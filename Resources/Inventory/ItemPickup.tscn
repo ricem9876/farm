@@ -1,0 +1,29 @@
+[gd_scene load_steps=5 format=3 uid="uid://cooqena0rhsqu"]
+
+[ext_resource type="Script" path="res://Resources/Inventory/Items/ItemPickup.gd" id="1_tmmjh"]
+[ext_resource type="Texture2D" uid="uid://bd75nh8csvs5b" path="res://Resources/Map/Spring Crops.png" id="2_lih63"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_caw5t"]
+radius = 19.105
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_esk4a"]
+radius = 45.0111
+
+[node name="ItemPickup" type="Area2D"]
+script = ExtResource("1_tmmjh")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_lih63")
+hframes = 14
+vframes = 4
+frame = 50
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+visible = false
+shape = SubResource("CircleShape2D_caw5t")
+
+[node name="Area2D" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+visible = false
+shape = SubResource("CircleShape2D_esk4a")

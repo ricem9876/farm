@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://bnhhs3cpvjrv6"]
+
+[ext_resource type="Script" path="res://Resources/Weapon/Gun.gd" id="1_0rnkf"]
+[ext_resource type="Texture2D" uid="uid://cjhf08my67r8k" path="res://Resources/Weapon/assaultrifle.png" id="2_t54h1"]
+
+[node name="Gun" type="Node2D"]
+script = ExtResource("1_0rnkf")
+
+[node name="GunSprite" type="Sprite2D" parent="."]
+position = Vector2(12, 5)
+scale = Vector2(0.0414365, 0.0594828)
+texture = ExtResource("2_t54h1")
+
+[node name="MuzzlePoint" type="Node2D" parent="."]
+position = Vector2(20, 4)
