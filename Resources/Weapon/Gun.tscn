@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://bnhhs3cpvjrv6"]
 
-[ext_resource type="Script" path="res://Resources/Weapon/Gun.gd" id="1_0rnkf"]
+[ext_resource type="Script" uid="uid://cro24uir58w1t" path="res://Resources/Weapon/Gun.gd" id="1_0rnkf"]
 [ext_resource type="Texture2D" uid="uid://cjhf08my67r8k" path="res://Resources/Weapon/assaultrifle.png" id="2_t54h1"]
 
 [node name="Gun" type="Node2D"]

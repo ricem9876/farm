@@ -1,9 +1,9 @@
 [gd_scene load_steps=8 format=4 uid="uid://deuvom31p4gsp"]
 
-[ext_resource type="Script" path="res://farm.gd" id="1_j765g"]
+[ext_resource type="Script" uid="uid://bg7ucnibks8si" path="res://farm.gd" id="1_j765g"]
 [ext_resource type="TileSet" uid="uid://ctssncl0yvlwb" path="res://Resources/Map/spring.tres" id="1_vglgb"]
 [ext_resource type="PackedScene" uid="uid://rhebvs8qauqd" path="res://Resources/Character/player.tscn" id="2_bwaq1"]
-[ext_resource type="Script" path="res://ground.gd" id="3_0nrwy"]
+[ext_resource type="Script" uid="uid://bcj4xymk2fek8" path="res://ground.gd" id="3_0nrwy"]
 [ext_resource type="PackedScene" uid="uid://hx7ftx7y1syw" path="res://Resources/Inventory/InventoryUI.tscn" id="5_u1tjg"]
 [ext_resource type="PackedScene" uid="uid://cr7kuseg2ufuo" path="res://Resources/Enemies/Mushroom/MushroomSpawner.tscn" id="6_n321y"]
 [ext_resource type="PackedScene" uid="uid://bku3wgg175nyp" path="res://Resources/Enemies/Mushroom/Mushroom.tscn" id="7_ndom8"]

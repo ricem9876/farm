@@ -1,11 +1,11 @@
 [gd_scene load_steps=15 format=3 uid="uid://rhebvs8qauqd"]
 
-[ext_resource type="Script" path="res://Resources/Character/scripts/player.gd" id="1_13ehe"]
+[ext_resource type="Script" uid="uid://banmwipl3lkhs" path="res://Resources/Character/scripts/player.gd" id="1_13ehe"]
 [ext_resource type="Texture2D" uid="uid://cr0eib1t3nahd" path="res://Resources/Character/mainIdle.png" id="1_tcqxc"]
 [ext_resource type="Texture2D" uid="uid://m588xojih81n" path="res://Resources/Character/mainWalk.png" id="2_qwcpi"]
-[ext_resource type="Script" path="res://Resources/Character/StateMachine.gd" id="4_f0yl4"]
-[ext_resource type="Script" path="res://Resources/Character/IdleState.gd" id="5_40rox"]
-[ext_resource type="Script" path="res://Resources/Character/WalkState.gd" id="6_68bqj"]
+[ext_resource type="Script" uid="uid://dgjehbei52k34" path="res://Resources/Character/StateMachine.gd" id="4_f0yl4"]
+[ext_resource type="Script" uid="uid://crw4qj7pdmlgt" path="res://Resources/Character/IdleState.gd" id="5_40rox"]
+[ext_resource type="Script" uid="uid://c67pwxwqadr05" path="res://Resources/Character/WalkState.gd" id="6_68bqj"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qawys"]
 size = Vector2(13.5, 21.5)
@@ -285,12 +285,12 @@ tracks/2/keys = {
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_stvm0"]
 _data = {
-"RESET": SubResource("Animation_dp20h"),
-"idle": SubResource("Animation_5dkyl"),
-"rundown": SubResource("Animation_jv3sx"),
-"runleft": SubResource("Animation_adn0q"),
-"runright": SubResource("Animation_lf60r"),
-"runup": SubResource("Animation_ar6ke")
+&"RESET": SubResource("Animation_dp20h"),
+&"idle": SubResource("Animation_5dkyl"),
+&"rundown": SubResource("Animation_jv3sx"),
+&"runleft": SubResource("Animation_adn0q"),
+&"runright": SubResource("Animation_lf60r"),
+&"runup": SubResource("Animation_ar6ke")
 }
 
 [node name="player" type="CharacterBody2D"]
@@ -307,7 +307,7 @@ vframes = 3
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 unique_name_in_owner = true
 libraries = {
-"": SubResource("AnimationLibrary_stvm0")
+&"": SubResource("AnimationLibrary_stvm0")
 }
 
 [node name="StateMachine" type="Node" parent="."]

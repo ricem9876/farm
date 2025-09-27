@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://hx7ftx7y1syw"]
 
-[ext_resource type="Script" path="res://Resources/Inventory/InventoryUI.gd" id="1_nbq8l"]
+[ext_resource type="Script" uid="uid://l3c8uus17wxo" path="res://Resources/Inventory/InventoryUI.gd" id="1_nbq8l"]
 
 [node name="InventoryUI" type="Control"]
 layout_mode = 3

@@ -1,6 +1,6 @@
 [gd_scene load_steps=63 format=3 uid="uid://bku3wgg175nyp"]
 
-[ext_resource type="Script" path="res://Resources/Enemies/Mushroom/Mushroom.gd" id="1_735lc"]
+[ext_resource type="Script" uid="uid://ccmq6q52g0k7l" path="res://Resources/Enemies/Mushroom/Mushroom.gd" id="1_735lc"]
 [ext_resource type="Texture2D" uid="uid://cvsjbj3bmcv1m" path="res://Resources/Enemies/Mushroom/Animations/Mushroom-Attack.png" id="2_x5fgu"]
 [ext_resource type="Texture2D" uid="uid://bcp1ojec7vpx4" path="res://Resources/Enemies/Mushroom/Animations/Mushroom-Die.png" id="3_ehbtb"]
 [ext_resource type="Texture2D" uid="uid://dijas1hyncwhd" path="res://Resources/Enemies/Mushroom/Animations/Mushroom-Hit.png" id="4_u87m3"]

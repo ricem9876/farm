@@ -1,6 +1,6 @@
 [gd_scene load_steps=5 format=3 uid="uid://cooqena0rhsqu"]
 
-[ext_resource type="Script" path="res://Resources/Inventory/Items/ItemPickup.gd" id="1_tmmjh"]
+[ext_resource type="Script" uid="uid://bljxb2bgnpeci" path="res://Resources/Inventory/Items/ItemPickup.gd" id="1_tmmjh"]
 [ext_resource type="Texture2D" uid="uid://bd75nh8csvs5b" path="res://Resources/Map/Spring Crops.png" id="2_lih63"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_caw5t"]
