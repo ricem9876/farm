@@ -1,0 +1,23 @@
+[gd_scene load_steps=3 format=3 uid="uid://dcmnp8k6fb2bj"]
+
+[ext_resource type="Texture2D" uid="uid://c1halsls6buik" path="res://Resources/Map/Tilesets/TownPack/house_interiors_assets.png" id="1_e8ywr"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_fh8hy"]
+
+[node name="WeaponChest" type="Area2D"]
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_e8ywr")
+hframes = 41
+vframes = 17
+frame = 251
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+visible = false
+position = Vector2(-1, 3)
+shape = SubResource("CircleShape2D_fh8hy")
+one_way_collision_margin = 29.8
+
+[node name="PromptLabel" type="Label" parent="."]
+offset_right = 40.0
+offset_bottom = 23.0

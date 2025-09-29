@@ -1,0 +1,132 @@
+extends Node
+class_name WeaponManager
+
+signal weapon_switched(slot: int, weapon: Gun)
+signal weapon_equipped(slot: int, weapon_item: WeaponItem)
+signal weapon_unequipped(slot: int)
+
+@export var primary_slot: WeaponItem
+@export var secondary_slot: WeaponItem
+
+var primary_gun: Gun
+var secondary_gun: Gun
+var active_slot: int = 0  # 0 = primary, 1 = secondary
+var player: Node2D
+
+func _ready():
+	player = get_parent()
+
+func equip_weapon(weapon_item: WeaponItem, slot: int = 0) -> bool:
+	if not weapon_item or weapon_item.item_type != "weapon":
+		print("Cannot equip non-weapon item")
+		return false
+	
+	# Remove old weapon from slot
+	unequip_weapon(slot)
+	
+	# Set the weapon item
+	if slot == 0:
+		primary_slot = weapon_item
+	else:
+		secondary_slot = weapon_item
+	
+	# Create the gun instance
+	var gun = weapon_item.weapon_scene.instantiate() as Gun
+	if not gun:
+		print("Failed to instantiate weapon")
+		return false
+	
+	# Add gun to player
+	player.add_child(gun)
+	gun.setup_with_player(player)
+	
+	# Set gun stats from weapon item
+	gun.base_damage = weapon_item.base_damage
+	gun.base_fire_rate = weapon_item.base_fire_rate
+	gun.base_bullet_speed = weapon_item.base_bullet_speed
+	gun.base_accuracy = weapon_item.base_accuracy
+	gun.base_bullet_count = weapon_item.base_bullet_count
+	gun.gun_tier = weapon_item.weapon_tier
+	gun._initialize_stats()
+	gun._setup_gun_appearance()
+	
+	# Store reference
+	if slot == 0:
+		primary_gun = gun
+	else:
+		secondary_gun = gun
+	
+	# Hide if not active slot
+	if slot != active_slot:
+		gun.visible = false
+		gun.process_mode = Node.PROCESS_MODE_DISABLED
+	
+	weapon_equipped.emit(slot, weapon_item)
+	print("Equipped weapon in slot ", slot, ": ", weapon_item.name)
+	return true
+
+func unequip_weapon(slot: int) -> WeaponItem:
+	var weapon_item: WeaponItem
+	var gun: Gun
+	
+	if slot == 0:
+		weapon_item = primary_slot
+		gun = primary_gun
+		primary_slot = null
+		primary_gun = null
+	else:
+		weapon_item = secondary_slot
+		gun = secondary_gun
+		secondary_slot = null
+		secondary_gun = null
+	
+	# Remove the gun node
+	if gun:
+		gun.queue_free()
+	
+	if weapon_item:
+		weapon_unequipped.emit(slot)
+	
+	return weapon_item
+
+func switch_weapon():
+	# Toggle between primary (0) and secondary (1)
+	var new_slot = 1 - active_slot
+	
+	# Check if new slot has a weapon
+	var new_weapon = get_weapon_in_slot(new_slot)
+	if not new_weapon:
+		print("No weapon in slot ", new_slot)
+		return
+	
+	# Hide current weapon
+	var current_gun = get_active_gun()
+	if current_gun:
+		current_gun.visible = false
+		current_gun.process_mode = Node.PROCESS_MODE_DISABLED
+		current_gun.stop_firing()
+	
+	# Show new weapon
+	active_slot = new_slot
+	var new_gun = get_active_gun()
+	if new_gun:
+		new_gun.visible = true
+		new_gun.process_mode = Node.PROCESS_MODE_INHERIT
+		weapon_switched.emit(active_slot, new_gun)
+		print("Switched to ", "primary" if active_slot == 0 else "secondary", " weapon")
+
+func get_active_gun() -> Gun:
+	return primary_gun if active_slot == 0 else secondary_gun
+
+func get_weapon_in_slot(slot: int) -> WeaponItem:
+	return primary_slot if slot == 0 else secondary_slot
+
+func has_weapon_in_slot(slot: int) -> bool:
+	return get_weapon_in_slot(slot) != null
+
+func get_active_slot() -> int:
+	return active_slot
+
+func can_equip_weapon() -> bool:
+	# Check if either slot is empty
+	return primary_slot == null or secondary_slot == null
