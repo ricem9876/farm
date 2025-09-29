@@ -35,6 +35,7 @@ var player: Node2D
 var fire_timer: float = 0.0
 var is_firing: bool = false
 var spread_pattern: Array[float] = []
+var can_fire: bool = true
 
 func _ready():
 		_initialize_stats()
@@ -98,11 +99,22 @@ func _handle_firing(delta):
 	if is_firing and fire_timer <= 0:
 		fire()
 		fire_timer = 1.0 / current_fire_rate
+		
+func set_can_fire(value: bool):
+	can_fire = value
+	if not can_fire:
+		stop_firing()  # Stop any current firing
+		
 func start_firing():
+	if not can_fire:
+		return
+	# Your existing start_firing logic here
 	is_firing = true
 func stop_firing():
 	is_firing = false
 func fire():
+	if not can_fire:
+		return
 	if not muzzle_point:
 		return
 	_calculate_spread_pattern()
@@ -163,7 +175,7 @@ func _evolve_gun():
 			_upgrade_stat("damage", current_damage * 2.5) 
 			
 	_setup_gun_appearance()
-	print("Gun evolved to tier ", gun_tier, ": ", gun_name)
+	#print("Gun evolved to tier ", gun_tier, ": ", gun_name)
 
 func _upgrade_stat(stat_name: String, new_value: float):
 	var old_value:float

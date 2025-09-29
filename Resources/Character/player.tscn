@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3 uid="uid://rhebvs8qauqd"]
+[gd_scene load_steps=16 format=3 uid="uid://rhebvs8qauqd"]
 
 [ext_resource type="Script" uid="uid://banmwipl3lkhs" path="res://Resources/Character/scripts/player.gd" id="1_13ehe"]
 [ext_resource type="Texture2D" uid="uid://cr0eib1t3nahd" path="res://Resources/Character/mainIdle.png" id="1_tcqxc"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://dgjehbei52k34" path="res://Resources/Character/StateMachine.gd" id="4_f0yl4"]
 [ext_resource type="Script" uid="uid://crw4qj7pdmlgt" path="res://Resources/Character/IdleState.gd" id="5_40rox"]
 [ext_resource type="Script" uid="uid://c67pwxwqadr05" path="res://Resources/Character/WalkState.gd" id="6_68bqj"]
+[ext_resource type="Script" uid="uid://k6jhlmnnrght" path="res://Resources/Character/SafehouseState.gd" id="7_3s00l"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qawys"]
 size = Vector2(13.5, 21.5)
@@ -318,3 +319,6 @@ script = ExtResource("5_40rox")
 
 [node name="WalkState" type="Node" parent="StateMachine"]
 script = ExtResource("6_68bqj")
+
+[node name="SafehouseState" type="Node" parent="StateMachine"]
+script = ExtResource("7_3s00l")

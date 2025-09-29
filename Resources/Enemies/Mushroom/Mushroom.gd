@@ -11,7 +11,7 @@ signal item_dropped(item_name: String, position: Vector2)
 @export var attack_damage: float = 10.0
 @export var attack_range: float = 30.0
 @export var detection_range: float = 100.0
-@export var experience_reward: int = 15
+@export var experience_reward: int = 50
 
 # References
 @onready var animated_sprite = $AnimatedSprite2D
@@ -158,20 +158,20 @@ func _play_animation(anim_name: String):
 		if sprite_frames and sprite_frames.has_animation(anim_name):
 			if animated_sprite.animation != anim_name:
 				animated_sprite.play(anim_name)
-		else:
-			print("Warning: Animation '", anim_name, "' not found in AnimatedSprite2D")
+		#else:
+			#print("Warning: Animation '", anim_name, "' not found in AnimatedSprite2D")
 
 func take_damage(damage: float):
 	if is_dead:
 		return
 	
-	print("Mushroom taking damage: ", damage, " | Health before: ", current_health)
+	#print("Mushroom taking damage: ", damage, " | Health before: ", current_health)
 	
 	current_health -= damage
 	current_health = max(0, current_health)  # Ensure health doesn't go below 0
 	_update_health_bar()
 	
-	print("Health after damage: ", current_health)
+	#print("Health after damage: ", current_health)
 	
 	# Enter hit state
 	_change_state(State.HIT)
@@ -183,7 +183,7 @@ func _update_health_bar():
 	if health_bar:
 		var health_percentage = (current_health / max_health) * 100
 		health_bar.value = health_percentage
-		print("Health bar updated: ", health_percentage, "%")
+		#print("Health bar updated: ", health_percentage, "%")
 
 func _die():
 	if is_dead:

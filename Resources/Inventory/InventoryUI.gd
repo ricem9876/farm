@@ -14,7 +14,7 @@ class_name InventoryUI
 
 var inventory_manager: InventoryManager
 var slot_scene = preload("res://Resources/Inventory/InventorySlot.tscn")
-var offset_from_camera: Vector2 = Vector2(0,0)  # Center on screen
+var offset_from_camera: Vector2 = Vector2(0, -50)  # Center on screen
 var follow_camera: Camera2D
 var slots: Array[InventorySlot] = []
 
@@ -48,10 +48,10 @@ func _setup_styling():
 		# Create a StyleBoxFlat for pixel art look - warm cream/beige
 		var style_box = StyleBoxFlat.new()
 		style_box.bg_color = Color(0.98, 0.94, 0.86)  # Very light warm cream (#FAF0DB)
-		style_box.border_width_left = 6
-		style_box.border_width_right = 6
-		style_box.border_width_top = 6
-		style_box.border_width_bottom = 6
+		style_box.border_width_left = 1
+		style_box.border_width_right = 1
+		style_box.border_width_top = 1
+		style_box.border_width_bottom = 1
 		style_box.border_color = Color(0.45, 0.32, 0.18)  # Dark brown border (#73522E)
 		style_box.corner_radius_top_left = 12
 		style_box.corner_radius_top_right = 12
@@ -63,6 +63,12 @@ func _setup_styling():
 		style_box.shadow_size = 4
 		style_box.shadow_offset = Vector2(2, 2)
 		
+		# Add padding to ensure content fits properly
+		style_box.content_margin_left = 8
+		style_box.content_margin_right = 8
+		style_box.content_margin_top = 8
+		style_box.content_margin_bottom = 8
+		
 		background_panel.add_theme_stylebox_override("panel", style_box)
 		print("Applied styling to main panel")
 	else:
@@ -72,10 +78,10 @@ func _setup_styling():
 	if title_bar:
 		var title_style = StyleBoxFlat.new()
 		title_style.bg_color = Color(0.45, 0.32, 0.18)  # Dark wood brown (#73522E)
-		title_style.border_width_left = 3
-		title_style.border_width_right = 3
-		title_style.border_width_top = 3
-		title_style.border_width_bottom = 3
+		title_style.border_width_left = 1
+		title_style.border_width_right = 1
+		title_style.border_width_top = 1
+		title_style.border_width_bottom = 1
 		title_style.border_color = Color(0.35, 0.25, 0.15)  # Even darker brown
 		title_style.corner_radius_top_left = 6
 		title_style.corner_radius_top_right = 6
@@ -102,10 +108,10 @@ func _setup_styling():
 	if item_info_panel:
 		var info_style = StyleBoxFlat.new()
 		info_style.bg_color = Color(0.45, 0.32, 0.18)  # Dark wood brown
-		info_style.border_width_left = 3
-		info_style.border_width_right = 3
-		info_style.border_width_top = 3
-		info_style.border_width_bottom = 3
+		info_style.border_width_left = 1
+		info_style.border_width_right = 1
+		info_style.border_width_top = 1
+		info_style.border_width_bottom = 1
 		info_style.border_color = Color(0.35, 0.25, 0.15)
 		info_style.corner_radius_top_left = 6
 		info_style.corner_radius_top_right = 6
@@ -184,17 +190,20 @@ func setup_inventory(inv_manager: InventoryManager, camera: Camera2D = null, pla
 	
 func _process(delta):
 	if visible and follow_camera:
-		# Center on screen relative to camera
+		# Get viewport size
 		var viewport = get_viewport()
 		var screen_size = viewport.get_visible_rect().size
 		
-		# Position relative to the camera's global position
-		if follow_camera.is_current():
-			var camera_center = follow_camera.get_screen_center_position()
-			global_position = camera_center - size * 0.5 + Vector2(-25,-50)
-		else:
-			# Fallback to screen center
-			global_position = screen_size * 0.5 - size * 0.5
+		# Position inventory at screen center relative to camera
+		# Since this is a Control node, we use the camera's global_position
+		# and adjust for screen coordinates
+		var camera_pos = follow_camera.global_position
+		
+		# Calculate center of screen in world coordinates
+		var screen_center_world = camera_pos + offset_from_camera
+		
+		# Position inventory centered on screen
+		global_position = screen_center_world - size * 0.5
 		
 func _create_slots():
 	# Check if item_grid exists
@@ -208,25 +217,27 @@ func _create_slots():
 		child.queue_free()
 	slots.clear()
 	
-	# Set up grid with smaller spacing
-	item_grid.columns = 5  # 5x4 grid for 20 slots
-	item_grid.add_theme_constant_override("h_separation", 4)  # Horizontal spacing between slots
-	item_grid.add_theme_constant_override("v_separation", 4)  # Vertical spacing between slots
+	# Set up grid as single row with 8 slots
+	item_grid.columns = 8  # Single row with 8 slots
+	item_grid.add_theme_constant_override("h_separation", 8)  # More spacing between slots
+	item_grid.add_theme_constant_override("v_separation", 0)  # No vertical spacing
 	
 	if not inventory_manager:
 		print("ERROR: inventory_manager is null!")
 		return
 	
-	print("Creating ", inventory_manager.max_slots, " inventory slots...")
+	# Reduce inventory to 8 slots for single row
+	var slot_count = 8
+	print("Creating ", slot_count, " inventory slots in single row...")
 	
-	for i in range(inventory_manager.max_slots):
+	for i in range(slot_count):
 		var slot = slot_scene.instantiate()
 		slot.slot_index = i
 		slot.item_clicked.connect(_on_item_clicked)
 		
-		# Scale down the slots to make them smaller
-		slot.custom_minimum_size = Vector2(30, 30)  # Smaller slots (was probably 64x64)
-		slot.size = Vector2(30, 30)
+		# Very small slots - 16x16 pixels
+		slot.custom_minimum_size = Vector2(16, 16)  # Tiny 16x16 slots
+		slot.size = Vector2(16, 16)
 		
 		# Connect the built-in mouse hover signals for item info
 		slot.mouse_entered.connect(_on_slot_hovered.bind(i))
@@ -236,6 +247,7 @@ func _create_slots():
 		slots.append(slot)
 		
 	print("✓ Created ", slots.size(), " inventory slots successfully!")
+	print("Final grid size: ", item_grid.size)
 		
 func _update_display():
 	for i in range(slots.size()):

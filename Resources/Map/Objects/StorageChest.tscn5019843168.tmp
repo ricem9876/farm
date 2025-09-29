@@ -1,0 +1,20 @@
+[gd_scene load_steps=4 format=3 uid="uid://bgm1ctebbs1l4"]
+
+[ext_resource type="Script" uid="uid://chwbf7ca8gakv" path="res://Resources/Map/Scripts/StorageChest.gd" id="1_icdnu"]
+[ext_resource type="Texture2D" uid="uid://bl6xpre06cbbm" path="res://Resources/Inventory/Sprites/wardrobe.png" id="2_cfmhq"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_cj0iy"]
+size = Vector2(20, 28)
+
+[node name="StorageChest" type="Area2D"]
+script = ExtResource("1_icdnu")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_cfmhq")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_cj0iy")
+
+[node name="InteractionPrompt" type="Label" parent="."]
+offset_right = 40.0
+offset_bottom = 23.0

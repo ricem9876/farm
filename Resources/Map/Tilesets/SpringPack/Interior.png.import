@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://idkiwpk4l4ln"
-path="res://.godot/imported/Interior.png-e5546192267770ab0a71f1ba64ca1887.ctex"
+path="res://.godot/imported/Interior.png-5e5eb2d869f37f538c2014420d9d790a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Resources/Map/Interior.png"
-dest_files=["res://.godot/imported/Interior.png-e5546192267770ab0a71f1ba64ca1887.ctex"]
+source_file="res://Resources/Map/Tilesets/SpringPack/Interior.png"
+dest_files=["res://.godot/imported/Interior.png-5e5eb2d869f37f538c2014420d9d790a.ctex"]
 
 [params]
 

@@ -23,10 +23,10 @@ func _setup_slot_styling():
 	if slot_background:
 		var normal_style = StyleBoxFlat.new()
 		normal_style.bg_color = Color(0.96, 0.90, 0.78)  # Light cream (#F5E6C8)
-		normal_style.border_width_left = 3
-		normal_style.border_width_right = 3
-		normal_style.border_width_top = 3
-		normal_style.border_width_bottom = 3
+		normal_style.border_width_left = 2
+		normal_style.border_width_right = 2
+		normal_style.border_width_top = 2
+		normal_style.border_width_bottom = 2
 		normal_style.border_color = Color(0.55, 0.42, 0.28)  # Medium brown border (#8C6B47)
 		normal_style.corner_radius_top_left = 6
 		normal_style.corner_radius_top_right = 6
@@ -107,10 +107,10 @@ func _update_slot_appearance(has_item: bool):
 		# Note: You might want to add a label child to show slot numbers
 	
 	# Apply consistent styling
-	style.border_width_left = 3
-	style.border_width_right = 3
-	style.border_width_top = 3
-	style.border_width_bottom = 3
+	style.border_width_left = 2
+	style.border_width_right = 2
+	style.border_width_top = 2
+	style.border_width_bottom = 2
 	style.corner_radius_top_left = 6
 	style.corner_radius_top_right = 6
 	style.corner_radius_bottom_left = 6

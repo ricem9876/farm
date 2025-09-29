@@ -1,0 +1,101 @@
+[gd_scene load_steps=2 format=3 uid="uid://d1y8knxeelrx1"]
+
+[ext_resource type="Script" uid="uid://dvb8lmbdfq8vs" path="res://StorageUI.gd" id="1_omk60"]
+
+[node name="StorageUI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_omk60")
+
+[node name="Background" type="Panel" parent="."]
+custom_minimum_size = Vector2(800, 600)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Background"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PlayerInventoryPanel" type="Panel" parent="Background/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Background/HBoxContainer/PlayerInventoryPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PlayerTitle" type="Label" parent="Background/HBoxContainer/PlayerInventoryPanel/VBoxContainer"]
+layout_mode = 2
+text = "Player's"
+
+[node name="PlayerGrid" type="GridContainer" parent="Background/HBoxContainer/PlayerInventoryPanel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+columns = 4
+
+[node name="StorageInventoryPanel" type="Panel" parent="Background/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Background/HBoxContainer/StorageInventoryPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="StorageTitle" type="Label" parent="Background/HBoxContainer/StorageInventoryPanel/VBoxContainer"]
+layout_mode = 2
+text = "Storage"
+
+[node name="StorageGrid" type="GridContainer" parent="Background/HBoxContainer/StorageInventoryPanel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+columns = 8
+
+[node name="CloseButton" type="Button" parent="Background"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -17.0
+offset_bottom = 31.0
+grow_horizontal = 0
+text = "x"
+
+[node name="TransferInfo" type="Label" parent="Background"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -23.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0

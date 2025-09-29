@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c2hp1wcwci102"
-path="res://.godot/imported/Maple Tree.png-dce8de1240c6f3679b170c41305cc442.ctex"
+uid="uid://claj51lvamn35"
+path="res://.godot/imported/Tileset Spring.png-33c11fc80bf9ce823167c73fd51c2cbc.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Resources/Map/Maple Tree.png"
-dest_files=["res://.godot/imported/Maple Tree.png-dce8de1240c6f3679b170c41305cc442.ctex"]
+source_file="res://Resources/Map/Tilesets/SpringPack/Tileset Spring.png"
+dest_files=["res://.godot/imported/Tileset Spring.png-33c11fc80bf9ce823167c73fd51c2cbc.ctex"]
 
 [params]
 

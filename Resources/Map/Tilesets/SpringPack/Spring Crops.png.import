@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://blq3hxtog48rn"
-path="res://.godot/imported/Fence's copiar.png-0cbd699205a4ea635cd7d83f3ee094ec.ctex"
+uid="uid://bd75nh8csvs5b"
+path="res://.godot/imported/Spring Crops.png-cbeca862da3439d1458b46fd9ff710d8.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Resources/Map/Fence's copiar.png"
-dest_files=["res://.godot/imported/Fence's copiar.png-0cbd699205a4ea635cd7d83f3ee094ec.ctex"]
+source_file="res://Resources/Map/Tilesets/SpringPack/Spring Crops.png"
+dest_files=["res://.godot/imported/Spring Crops.png-cbeca862da3439d1458b46fd9ff710d8.ctex"]
 
 [params]
 

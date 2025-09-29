@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://claj51lvamn35"
-path="res://.godot/imported/Tileset Spring.png-e44a2a04a5ab64bcbd6918abc8f63a20.ctex"
+uid="uid://ceblxpja0c3uq"
+path="res://.godot/imported/wood.png-4a04652b92a6f33608c240f14f464d6a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Resources/Map/Tileset Spring.png"
-dest_files=["res://.godot/imported/Tileset Spring.png-e44a2a04a5ab64bcbd6918abc8f63a20.ctex"]
+source_file="res://Resources/Inventory/Sprites/wood.png"
+dest_files=["res://.godot/imported/wood.png-4a04652b92a6f33608c240f14f464d6a.ctex"]
 
 [params]
 

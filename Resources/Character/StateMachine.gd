@@ -1,5 +1,4 @@
-extends state
-
+extends Node
 class_name StateMachine
 
 var current_state: state = null
@@ -25,3 +24,23 @@ func _physics_process(delta: float) -> void:
 func _input(event: InputEvent) -> void:
 	if current_state:
 		current_state.handle_input(event)
+
+# Method to change to safehouse mode
+func enter_safehouse_mode():
+	var safehouse_state = get_node("SafehouseState")
+	if safehouse_state:
+		change_state(safehouse_state)
+	else:
+		print("SafehouseState node not found!")
+
+# Method to change to combat mode  
+func enter_combat_mode():
+	var idle_state = get_node("IdleState")
+	if idle_state:
+		change_state(idle_state)
+	else:
+		print("IdleState node not found!")
+
+# Check if currently in safehouse
+func is_in_safehouse() -> bool:
+	return current_state != null and current_state.get_script() != null and current_state.get_script().get_global_name() == "SafehouseState"

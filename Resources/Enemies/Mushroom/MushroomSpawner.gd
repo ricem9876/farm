@@ -41,7 +41,7 @@ func _spawn_mushroom():
 		
 		return
 	
-	print("Spawning mushroom at player position: ", player.global_position)
+	#print("Spawning mushroom at player position: ", player.global_position)
 	
 	var angle = randf() *2 * PI
 	var distance = spawn_radius + randf_range(0,50)

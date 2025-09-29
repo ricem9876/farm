@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b8hipibixe2hm"
-path="res://.godot/imported/Road copiar.png-4c3ee51303d1901af23b90d35ae78375.ctex"
+uid="uid://d0naftmkmt5kh"
+path="res://.godot/imported/house_building_assets_yellow.png-b879b0f839784fff7b187a3835aeeddb.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Resources/Map/Road copiar.png"
-dest_files=["res://.godot/imported/Road copiar.png-4c3ee51303d1901af23b90d35ae78375.ctex"]
+source_file="res://Resources/Map/Tilesets/TownPack/house_building_assets_yellow.png"
+dest_files=["res://.godot/imported/house_building_assets_yellow.png-b879b0f839784fff7b187a3835aeeddb.ctex"]
 
 [params]
 
