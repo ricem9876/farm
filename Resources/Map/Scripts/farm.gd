@@ -25,7 +25,6 @@ func _ready():
 	if house_entrance:
 		print("✓ HouseEntrance found at position: ", house_entrance.global_position)
 		
-		# Debug collision shape
 		var collision_shape = house_entrance.get_node_or_null("CollisionShape2D")
 		if collision_shape:
 			print("  ✓ CollisionShape2D found")
@@ -34,11 +33,9 @@ func _ready():
 		else:
 			print("  ✗ ERROR: CollisionShape2D not found!")
 		
-		# Setup the interaction
 		if not house_entrance.is_in_group("interaction_areas"):
 			house_entrance.add_to_group("interaction_areas")
 		
-		# Make sure it's an InteractionArea
 		if house_entrance is InteractionArea:
 			house_entrance.interaction_type = "house"
 			house_entrance.show_prompt = true
@@ -52,9 +49,15 @@ func _ready():
 	
 	# Setup inventory UI
 	if inventory_ui:
+		print("✓ InventoryUI found")
+		print("  - Connecting inventory_toggle_requested signal...")
 		player.inventory_toggle_requested.connect(_on_inventory_toggle_requested)
+		print("  - Signal connected!")
+		
+		print("  - Setting up inventory UI...")
 		inventory_ui.setup_inventory(player.get_inventory_manager(), camera, player)
-		print("✓ Inventory UI setup complete")
+		print("  - Inventory UI setup complete")
+		print("  - Initial visibility: ", inventory_ui.visible)
 	else:
 		print("ERROR: InventoryUI not found!")
 	
@@ -69,7 +72,6 @@ func _ready():
 	_enable_gun_on_farm()
 	
 	print("=== FARM SCENE SETUP COMPLETE ===\n")
-	print("Walk to the house and watch for debug messages!")
 
 func _restore_player_state():
 	"""Restore player state when entering farm"""
@@ -99,17 +101,25 @@ func _enable_gun_on_farm():
 	if gun:
 		gun.set_can_fire(true)
 		gun.visible = true
-		gun.process_mode = Node.PROCESS_MODE_INHERIT  # Re-enable processing
+		gun.process_mode = Node.PROCESS_MODE_INHERIT
 		print("✓ Gun enabled, visible, and processing resumed on farm")
 	else:
 		print("✗ No active gun found (this is OK if player has no weapon)")
 
 func _on_inventory_toggle_requested():
+	print("=== INVENTORY TOGGLE REQUESTED ===")
+	print("Current inventory_ui: ", inventory_ui)
+	print("Is inventory_ui valid: ", is_instance_valid(inventory_ui))
 	if inventory_ui:
+		print("Current visibility: ", inventory_ui.visible)
 		inventory_ui.toggle_visibility()
+		print("New visibility: ", inventory_ui.visible)
+	else:
+		print("ERROR: inventory_ui is null!")
+	print("==================================")
 
-# Debug function - call this to test scene switching manually
 func _input(event):
-	if event.is_action_pressed("ui_accept"):  # Space bar
-		print("Manual scene switch test - changing to safehouse...")
-		GameManager.change_to_safehouse()
+	# Debug input
+	if event.is_action_pressed("toggle_inventory"):
+		print(">>> TAB/SHIFT PRESSED IN FARM SCENE <<<")
+		_on_inventory_toggle_requested()

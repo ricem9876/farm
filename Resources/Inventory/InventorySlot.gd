@@ -41,12 +41,12 @@ func _setup_slot_styling():
 		slot_background.offset_bottom = 0
 		
 		var normal_style = StyleBoxFlat.new()
-		normal_style.bg_color = Color(0.96, 0.90, 0.78)
+		normal_style.bg_color = Color(0.96, 0.90, 0.78)  # Warm cream
 		normal_style.border_width_left = 4
 		normal_style.border_width_right = 4
 		normal_style.border_width_top = 4
 		normal_style.border_width_bottom = 4
-		normal_style.border_color = Color(0.55, 0.42, 0.28)
+		normal_style.border_color = Color(0.55, 0.42, 0.28)  # Brown border
 		normal_style.corner_radius_top_left = 8
 		normal_style.corner_radius_top_right = 8
 		normal_style.corner_radius_bottom_left = 8
@@ -84,8 +84,6 @@ func set_item(item: Item, quantity: int):
 	
 	if item:
 		button.texture_normal = item.icon
-		
-		# The button is already configured in _setup_button_size() to scale properly
 		
 		if quantity > 1:
 			quantity_label.text = str(quantity)

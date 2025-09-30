@@ -65,6 +65,11 @@ func _ready():
 	weapon_chest.set_storage_ui(weapon_storage_ui)
 	print("✓ WeaponChest connected")
 	
+	# Connect to weapon manager signals to auto-disable guns when equipped
+	if player.has_method("get_weapon_manager"):
+		var weapon_mgr = player.get_weapon_manager()
+		weapon_mgr.weapon_equipped.connect(_on_weapon_equipped_in_safehouse)
+	
 	# Restore player state from GameManager
 	await get_tree().process_frame
 	_restore_player_state()
@@ -90,36 +95,45 @@ func _restore_player_state():
 	if player.has_method("get_weapon_manager"):
 		GameManager.restore_player_weapons(player.get_weapon_manager())
 
+func _on_weapon_equipped_in_safehouse(slot: int, weapon_item: WeaponItem):
+	"""Called whenever a weapon is equipped - disable it immediately if in safehouse"""
+	print("Weapon equipped in safehouse - disabling it!")
+	await get_tree().process_frame  # Wait for gun to be instantiated
+	_disable_all_guns()
+
 func _disable_gun_in_safehouse():
 	print("\n=== DISABLING GUN IN SAFEHOUSE ===")
-	print("Attempting to disable gun in safehouse...")
-	
+	_disable_all_guns()
+	print("===================================\n")
+
+func _disable_all_guns():
+	"""Disable ALL guns (both primary and secondary)"""
 	if not player:
 		print("✗ No player reference")
 		return
-	
-	print("✓ Player exists")
 	
 	var weapon_manager = player.get_weapon_manager()
 	if not weapon_manager:
 		print("✗ No weapon manager")
 		return
 	
-	print("✓ Weapon manager exists")
+	# Disable primary gun
+	var primary_gun = weapon_manager.primary_gun
+	if primary_gun:
+		print("Disabling PRIMARY gun")
+		primary_gun.set_can_fire(false)
+		primary_gun.visible = false
+		primary_gun.process_mode = Node.PROCESS_MODE_DISABLED
+		print("✓ Primary gun disabled")
 	
-	var gun = weapon_manager.get_active_gun()
-	print("Active gun: ", gun)
+	# Disable secondary gun
+	var secondary_gun = weapon_manager.secondary_gun
+	if secondary_gun:
+		print("Disabling SECONDARY gun")
+		secondary_gun.set_can_fire(false)
+		secondary_gun.visible = false
+		secondary_gun.process_mode = Node.PROCESS_MODE_DISABLED
+		print("✓ Secondary gun disabled")
 	
-	if gun:
-		print("BEFORE - can_fire: ", gun.can_fire, " visible: ", gun.visible, " process_mode: ", gun.process_mode)
-		
-		gun.set_can_fire(false)
-		gun.visible = false
-		gun.process_mode = Node.PROCESS_MODE_DISABLED  # Completely disable processing
-		
-		print("AFTER - can_fire: ", gun.can_fire, " visible: ", gun.visible, " process_mode: ", gun.process_mode)
-		print("✓ Gun disabled, hidden, and processing stopped in safehouse")
-	else:
-		print("✗ No active gun found (this is OK if player has no weapon)")
-	
-	print("===================================\n")
+	if not primary_gun and not secondary_gun:
+		print("✗ No guns found (this is OK if player has no weapons)")

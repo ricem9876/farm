@@ -49,7 +49,10 @@ func _give_starting_weapon():
 	
 func _input(event):
 	if event.is_action_pressed("toggle_inventory"):
+		print(">>> PLAYER DETECTED TAB/SHIFT PRESS <<<")
+		print("Emitting inventory_toggle_requested signal...")
 		inventory_toggle_requested.emit()
+		print("Signal emitted!")
 	
 	# Weapon switching
 	if event.is_action_pressed("switch_weapon"):
@@ -57,20 +60,10 @@ func _input(event):
 	
 	# FIXED: Check if gun can fire before handling fire input
 	if event.is_action_pressed("fire"):
-		print("=== FIRE INPUT DETECTED ===")
 		var active_gun = weapon_manager.get_active_gun()
-		print("Active gun exists: ", active_gun != null)
-		if active_gun:
-			print("Gun can_fire: ", active_gun.can_fire)
-			print("Gun visible: ", active_gun.visible)
-			print("Gun process_mode: ", active_gun.process_mode)
 		
-		if active_gun and active_gun.can_fire:  # Added can_fire check
-			print("✓ Starting to fire")
+		if active_gun and active_gun.can_fire:
 			active_gun.start_firing()
-		else:
-			print("✗ Cannot fire - gun disabled")
-		print("===========================")
 		
 	elif event.is_action_released("fire"):
 		var active_gun = weapon_manager.get_active_gun()
