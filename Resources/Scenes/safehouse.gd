@@ -66,6 +66,14 @@ func _ready():
 	weapon_chest.set_storage_ui(weapon_storage_ui)
 	print("✓ WeaponChest connected")
 	
+	# Setup weapon HUD (ADD THIS)
+	if weapon_hud:
+		print("✓ WeaponHUD found")
+		weapon_hud.setup_hud(player.get_weapon_manager(), player)
+		print("  - Weapon HUD setup complete")
+	else:
+		print("ERROR: WeaponHUD not found!")
+	
 	# Connect to weapon manager signals to auto-disable guns when equipped
 	if player.has_method("get_weapon_manager"):
 		var weapon_mgr = player.get_weapon_manager()

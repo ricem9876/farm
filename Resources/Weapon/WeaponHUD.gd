@@ -14,7 +14,7 @@ var weapon_manager: WeaponManager
 var player: Node2D
 
 # Positioning
-var offset_from_player_bottom: float = 60.0  # Distance below player
+var offset_from_player_bottom: float = -80.0  # Distance below player
 
 func _ready():
 	_setup_styling()
