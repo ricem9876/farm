@@ -1,10 +1,12 @@
-[gd_scene load_steps=3 format=3 uid="uid://dcmnp8k6fb2bj"]
+[gd_scene load_steps=4 format=3 uid="uid://dcmnp8k6fb2bj"]
 
 [ext_resource type="Texture2D" uid="uid://c1halsls6buik" path="res://Resources/Map/Tilesets/TownPack/house_interiors_assets.png" id="1_e8ywr"]
+[ext_resource type="Script" uid="uid://c5i8724333qwt" path="res://Resources/Weapon/WeaponChest.gd" id="1_fh8hy"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_fh8hy"]
 
 [node name="WeaponChest" type="Area2D"]
+script = ExtResource("1_fh8hy")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("1_e8ywr")

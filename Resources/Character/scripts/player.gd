@@ -25,6 +25,11 @@ func _ready():
 	
 	# Give player a starting weapon
 	_give_starting_weapon()
+	
+	add_to_group("player")  # ADD THIS LINE!
+	
+	print("Player ready - setting up managers...")
+	# ... rest of your _ready code
 
 func _give_starting_weapon():
 	# Create a basic weapon item

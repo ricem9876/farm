@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=4 uid="uid://bj8jr4y5r1lxw"]
+[gd_scene load_steps=10 format=4 uid="uid://bj8jr4y5r1lxw"]
 
 [ext_resource type="PackedScene" uid="uid://rhebvs8qauqd" path="res://Resources/Character/player.tscn" id="1_4hm0u"]
 [ext_resource type="TileSet" uid="uid://ctssncl0yvlwb" path="res://Resources/Map/Tilesets/SpringPack/spring.tres" id="1_4n2tw"]
@@ -7,6 +7,7 @@
 [ext_resource type="Script" uid="uid://cy7njxmv6vctv" path="res://Resources/Scenes/farm_exit.gd" id="5_vabqk"]
 [ext_resource type="PackedScene" uid="uid://bgm1ctebbs1l4" path="res://Resources/Map/Objects/StorageChest.tscn" id="6_vabqk"]
 [ext_resource type="PackedScene" uid="uid://dcmnp8k6fb2bj" path="res://Resources/Weapon/WeaponChest.tscn" id="7_k87ip"]
+[ext_resource type="PackedScene" uid="uid://cthordbq5t404" path="res://Resources/Weapon/WeaponStorageUI.tscn" id="8_3fhve"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_k87ip"]
 size = Vector2(12.5, 21)
@@ -55,5 +56,15 @@ z_index = 1
 position = Vector2(551, 253)
 
 [node name="WeaponChest" parent="." instance=ExtResource("7_k87ip")]
+unique_name_in_owner = true
 z_index = 1
 position = Vector2(411, 251)
+
+[node name="WeaponStorageUI" parent="." instance=ExtResource("8_3fhve")]
+unique_name_in_owner = true
+visible = false
+top_level = true
+offset_left = 404.0
+offset_top = 282.0
+offset_right = 404.0
+offset_bottom = 282.0
