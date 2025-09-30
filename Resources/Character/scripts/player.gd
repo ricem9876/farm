@@ -54,7 +54,20 @@ func _input(event):
 		inventory_toggle_requested.emit()
 		print("Signal emitted!")
 	
-	# Weapon switching
+	# Direct weapon slot selection with 1 and 2
+	if event.is_action_pressed("weapon_slot_1"):
+		if weapon_manager.has_weapon_in_slot(0):
+			weapon_manager.active_slot = 0
+			weapon_manager.switch_weapon()
+			print("Switched to weapon slot 1 (Primary)")
+	
+	if event.is_action_pressed("weapon_slot_2"):
+		if weapon_manager.has_weapon_in_slot(1):
+			weapon_manager.active_slot = 1
+			weapon_manager.switch_weapon()
+			print("Switched to weapon slot 2 (Secondary)")
+	
+	# Weapon switching with Q
 	if event.is_action_pressed("switch_weapon"):
 		weapon_manager.switch_weapon()
 	

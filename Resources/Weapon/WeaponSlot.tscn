@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://cfygsiok5xlut"]
 
-[ext_resource type="Script" uid="uid://c0pcpqmryf5el" path="res://Resources/Weapon/WeaponSlot.gd" id="1_gv8oh"]
+[ext_resource type="Script" uid="uid://c0pcpqmryf5el" path="res://Resources/Weapon/WeaponSlot.gd" id="1_pjhlk"]
 
 [node name="WeaponSlot" type="Control"]
 layout_mode = 3
@@ -9,4 +9,4 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_gv8oh")
+script = ExtResource("1_pjhlk")

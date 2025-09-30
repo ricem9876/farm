@@ -1,6 +1,7 @@
 extends Node2D
 
 @onready var inventory_ui = $InventoryUI
+@onready var weapon_hud = $WeaponHUD
 @onready var player = $player
 @onready var camera = $player/Camera2D
 @onready var house_entrance = $HouseEntrance
@@ -60,6 +61,14 @@ func _ready():
 		print("  - Initial visibility: ", inventory_ui.visible)
 	else:
 		print("ERROR: InventoryUI not found!")
+	
+	# Setup weapon HUD
+	if weapon_hud:
+		print("✓ WeaponHUD found")
+		weapon_hud.setup_hud(player.get_weapon_manager(), player)
+		print("  - Weapon HUD setup complete")
+	else:
+		print("ERROR: WeaponHUD not found!")
 	
 	# Restore player state from GameManager
 	await get_tree().process_frame
