@@ -1,75 +1,60 @@
 extends Node2D
 
 @onready var inventory_ui = $InventoryUI
-@onready var weapon_storage_ui = $WeaponStorageUI
 @onready var player = $player
 @onready var camera = $player/Camera2D
-@onready var weapon_chest = $WeaponChest
-
-var weapon_storage: WeaponStorageManager
+@onready var house_entrance = $HouseEntrance
 
 func _ready():
-	print("=== FARM SETUP START ===")
+	print("\n=== FARM SCENE SETUP START ===")
 	
-	if player:
-		# Setup inventory
-		player.inventory_toggle_requested.connect(_on_inventory_toggle_requested)
-		if inventory_ui:
-			inventory_ui.setup_inventory(player.get_inventory_manager(), camera, player)
-		
-		# Setup weapon storage
-		weapon_storage = WeaponStorageManager.new()
-		add_child(weapon_storage)
-		
-		if weapon_storage_ui:
-			weapon_storage_ui.setup_storage(
-				weapon_storage,
-				player.get_weapon_manager(),
-				player
-			)
-		
-		# Connect weapon chest to UI
-		if weapon_chest:
-			weapon_chest.set_storage_ui(weapon_storage_ui)
-		
-		# Add test weapons
-		_add_test_weapons()
-	
-	print("=== FARM SETUP COMPLETE ===")
-
-func _add_test_weapons():
-	if not weapon_storage:
+	if not player:
+		print("ERROR: Player not found!")
 		return
 	
-	var pistol = WeaponItem.new()
-	pistol.name = "Test Pistol"
-	pistol.description = "Backup weapon"
-	pistol.weapon_type = "Pistol"
-	pistol.weapon_scene = preload("res://Resources/Weapon/Gun.tscn")
-	pistol.weapon_sprite = preload("res://Resources/Weapon/assaultrifle.png")
-	pistol.icon = preload("res://Resources/Weapon/assaultrifle.png")
-	pistol.base_damage = 15.0
-	pistol.base_fire_rate = 3.0
-	pistol.base_bullet_count = 1
-	pistol.base_accuracy = 0.95
-	pistol.base_bullet_speed = 500.0
-	weapon_storage.add_weapon(pistol)
+	print("✓ Player found at position: ", player.global_position)
 	
-	var shotgun = WeaponItem.new()
-	shotgun.name = "Test Shotgun"
-	shotgun.description = "Close range power"
-	shotgun.weapon_type = "Shotgun"
-	shotgun.weapon_scene = preload("res://Resources/Weapon/Gun.tscn")
-	shotgun.weapon_sprite = preload("res://Resources/Weapon/assaultrifle.png")
-	shotgun.icon = preload("res://Resources/Weapon/assaultrifle.png")
-	shotgun.base_damage = 8.0
-	shotgun.base_fire_rate = 1.0
-	shotgun.base_bullet_count = 6
-	shotgun.base_accuracy = 0.6
-	shotgun.base_bullet_speed = 350.0
-	weapon_storage.add_weapon(shotgun)
+	# Make sure player is in the player group
+	if not player.is_in_group("player"):
+		player.add_to_group("player")
+		print("✓ Added player to 'player' group")
 	
-	print("Added test weapons to storage")
+	# Setup house entrance interaction
+	if house_entrance:
+		print("✓ HouseEntrance found")
+		if not house_entrance.is_in_group("interaction_areas"):
+			house_entrance.add_to_group("interaction_areas")
+		house_entrance.interaction_type = "house"
+		print("  - Interaction type set to: ", house_entrance.interaction_type)
+	else:
+		print("ERROR: HouseEntrance not found!")
+	
+	# Setup inventory UI
+	if inventory_ui:
+		player.inventory_toggle_requested.connect(_on_inventory_toggle_requested)
+		inventory_ui.setup_inventory(player.get_inventory_manager(), camera, player)
+		print("✓ Inventory UI setup complete")
+	else:
+		print("ERROR: InventoryUI not found!")
+	
+	# Restore player state from GameManager
+	await get_tree().process_frame
+	_restore_player_state()
+	
+	print("=== FARM SCENE SETUP COMPLETE ===\n")
+
+func _restore_player_state():
+	"""Restore player state when entering farm"""
+	print("Checking for saved player state...")
+	
+	# Restore inventory
+	if player.has_method("get_inventory_manager"):
+		GameManager.restore_player_inventory(player.get_inventory_manager())
+	
+	# Restore weapons
+	if player.has_method("get_weapon_manager"):
+		GameManager.restore_player_weapons(player.get_weapon_manager())
 
 func _on_inventory_toggle_requested():
-	inventory_ui.toggle_visibility()
+	if inventory_ui:
+		inventory_ui.toggle_visibility()

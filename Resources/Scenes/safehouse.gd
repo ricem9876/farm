@@ -1,12 +1,13 @@
 extends Node2D
 
-@onready var weapon_storage_ui = %WeaponStorageUI  # % finds it anywhere!
+@onready var weapon_storage_ui = %WeaponStorageUI
 @onready var weapon_chest = %WeaponChest
+@onready var farm_exit = $FarmExit
 var player: Node2D
 var weapon_storage: WeaponStorageManager
 
 func _ready():
-	print("=== SAFEHOUSE SETUP START ===")
+	print("\n=== SAFEHOUSE SETUP START ===")
 	
 	# Find player
 	player = get_tree().get_first_node_in_group("player")
@@ -17,7 +18,22 @@ func _ready():
 		print("ERROR: Player not found!")
 		return
 	
-	print("✓ Player found")
+	print("✓ Player found at position: ", player.global_position)
+	
+	# Make sure player is in the player group
+	if not player.is_in_group("player"):
+		player.add_to_group("player")
+		print("✓ Added player to 'player' group")
+	
+	# Setup farm exit interaction
+	if farm_exit:
+		print("✓ FarmExit found")
+		if not farm_exit.is_in_group("interaction_areas"):
+			farm_exit.add_to_group("interaction_areas")
+		farm_exit.interaction_type = "farm_exit"
+		print("  - Interaction type set to: ", farm_exit.interaction_type)
+	else:
+		print("ERROR: FarmExit not found!")
 	
 	# Check if nodes were found
 	if not weapon_storage_ui:
@@ -35,49 +51,33 @@ func _ready():
 	add_child(weapon_storage)
 	print("✓ WeaponStorageManager created")
 	
-	# Setup UI
+	# Setup UI - this will auto-populate with weapons
 	weapon_storage_ui.setup_storage(
 		weapon_storage,
 		player.get_weapon_manager(),
 		player
 	)
-	print("✓ WeaponStorageUI setup complete")
+	print("✓ WeaponStorageUI setup complete (auto-populated with weapons)")
 	
 	# Connect chest
 	weapon_chest.set_storage_ui(weapon_storage_ui)
 	print("✓ WeaponChest connected")
 	
-	# Add test weapons
-	_add_starter_weapons()
+	# Restore player state from GameManager
+	await get_tree().process_frame
+	_restore_player_state()
 	
 	print("=== SAFEHOUSE SETUP COMPLETE ===")
+	print("Storage has ", weapon_storage.get_weapon_count(), " weapons\n")
 
-func _add_starter_weapons():
-	if not weapon_storage:
-		return
+func _restore_player_state():
+	"""Restore player state when entering safehouse"""
+	print("Checking for saved player state...")
 	
-	# Pistol
-	var pistol = WeaponItem.new()
-	pistol.name = "Spare Pistol"
-	pistol.weapon_type = "Pistol"
-	pistol.weapon_scene = preload("res://Resources/Weapon/Gun.tscn")
-	pistol.weapon_sprite = preload("res://Resources/Weapon/assaultrifle.png")
-	pistol.icon = preload("res://Resources/Weapon/assaultrifle.png")
-	pistol.base_damage = 15.0
-	pistol.base_fire_rate = 3.0
-	pistol.base_bullet_count = 1
-	weapon_storage.add_weapon(pistol)
+	# Restore inventory
+	if player.has_method("get_inventory_manager"):
+		GameManager.restore_player_inventory(player.get_inventory_manager())
 	
-	# Shotgun
-	var shotgun = WeaponItem.new()
-	shotgun.name = "Combat Shotgun"
-	shotgun.weapon_type = "Shotgun"
-	shotgun.weapon_scene = preload("res://Resources/Weapon/Gun.tscn")
-	shotgun.weapon_sprite = preload("res://Resources/Weapon/assaultrifle.png")
-	shotgun.icon = preload("res://Resources/Weapon/assaultrifle.png")
-	shotgun.base_damage = 8.0
-	shotgun.base_fire_rate = 1.0
-	shotgun.base_bullet_count = 6
-	weapon_storage.add_weapon(shotgun)
-	
-	print("✓ Added starter weapons")
+	# Restore weapons
+	if player.has_method("get_weapon_manager"):
+		GameManager.restore_player_weapons(player.get_weapon_manager())
