@@ -25,6 +25,11 @@ func _ready():
 	
 	# Apply scale to the entire UI
 	scale = Vector2(UI_SCALE, UI_SCALE)
+		# FIX BLUR - Add these lines!
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	
+	# Apply to scale
+	scale = Vector2(UI_SCALE, UI_SCALE)
 	
 	_setup_styling()
 	

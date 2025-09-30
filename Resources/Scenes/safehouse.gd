@@ -24,6 +24,8 @@ func _ready():
 	if not player.is_in_group("player"):
 		player.add_to_group("player")
 		print("✓ Added player to 'player' group")
+	else:
+		print("✓ Player already in 'player' group")
 	
 	# Setup farm exit interaction
 	if farm_exit:
@@ -67,6 +69,12 @@ func _ready():
 	await get_tree().process_frame
 	_restore_player_state()
 	
+	# Wait another frame for weapons to be restored and instantiated
+	await get_tree().process_frame
+	
+	# NOW disable the gun
+	_disable_gun_in_safehouse()
+	
 	print("=== SAFEHOUSE SETUP COMPLETE ===")
 	print("Storage has ", weapon_storage.get_weapon_count(), " weapons\n")
 
@@ -81,3 +89,37 @@ func _restore_player_state():
 	# Restore weapons
 	if player.has_method("get_weapon_manager"):
 		GameManager.restore_player_weapons(player.get_weapon_manager())
+
+func _disable_gun_in_safehouse():
+	print("\n=== DISABLING GUN IN SAFEHOUSE ===")
+	print("Attempting to disable gun in safehouse...")
+	
+	if not player:
+		print("✗ No player reference")
+		return
+	
+	print("✓ Player exists")
+	
+	var weapon_manager = player.get_weapon_manager()
+	if not weapon_manager:
+		print("✗ No weapon manager")
+		return
+	
+	print("✓ Weapon manager exists")
+	
+	var gun = weapon_manager.get_active_gun()
+	print("Active gun: ", gun)
+	
+	if gun:
+		print("BEFORE - can_fire: ", gun.can_fire, " visible: ", gun.visible, " process_mode: ", gun.process_mode)
+		
+		gun.set_can_fire(false)
+		gun.visible = false
+		gun.process_mode = Node.PROCESS_MODE_DISABLED  # Completely disable processing
+		
+		print("AFTER - can_fire: ", gun.can_fire, " visible: ", gun.visible, " process_mode: ", gun.process_mode)
+		print("✓ Gun disabled, hidden, and processing stopped in safehouse")
+	else:
+		print("✗ No active gun found (this is OK if player has no weapon)")
+	
+	print("===================================\n")

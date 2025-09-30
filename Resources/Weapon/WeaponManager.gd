@@ -47,6 +47,19 @@ func equip_weapon(weapon_item: WeaponItem, slot: int = 0) -> bool:
 	gun.base_accuracy = weapon_item.base_accuracy
 	gun.base_bullet_count = weapon_item.base_bullet_count
 	gun.gun_tier = weapon_item.weapon_tier
+	gun.gun_name = weapon_item.name
+	
+	# IMPORTANT: Set the gun sprite from the weapon item!
+	if gun.gun_sprite and weapon_item.weapon_sprite:
+		gun.gun_sprite.texture = weapon_item.weapon_sprite
+		print("✓ Set gun sprite to: ", weapon_item.weapon_sprite.resource_path)
+	else:
+		print("✗ Warning: Could not set gun sprite!")
+		if not gun.gun_sprite:
+			print("  - gun_sprite is null")
+		if not weapon_item.weapon_sprite:
+			print("  - weapon_item.weapon_sprite is null")
+	
 	gun._initialize_stats()
 	gun._setup_gun_appearance()
 	
@@ -113,7 +126,7 @@ func switch_weapon():
 		new_gun.visible = true
 		new_gun.process_mode = Node.PROCESS_MODE_INHERIT
 		weapon_switched.emit(active_slot, new_gun)
-		print("Switched to ", "primary" if active_slot == 0 else "secondary", " weapon")
+		print("Switched to ", "primary" if active_slot == 0 else "secondary", " weapon: ", new_weapon.name)
 
 func get_active_gun() -> Gun:
 	return primary_gun if active_slot == 0 else secondary_gun

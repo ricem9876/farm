@@ -18,14 +18,35 @@ func _ready():
 	if not player.is_in_group("player"):
 		player.add_to_group("player")
 		print("✓ Added player to 'player' group")
+	else:
+		print("✓ Player already in 'player' group")
 	
 	# Setup house entrance interaction
 	if house_entrance:
-		print("✓ HouseEntrance found")
+		print("✓ HouseEntrance found at position: ", house_entrance.global_position)
+		
+		# Debug collision shape
+		var collision_shape = house_entrance.get_node_or_null("CollisionShape2D")
+		if collision_shape:
+			print("  ✓ CollisionShape2D found")
+			print("    - Shape: ", collision_shape.shape)
+			print("    - Position: ", collision_shape.position)
+		else:
+			print("  ✗ ERROR: CollisionShape2D not found!")
+		
+		# Setup the interaction
 		if not house_entrance.is_in_group("interaction_areas"):
 			house_entrance.add_to_group("interaction_areas")
-		house_entrance.interaction_type = "house"
-		print("  - Interaction type set to: ", house_entrance.interaction_type)
+		
+		# Make sure it's an InteractionArea
+		if house_entrance is InteractionArea:
+			house_entrance.interaction_type = "house"
+			house_entrance.show_prompt = true
+			print("  ✓ Set interaction type to: ", house_entrance.interaction_type)
+			print("  ✓ HouseEntrance is InteractionArea type")
+		else:
+			print("  ✗ ERROR: HouseEntrance is not InteractionArea type!")
+			print("    Current script: ", house_entrance.get_script())
 	else:
 		print("ERROR: HouseEntrance not found!")
 	
@@ -41,7 +62,14 @@ func _ready():
 	await get_tree().process_frame
 	_restore_player_state()
 	
+	# Wait another frame for weapons to be restored and instantiated
+	await get_tree().process_frame
+	
+	# NOW enable the gun
+	_enable_gun_on_farm()
+	
 	print("=== FARM SCENE SETUP COMPLETE ===\n")
+	print("Walk to the house and watch for debug messages!")
 
 func _restore_player_state():
 	"""Restore player state when entering farm"""
@@ -55,6 +83,33 @@ func _restore_player_state():
 	if player.has_method("get_weapon_manager"):
 		GameManager.restore_player_weapons(player.get_weapon_manager())
 
+func _enable_gun_on_farm():
+	print("Attempting to enable gun on farm...")
+	
+	if not player:
+		print("✗ No player reference")
+		return
+	
+	var weapon_manager = player.get_weapon_manager()
+	if not weapon_manager:
+		print("✗ No weapon manager")
+		return
+	
+	var gun = weapon_manager.get_active_gun()
+	if gun:
+		gun.set_can_fire(true)
+		gun.visible = true
+		gun.process_mode = Node.PROCESS_MODE_INHERIT  # Re-enable processing
+		print("✓ Gun enabled, visible, and processing resumed on farm")
+	else:
+		print("✗ No active gun found (this is OK if player has no weapon)")
+
 func _on_inventory_toggle_requested():
 	if inventory_ui:
 		inventory_ui.toggle_visibility()
+
+# Debug function - call this to test scene switching manually
+func _input(event):
+	if event.is_action_pressed("ui_accept"):  # Space bar
+		print("Manual scene switch test - changing to safehouse...")
+		GameManager.change_to_safehouse()

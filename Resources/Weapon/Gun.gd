@@ -34,11 +34,22 @@ var player: Node2D
 var fire_timer: float = 0.0
 var is_firing: bool = false
 var spread_pattern: Array[float] = []
+var can_fire: bool = true  # NEW: Control whether gun can fire
 
 func _ready():
 	_initialize_stats()
 	_setup_gun_appearance()
 	_calculate_spread_pattern()
+	
+	# DEBUG: Print sprite info
+	if gun_sprite:
+		print("\n=== GUN SPRITE DEBUG ===")
+		print("Sprite scale: ", gun_sprite.scale)
+		print("Sprite texture: ", gun_sprite.texture)
+		if gun_sprite.texture:
+			print("Texture size: ", gun_sprite.texture.get_size())
+		print("Sprite position: ", gun_sprite.position)
+		print("========================\n")
 
 func _initialize_stats():
 	current_damage = base_damage
@@ -50,6 +61,22 @@ func _initialize_stats():
 func _setup_gun_appearance():
 	if not gun_sprite:
 		return
+	
+	# Reset scale first
+	gun_sprite.scale = Vector2(1.0, 1.0)
+	
+	# Check if texture exists and get its actual dimensions
+	if gun_sprite.texture:
+		var texture_size = gun_sprite.texture.get_size()
+		print("Original texture dimensions: ", texture_size)
+		
+		# Calculate scale to fit desired size (e.g., 20 pixels wide)
+		var desired_width = 20.0
+		var scale_factor = desired_width / texture_size.x
+		
+		# Apply UNIFORM scale
+		gun_sprite.scale = Vector2(scale_factor, scale_factor)
+		print("Applied uniform scale: ", gun_sprite.scale)
 		
 	match gun_tier:
 		1:
@@ -70,6 +97,13 @@ func _setup_gun_appearance():
 
 func setup_with_player(player_node: Node2D):
 	player = player_node
+
+# NEW: Method to enable/disable firing
+func set_can_fire(enabled: bool):
+	can_fire = enabled
+	print("Gun can_fire set to: ", can_fire)
+	if not can_fire:
+		stop_firing()
 	
 func _process(delta):
 	if player:
@@ -89,10 +123,15 @@ func _aim_at_mouse():
 	rotation = direction_to_mouse.angle()
 	
 	if gun_sprite:
+		# Store the original scale magnitude
+		var scale_magnitude = abs(gun_sprite.scale.x)
+		
 		if direction_to_mouse.x < 0:
-			gun_sprite.scale.y = -1
+			# Flip vertically when aiming left
+			gun_sprite.scale = Vector2(scale_magnitude, -scale_magnitude)
 		else:
-			gun_sprite.scale.y = 1
+			# Normal orientation when aiming right
+			gun_sprite.scale = Vector2(scale_magnitude, scale_magnitude)
 		
 			
 func _handle_firing(delta):
@@ -104,12 +143,21 @@ func _handle_firing(delta):
 		fire_timer = 1.0 / current_fire_rate
 
 func start_firing():
+	if not can_fire:  # Don't start firing if disabled
+		return
 	is_firing = true
 
 func stop_firing():
 	is_firing = false
 
 func fire():
+	# NEW: Check if gun can fire
+	if not can_fire:
+		print("Gun.fire() called but can_fire is FALSE - blocked!")
+		return
+	
+	print("Gun.fire() - FIRING BULLET")
+		
 	if not muzzle_point:
 		return
 		

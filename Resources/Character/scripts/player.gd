@@ -26,10 +26,9 @@ func _ready():
 	# Give player a starting weapon
 	_give_starting_weapon()
 	
-	add_to_group("player")  # ADD THIS LINE!
+	add_to_group("player")
 	
 	print("Player ready - setting up managers...")
-	# ... rest of your _ready code
 
 func _give_starting_weapon():
 	# Create a basic weapon item
@@ -56,11 +55,23 @@ func _input(event):
 	if event.is_action_pressed("switch_weapon"):
 		weapon_manager.switch_weapon()
 	
-	# Firing - let the active gun handle this
+	# FIXED: Check if gun can fire before handling fire input
 	if event.is_action_pressed("fire"):
+		print("=== FIRE INPUT DETECTED ===")
 		var active_gun = weapon_manager.get_active_gun()
+		print("Active gun exists: ", active_gun != null)
 		if active_gun:
+			print("Gun can_fire: ", active_gun.can_fire)
+			print("Gun visible: ", active_gun.visible)
+			print("Gun process_mode: ", active_gun.process_mode)
+		
+		if active_gun and active_gun.can_fire:  # Added can_fire check
+			print("✓ Starting to fire")
 			active_gun.start_firing()
+		else:
+			print("✗ Cannot fire - gun disabled")
+		print("===========================")
+		
 	elif event.is_action_released("fire"):
 		var active_gun = weapon_manager.get_active_gun()
 		if active_gun:
