@@ -14,9 +14,13 @@ var weapon_manager: WeaponManager
 var player: Node2D
 
 # Positioning
-var offset_from_player_bottom: float = -80.0  # Distance below player
+var offset_from_player_bottom: float = -130.0  # Distance below player
 
 func _ready():
+	scale = Vector2(2, 2)
+	anchors_preset = Control.PRESET_CENTER_BOTTOM
+	offset_top = -175
+	offset_bottom = -100
 	_setup_styling()
 
 func setup_hud(manager: WeaponManager, player_node: Node2D):
@@ -58,12 +62,9 @@ func setup_hud(manager: WeaponManager, player_node: Node2D):
 	
 	# Initial update
 	_update_display()
-func _process(delta):
-	if player:
-		# Position relative to player at bottom center
-		global_position.x = player.global_position.x - (size.x / 2.0)
-		global_position.y = player.global_position.y + offset_from_player_bottom
 
+
+	
 func _setup_styling():
 	var pixel_font = preload("res://Resources/Fonts/yoster.ttf")
 	

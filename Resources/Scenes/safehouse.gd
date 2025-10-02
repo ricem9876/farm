@@ -2,7 +2,7 @@ extends Node2D
 
 @onready var weapon_storage_ui = %WeaponStorageUI
 @onready var weapon_chest = %WeaponChest
-@onready var weapon_hud = $WeaponHUD
+@onready var weapon_hud = $CanvasLayer/WeaponHUD
 @onready var farm_exit = $FarmExit
 
 var player: Node2D

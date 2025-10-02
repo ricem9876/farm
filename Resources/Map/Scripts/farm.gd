@@ -1,7 +1,7 @@
 extends Node2D
 
 @onready var inventory_ui = $InventoryUI
-@onready var weapon_hud = $WeaponHUD
+@onready var weapon_hud = $CanvasLayer/WeaponHUD
 @onready var player = $player
 @onready var camera = $player/Camera2D
 @onready var house_entrance = $HouseEntrance
