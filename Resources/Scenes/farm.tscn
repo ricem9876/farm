@@ -1,11 +1,10 @@
-[gd_scene load_steps=10 format=4 uid="uid://deuvom31p4gsp"]
+[gd_scene load_steps=9 format=4 uid="uid://deuvom31p4gsp"]
 
 [ext_resource type="Script" uid="uid://bg7ucnibks8si" path="res://Resources/Map/Scripts/farm.gd" id="1_3hmok"]
 [ext_resource type="PackedScene" uid="uid://rhebvs8qauqd" path="res://Resources/Character/player.tscn" id="2_t138i"]
 [ext_resource type="TileSet" uid="uid://ctssncl0yvlwb" path="res://Resources/Map/Tilesets/SpringPack/spring.tres" id="3_6x1uo"]
 [ext_resource type="PackedScene" uid="uid://hx7ftx7y1syw" path="res://Resources/Inventory/InventoryUI.tscn" id="5_okop5"]
 [ext_resource type="PackedScene" uid="uid://cr7kuseg2ufuo" path="res://Resources/Enemies/Mushroom/MushroomSpawner.tscn" id="6_4njsf"]
-[ext_resource type="PackedScene" uid="uid://bku3wgg175nyp" path="res://Resources/Enemies/Mushroom/Mushroom.tscn" id="7_6pba5"]
 [ext_resource type="PackedScene" uid="uid://2w4m3qvk8tpe" path="res://Resources/Weapon/WeaponHUD.tscn" id="8_6x1uo"]
 [ext_resource type="Script" uid="uid://bssm3c8mgjfq1" path="res://Resources/Scenes/houseentrance.gd" id="8_t138i"]
 
@@ -50,7 +49,6 @@ tile_set = ExtResource("3_6x1uo")
 
 [node name="MushroomSpawner" parent="." instance=ExtResource("6_4njsf")]
 position = Vector2(467, 320)
-mushroom_scene = ExtResource("7_6pba5")
 
 [node name="WeaponHUD" parent="." instance=ExtResource("8_6x1uo")]
 offset_left = 539.0

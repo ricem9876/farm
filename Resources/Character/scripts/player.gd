@@ -1,141 +1,285 @@
 extends CharacterBody2D
-class_name player
 
 signal inventory_toggle_requested
 
-@export var max_health: float = 100.0
-var current_health: float
+# Movement and Physics
+@export var base_speed: float = 100.0
+
+# Health System
+var current_health: float = 100.0
+var max_health: float = 100.0
+
+# Level System
+var level_system: PlayerLevelSystem
+var skill_tree_ui  # Will be set if SkillTreeUI exists
+
+# Managers
 var inventory_manager: InventoryManager
 var weapon_manager: WeaponManager
 
+# State Machine Reference
+@onready var state_machine = $StateMachine
+
 func _ready():
-	# Setup inventory manager
-	inventory_manager = InventoryManager.new()
-	add_child(inventory_manager)
+	# Create and setup level system
+	_setup_level_system()
 	
-	# Setup weapon manager
-	weapon_manager = WeaponManager.new()
-	add_child(weapon_manager)
+	# Create and setup weapon manager
+	_setup_weapon_manager()
 	
-	# Connect weapon signals
-	weapon_manager.weapon_switched.connect(_on_weapon_switched)
-	weapon_manager.weapon_equipped.connect(_on_weapon_equipped)
+	# Create and setup inventory manager
+	_setup_inventory_manager()
 	
+	# Setup skill tree UI if it exists
+	_setup_skill_tree_ui()
+	
+	# Initialize health from level system
+	max_health = level_system.max_health
 	current_health = max_health
 	
-	# Give player a starting weapon
-	_give_starting_weapon()
+	# Defer weapon equipping until next frame (after parent is fully ready)
+	call_deferred("_equip_starting_weapon")
 	
-	add_to_group("player")
-	
-	print("Player ready - setting up managers...")
+	print("Player initialized - Level: ", level_system.current_level, " | Health: ", current_health, "/", max_health)
 
-func _give_starting_weapon():
-	# Create a basic weapon item
-	var starter_weapon = WeaponItem.new()
-	starter_weapon.name = "Starter Pistol"
-	starter_weapon.description = "A basic pistol for beginners"
-	starter_weapon.weapon_scene = preload("res://Resources/Weapon/Gun.tscn")
-	starter_weapon.icon = preload("res://Resources/Weapon/assaultrifle.png")
-	starter_weapon.weapon_tier = 1
-	starter_weapon.base_damage = 10.0
-	starter_weapon.base_fire_rate = 2.0
-	starter_weapon.base_bullet_speed = 400.0
-	starter_weapon.base_accuracy = 1.0
-	starter_weapon.base_bullet_count = 1
+func _setup_level_system():
+	# Create the level system
+	level_system = PlayerLevelSystem.new()
+	add_child(level_system)
 	
-	# Equip to primary slot
-	weapon_manager.equip_weapon(starter_weapon, 0)
+	# Connect to level system signals
+	level_system.level_up.connect(_on_player_level_up)
+	level_system.skill_point_spent.connect(_on_skill_point_spent)
+	level_system.experience_gained.connect(_on_experience_gained)
 	
-func _input(event):
-	if event.is_action_pressed("toggle_inventory"):
-		print(">>> PLAYER DETECTED TAB/SHIFT PRESS <<<")
-		print("Emitting inventory_toggle_requested signal...")
-		inventory_toggle_requested.emit()
-		print("Signal emitted!")
-	
-	# Direct weapon slot selection with 1 and 2
-	if event.is_action_pressed("weapon_slot_1"):
-		if weapon_manager.has_weapon_in_slot(0):
-			weapon_manager.active_slot = 0
-			weapon_manager.switch_weapon()
-			print("Switched to weapon slot 1 (Primary)")
-	
-	if event.is_action_pressed("weapon_slot_2"):
-		if weapon_manager.has_weapon_in_slot(1):
-			weapon_manager.active_slot = 1
-			weapon_manager.switch_weapon()
-			print("Switched to weapon slot 2 (Secondary)")
-	
-	# Weapon switching with Q
-	if event.is_action_pressed("switch_weapon"):
-		weapon_manager.switch_weapon()
-	
-	# FIXED: Check if gun can fire before handling fire input
-	if event.is_action_pressed("fire"):
-		var active_gun = weapon_manager.get_active_gun()
-		
-		if active_gun and active_gun.can_fire:
-			active_gun.start_firing()
-		
-	elif event.is_action_released("fire"):
-		var active_gun = weapon_manager.get_active_gun()
-		if active_gun:
-			active_gun.stop_firing()
+	print("✓ Level system created")
 
+func _setup_weapon_manager():
+	# Create the weapon manager
+	weapon_manager = WeaponManager.new()
+	add_child(weapon_manager)
+	print("✓ WeaponManager created")
+
+func _setup_inventory_manager():
+	# Create the inventory manager
+	inventory_manager = InventoryManager.new()
+	inventory_manager.max_slots = 8
+	add_child(inventory_manager)
+	print("✓ InventoryManager created")
+
+func _setup_skill_tree_ui():
+	# Try to find SkillTreeUI node
+	if has_node("SkillTreeUI"):
+		skill_tree_ui = get_node("SkillTreeUI")
+		
+		# Setup the UI with the level system
+		if skill_tree_ui.has_method("setup"):
+			skill_tree_ui.setup(level_system)
+			
+			# Make sure it starts HIDDEN
+			skill_tree_ui.visible = false
+			skill_tree_ui.hide()
+			
+			# Connect signals if they exist
+			if skill_tree_ui.has_signal("skill_tree_closed"):
+				skill_tree_ui.skill_tree_closed.connect(_on_skill_tree_closed)
+			
+			print("✓ Skill tree UI connected and hidden")
+		else:
+			print("⚠ Warning: SkillTreeUI exists but missing setup() method")
+			print("  Make sure SkillTreeUI.gd script is attached")
+	else:
+		print("ℹ SkillTreeUI not found - you can add it later")
+
+func _equip_starting_weapon():
+	print("\n=== EQUIPPING STARTING WEAPON ===")
+	
+	if not weapon_manager:
+		print("✗ Cannot equip starting weapon - no weapon manager")
+		return
+	
+	var starting_weapon = WeaponFactory.create_pistol()
+	print("Created starting weapon: ", starting_weapon.name)
+	
+	if weapon_manager.equip_weapon(starting_weapon, 0):
+		print("✓ Equipped starting weapon")
+		# Don't enable the gun here - let the location state handle it
+	else:
+		print("✗ Failed to equip")
+	
+	print("=================================\n")
+
+func _physics_process(delta):
+	# Movement is handled by state machine
+	move_and_slide()
+
+# Called by MushroomSpawner when enemies die
+func gain_experience(amount: int):
+	if level_system:
+		level_system.gain_experience(amount)
+
+# Get current movement speed (for use by state machine)
+func get_movement_speed() -> float:
+	if level_system:
+		return level_system.move_speed
+	return base_speed
+
+# Take damage from enemies
 func take_damage(damage: float):
 	current_health -= damage
+	current_health = max(0, current_health)
+	
+	print("Player took ", damage, " damage! Health: ", current_health, "/", max_health)
 	
 	if current_health <= 0:
-		_player_died()
+		_die()
 
-func _player_died():
-	# TODO: Game over logic
-	pass
+func heal(amount: float):
+	current_health += amount
+	current_health = min(current_health, max_health)
+	print("Player healed ", amount, "! Health: ", current_health, "/", max_health)
 
-func _on_weapon_switched(slot: int, weapon: Gun):
-	pass
+func _die():
+	print("Player died!")
+	# TODO: Add death logic (game over screen, respawn, etc.)
+	# For now, just respawn at full health
+	current_health = max_health
+	global_position = Vector2.ZERO
 
-func _on_weapon_equipped(slot: int, weapon_item: WeaponItem):
-	pass
-
-func gain_experience(points: int):
-	# Give experience to active gun
-	var active_gun = weapon_manager.get_active_gun()
-	if active_gun:
-		active_gun.add_evolution_points(points)
+# Collect item pickups
+func collect_item(item_name: String):
+	if not inventory_manager:
+		print("Cannot collect item - no inventory manager")
+		return
 	
-func _on_enemy_died():
-	gain_experience(10)
+	# Create item resource based on item_name
+	var item = _create_item_from_name(item_name)
+	if item:
+		if inventory_manager.add_item(item, 1):
+			print("✓ Collected: ", item.name)
+		else:
+			print("✗ Inventory full! Couldn't collect: ", item.name)
+
+func _create_item_from_name(item_name: String) -> Item:
+	var item = Item.new()
+	match item_name:
+		"mushroom":
+			item.name = "Mushroom"
+			item.description = "A tasty mushroom dropped by an enemy"
+			item.stack_size = 99
+			item.item_type = "consumable"
+			item.icon = preload("res://Resources/Inventory/Sprites/mushroom.png")
+		_:
+			print("Unknown item: ", item_name)
+			return null
+	return item
+
+# === MANAGER GETTERS ===
 
 func get_inventory_manager() -> InventoryManager:
 	return inventory_manager
 
 func get_weapon_manager() -> WeaponManager:
 	return weapon_manager
+
+# === LEVEL SYSTEM CALLBACKS ===
+
+func _on_player_level_up(new_level: int, skill_points_gained: int):
+	print("\n*** LEVEL UP! ***")
+	print("Now Level: ", new_level)
+	print("Skill Points Gained: ", skill_points_gained)
+	print("Total Skill Points: ", level_system.skill_points)
 	
-func collect_item(item_name: String):
-	if not inventory_manager:
+	# Heal to full on level up (optional)
+	current_health = max_health
+	print("Restored to full health!")
+
+func _on_experience_gained(amount: int, total: int):
+	# Optional: Show XP gain notification
+	pass
+
+func _on_skill_point_spent(stat_name: String, new_value: float):
+	match stat_name:
+		"health":
+			var old_max = max_health
+			max_health = level_system.max_health
+			
+			# Increase current health proportionally
+			var health_increase = max_health - old_max
+			current_health += health_increase
+			current_health = min(current_health, max_health)
+			
+			print("Max Health: ", old_max, " -> ", max_health, " (+", health_increase, ")")
+		
+		"speed":
+			print("Movement Speed: ", level_system.move_speed)
+		
+		"damage":
+			print("Damage Multiplier: x", level_system.damage_multiplier)
+		
+		"fire_rate":
+			print("Fire Rate Multiplier: x", level_system.fire_rate_multiplier)
+		
+		"reload":
+			print("Reload Speed Multiplier: x", level_system.reload_speed_multiplier)
+		
+		"crit_chance":
+			print("Critical Chance: ", level_system.critical_chance * 100, "%")
+		
+		"crit_damage":
+			print("Critical Damage: x", level_system.critical_damage)
+
+func _on_skill_tree_closed():
+	print("Skill tree closed - resuming game")
+
+# === INPUT HANDLING ===
+
+func _input(event):
+	# Don't process input if skill tree is open
+	if skill_tree_ui and skill_tree_ui.visible:
 		return
 	
-	# Handle different item types
-	match item_name:
-		"mushroom":
-			var mushroom_item = Item.new()
-			mushroom_item.name = "Mushroom"
-			mushroom_item.description = "A tasty mushroom"
-			mushroom_item.stack_size = 99
-			mushroom_item.item_type = "consumable"
-			mushroom_item.icon = preload("res://Resources/Inventory/Sprites/mushroom.png")
-			
-			inventory_manager.add_item(mushroom_item, 1)
+	# Toggle inventory
+	if event.is_action_pressed("toggle_inventory"):
+		inventory_toggle_requested.emit()
+		print(">>> Player emitted inventory_toggle_requested <<<")
+	
+	# Open skill tree with Page Up key
+	if event.is_action_pressed("ui_page_up"):
+		if skill_tree_ui and skill_tree_ui.has_method("open"):
+			if not skill_tree_ui.visible:
+				skill_tree_ui.open()
+	
+	# Weapon switching with 1, 2, and Q keys
+	if weapon_manager:
+		if event.is_action_pressed("ui_focus_next"):  # Tab key - switch weapons
+			weapon_manager.switch_weapon()
 		
-		"health_potion":
-			if current_health < max_health:
-				current_health = min(max_health, current_health + 25)
-		
-		"coin":
-			pass
-		
-		_:
-			pass
+		# Number keys for direct slot selection
+		if event is InputEventKey and event.pressed:
+			if event.keycode == KEY_1:
+				_switch_to_slot(0)
+			elif event.keycode == KEY_2:
+				_switch_to_slot(1)
+			elif event.keycode == KEY_Q:
+				weapon_manager.switch_weapon()
+
+func _switch_to_slot(slot: int):
+	if not weapon_manager:
+		return
+	
+	# Only switch if we have a weapon in that slot and it's not already active
+	if weapon_manager.has_weapon_in_slot(slot) and weapon_manager.active_slot != slot:
+		weapon_manager.switch_weapon()
+		print("Switched to weapon slot ", slot)
+	elif not weapon_manager.has_weapon_in_slot(slot):
+		print("No weapon in slot ", slot)
+
+func debug_add_xp(amount: int = 100):
+	gain_experience(amount)
+	print("DEBUG: Added ", amount, " XP")
+
+func debug_level_up():
+	if level_system:
+		level_system.gain_experience(level_system.experience_to_next_level)
+	print("DEBUG: Forced level up")

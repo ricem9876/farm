@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3 uid="uid://rhebvs8qauqd"]
+[gd_scene load_steps=17 format=3 uid="uid://rhebvs8qauqd"]
 
 [ext_resource type="Script" uid="uid://banmwipl3lkhs" path="res://Resources/Character/scripts/player.gd" id="1_13ehe"]
 [ext_resource type="Texture2D" uid="uid://cr0eib1t3nahd" path="res://Resources/Character/mainIdle.png" id="1_tcqxc"]
@@ -8,11 +8,6 @@
 [ext_resource type="Script" uid="uid://c67pwxwqadr05" path="res://Resources/Character/WalkState.gd" id="6_68bqj"]
 [ext_resource type="Script" uid="uid://k6jhlmnnrght" path="res://Resources/Character/SafehouseState.gd" id="7_3s00l"]
 [ext_resource type="PackedScene" uid="uid://b177nb8mlgy48" path="res://Resources/UI/SkillTreeUI.tscn" id="8_y50du"]
-[ext_resource type="Script" uid="uid://d0vhxi84sxuru" path="res://Resources/Character/scripts/PlayerLevelSystem.gd" id="9_t70h1"]
-[ext_resource type="Script" uid="uid://drkudqkqwwiig" path="res://Resources/UI/SkillTreeUI.gd" id="9_yhu08"]
-[ext_resource type="Script" uid="uid://bvet17hw2cfue" path="res://Resources/Weapon/WeaponManager.gd" id="11_j5vo7"]
-[ext_resource type="Script" uid="uid://dj5r5ky5jg58q" path="res://Resources/Character/scripts/State/LocationStateMachine.gd" id="12_25ma8"]
-[ext_resource type="Script" uid="uid://bt3u4ciyln77x" path="res://Resources/Character/FarmState.gd" id="13_paeun"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qawys"]
 size = Vector2(13.5, 21.5)
@@ -302,6 +297,7 @@ _data = {
 
 [node name="player" type="CharacterBody2D"]
 script = ExtResource("1_13ehe")
+max_health = null
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_qawys")
@@ -330,19 +326,4 @@ script = ExtResource("6_68bqj")
 script = ExtResource("7_3s00l")
 
 [node name="SkillTreeUI" parent="." instance=ExtResource("8_y50du")]
-script = ExtResource("9_yhu08")
-
-[node name="PlayerLevelSystem" type="Node" parent="."]
-script = ExtResource("9_t70h1")
-
-[node name="WeaponManager" type="Node" parent="."]
-script = ExtResource("11_j5vo7")
-
-[node name="LocationStateMachine" type="Node" parent="."]
-script = ExtResource("12_25ma8")
-
-[node name="FarmState" type="Node" parent="LocationStateMachine"]
-script = ExtResource("13_paeun")
-
-[node name="SafehouseState" type="Node" parent="LocationStateMachine"]
-script = ExtResource("7_3s00l")
+layer = 128

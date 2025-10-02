@@ -1,7 +1,6 @@
 extends Node2D
 class_name Gun
 
-signal gun_evolved(new_tier: int)
 signal stat_changed(stat_name: String, old_value: float, new_value: float)
 
 # Gun Stats
@@ -17,13 +16,6 @@ var current_bullet_speed: float
 var current_accuracy: float
 var current_bullet_count: int
 
-# Gun Properties
-@export var gun_name: String = "Basic Blaster"
-@export var gun_tier: int = 1
-@export var max_tier: int = 5
-@export var evolution_points: int = 0
-@export var points_needed_for_next_tier: int = 100
-
 # References
 @onready var muzzle_point = $MuzzlePoint
 @onready var gun_sprite = $GunSprite
@@ -34,7 +26,7 @@ var player: Node2D
 var fire_timer: float = 0.0
 var is_firing: bool = false
 var spread_pattern: Array[float] = []
-var can_fire: bool = true  # NEW: Control whether gun can fire
+var can_fire: bool = true
 
 func _ready():
 	_initialize_stats()
@@ -77,28 +69,10 @@ func _setup_gun_appearance():
 		# Apply UNIFORM scale
 		gun_sprite.scale = Vector2(scale_factor, scale_factor)
 		print("Applied uniform scale: ", gun_sprite.scale)
-		
-	match gun_tier:
-		1:
-			gun_sprite.modulate = Color.WHITE
-			gun_name = "Starter Pistol"
-		2:
-			gun_sprite.modulate = Color.CYAN
-			gun_name = "Rapid Blaster"
-		3:
-			gun_sprite.modulate = Color.GREEN
-			gun_name = "Multi-shot Cannon"
-		4:
-			gun_sprite.modulate = Color.ORANGE
-			gun_name = "Plasma Destroyer"
-		5:
-			gun_sprite.modulate = Color.PURPLE
-			gun_name = "Reality Ripper"
 
 func setup_with_player(player_node: Node2D):
 	player = player_node
 
-# NEW: Method to enable/disable firing
 func set_can_fire(enabled: bool):
 	can_fire = enabled
 	print("Gun can_fire set to: ", can_fire)
@@ -107,14 +81,15 @@ func set_can_fire(enabled: bool):
 	
 func _process(delta):
 	if player:
-		_follow_player()
 		_aim_at_mouse()
-		
-	_handle_firing(delta)
 	
-func _follow_player():
-	if player:
-		global_position = player.global_position
+	# DEBUG: Check firing state
+	if visible and can_fire:
+		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+			if not is_firing:
+				print(">>> MOUSE HELD BUT NOT FIRING <<<")
+	
+	_handle_firing(delta)
 
 func _aim_at_mouse():
 	var mouse_pos = get_global_mouse_position()
@@ -133,33 +108,81 @@ func _aim_at_mouse():
 			# Normal orientation when aiming right
 			gun_sprite.scale = Vector2(scale_magnitude, scale_magnitude)
 		
-			
 func _handle_firing(delta):
 	if fire_timer > 0:
 		fire_timer -= delta
+	
+	# Get player's fire rate multiplier for timer calculation
+	var fire_rate_multiplier = 1.0
+	if player and player.has_node("PlayerLevelSystem"):
+		var player_level_system = player.get_node("PlayerLevelSystem")
+		fire_rate_multiplier = player_level_system.fire_rate_multiplier
+	
+	# Apply fire rate multiplier to the timer
+	var modified_fire_rate = current_fire_rate * fire_rate_multiplier
 		
 	if is_firing and fire_timer <= 0:
 		fire()
-		fire_timer = 1.0 / current_fire_rate
+		fire_timer = 1.0 / modified_fire_rate
+
+func _input(event):
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			print("Gun received mouse button event: ", "pressed" if event.pressed else "released")
+			if event.pressed:
+				start_firing()
+			else:
+				stop_firing()
 
 func start_firing():
-	if not can_fire:  # Don't start firing if disabled
+	print("=== start_firing() called ===")
+	print("  can_fire: ", can_fire)
+	
+	if not can_fire:
+		print("  BLOCKED: can_fire is false")
 		return
+	
 	is_firing = true
+	print("  SUCCESS: is_firing set to true")
 
 func stop_firing():
 	is_firing = false
 
 func fire():
-	# NEW: Check if gun can fire
-	if not can_fire:
-		print("Gun.fire() called but can_fire is FALSE - blocked!")
-		return
+	print("=== fire() called ===")
+	print("  can_fire: ", can_fire)
+	print("  muzzle_point: ", muzzle_point)
 	
-	print("Gun.fire() - FIRING BULLET")
+	if not can_fire:
+		print("  BLOCKED: can_fire is false")
+		return
 		
 	if not muzzle_point:
+		print("  BLOCKED: no muzzle_point")
 		return
+	
+	print("  >>> FIRING BULLET <<<")
+	# Get player's level system for stat multipliers
+	var damage_multiplier = 1.0
+	var crit_chance = 0.0
+	var crit_damage = 1.5
+	
+	if player and player.has_node("PlayerLevelSystem"):
+		var player_level_system = player.get_node("PlayerLevelSystem")
+		damage_multiplier = player_level_system.damage_multiplier
+		crit_chance = player_level_system.critical_chance
+		crit_damage = player_level_system.critical_damage
+	
+	# Apply damage multiplier to base damage
+	var final_damage = current_damage * damage_multiplier
+	
+	# Check for critical hit
+	var is_critical = randf() < crit_chance
+	if is_critical:
+		final_damage *= crit_damage
+		print("💥 CRITICAL HIT! Damage: ", final_damage)
+	
+	print("Gun.fire() - FIRING BULLET | Damage: ", final_damage)
 		
 	_calculate_spread_pattern()
 	
@@ -177,7 +200,8 @@ func fire():
 			
 		var final_direction = base_direction.rotated(spread_angle)
 		
-		bullet.setup(current_damage, current_bullet_speed, final_direction)
+		# Use final_damage which includes player multipliers and crit
+		bullet.setup(final_damage, current_bullet_speed, final_direction)
 
 func _calculate_spread_pattern():
 	spread_pattern.clear()
@@ -189,37 +213,6 @@ func _calculate_spread_pattern():
 		for i in range(current_bullet_count):
 			var spread_ratio = float(i - (current_bullet_count - 1) / 2.0) / max(1, (current_bullet_count - 1) / 2.0)
 			spread_pattern.append(spread_ratio * max_spread)
-			
-func add_evolution_points(points: int):
-	evolution_points += points
-	_check_for_evolution()
-
-func _check_for_evolution():
-	while evolution_points >= points_needed_for_next_tier and gun_tier < max_tier:
-		evolution_points -= points_needed_for_next_tier
-		gun_tier += 1
-		points_needed_for_next_tier = int(points_needed_for_next_tier * 1.5)
-		_evolve_gun()
-		gun_evolved.emit(gun_tier)
-		
-func _evolve_gun():
-	match gun_tier:
-		2:
-			_upgrade_stat("fire_rate", current_fire_rate * 1.5)
-			_upgrade_stat("damage", current_damage * 1.2)
-		3:
-			_upgrade_stat("bullet_count", current_bullet_count + 1)
-			_upgrade_stat("accuracy", current_accuracy * 1.1)
-		4:
-			_upgrade_stat("damage", current_damage * 1.8)
-			_upgrade_stat("bullet_speed", current_bullet_speed * 1.3)
-		5:
-			_upgrade_stat("bullet_count", current_bullet_count + 2)
-			_upgrade_stat("fire_rate", current_fire_rate * 2.0)
-			_upgrade_stat("damage", current_damage * 2.5)
-			
-	_setup_gun_appearance()
-	print("Gun evolved to tier ", gun_tier, ": ", gun_name)
 
 func _upgrade_stat(stat_name: String, new_value: float):
 	var old_value: float
@@ -245,13 +238,23 @@ func _upgrade_stat(stat_name: String, new_value: float):
 	
 func get_gun_info() -> Dictionary:
 	var gun_info = {}
-	gun_info.name = gun_name
-	gun_info.tier = gun_tier
 	gun_info.damage = current_damage
 	gun_info.fire_rate = current_fire_rate
 	gun_info.bullet_speed = current_bullet_speed
 	gun_info.accuracy = current_accuracy
 	gun_info.bullet_count = current_bullet_count
-	gun_info.evolution_points = evolution_points
-	gun_info.points_to_next_tier = points_needed_for_next_tier
+	
+	# Include player multipliers if available
+	if player and player.has_node("PlayerLevelSystem"):
+		var player_level_system = player.get_node("PlayerLevelSystem")
+		gun_info.effective_damage = current_damage * player_level_system.damage_multiplier
+		gun_info.effective_fire_rate = current_fire_rate * player_level_system.fire_rate_multiplier
+		gun_info.crit_chance = player_level_system.critical_chance
+		gun_info.crit_damage = player_level_system.critical_damage
+	else:
+		gun_info.effective_damage = current_damage
+		gun_info.effective_fire_rate = current_fire_rate
+		gun_info.crit_chance = 0.0
+		gun_info.crit_damage = 1.5
+	
 	return gun_info

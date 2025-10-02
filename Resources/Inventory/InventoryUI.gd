@@ -128,12 +128,37 @@ func _setup_styling():
 		close_button.add_theme_font_override("font", pixel_font)
 
 func setup_inventory(inv_manager: InventoryManager, camera: Camera2D = null, player_node: Node = null):
+	print("\n=== INVENTORY UI SETUP DEBUG ===")
+	print("inv_manager: ", inv_manager)
+	print("inv_manager type: ", inv_manager.get_class() if inv_manager else "NULL")
+	print("inv_manager script: ", inv_manager.get_script() if inv_manager else "NULL")
+	
 	inventory_manager = inv_manager
 	follow_camera = camera
-	inventory_manager.inventory_changed.connect(_on_inventory_changed)
+	
+	# Check if the signal exists
+	if inventory_manager:
+		print("Checking for signals on inventory_manager...")
+		var signal_list = inventory_manager.get_signal_list()
+		print("Available signals:")
+		for sig in signal_list:
+			print("  - ", sig.name)
+		
+		if inventory_manager.has_signal("inventory_changed"):
+			print("✓ Signal 'inventory_changed' found! Connecting...")
+			inventory_manager.inventory_changed.connect(_on_inventory_changed)
+			print("✓ Signal connected successfully!")
+		else:
+			print("✗ ERROR: Signal 'inventory_changed' NOT found!")
+			print("  Make sure InventoryManager.gd has 'signal inventory_changed' at the top")
+	else:
+		print("✗ ERROR: inventory_manager is NULL!")
 	
 	if player_node and player_node.has_signal("inventory_toggle_requested"):
 		player_node.inventory_toggle_requested.connect(toggle_visibility)
+		print("✓ Connected to player's inventory_toggle_requested signal")
+	
+	print("=== END DEBUG ===\n")
 	
 	if not is_node_ready():
 		await ready

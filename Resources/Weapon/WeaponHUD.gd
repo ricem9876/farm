@@ -20,17 +20,44 @@ func _ready():
 	_setup_styling()
 
 func setup_hud(manager: WeaponManager, player_node: Node2D):
+	print("\n=== WEAPON HUD SETUP DEBUG ===")
+	print("manager: ", manager)
+	print("player_node: ", player_node)
+	
+	# Check if manager is null before proceeding
+	if not manager:
+		print("✗ ERROR: WeaponManager is NULL! Cannot setup HUD")
+		print("  The WeaponHUD will be hidden")
+		visible = false
+		print("=== END DEBUG ===\n")
+		return
+	
 	weapon_manager = manager
 	player = player_node
 	
-	# Connect to weapon manager signals
-	weapon_manager.weapon_equipped.connect(_on_weapon_equipped)
-	weapon_manager.weapon_unequipped.connect(_on_weapon_unequipped)
-	weapon_manager.weapon_switched.connect(_on_weapon_switched)
+	# Safe signal connections - check if signals exist
+	if weapon_manager.has_signal("weapon_equipped"):
+		weapon_manager.weapon_equipped.connect(_on_weapon_equipped)
+		print("✓ Connected to weapon_equipped signal")
+	else:
+		print("⚠ Warning: WeaponManager missing 'weapon_equipped' signal")
+	
+	if weapon_manager.has_signal("weapon_unequipped"):
+		weapon_manager.weapon_unequipped.connect(_on_weapon_unequipped)
+		print("✓ Connected to weapon_unequipped signal")
+	else:
+		print("⚠ Warning: WeaponManager missing 'weapon_unequipped' signal")
+	
+	if weapon_manager.has_signal("weapon_switched"):
+		weapon_manager.weapon_switched.connect(_on_weapon_switched)
+		print("✓ Connected to weapon_switched signal")
+	else:
+		print("⚠ Warning: WeaponManager missing 'weapon_switched' signal")
+	
+	print("=== END DEBUG ===\n")
 	
 	# Initial update
 	_update_display()
-
 func _process(delta):
 	if player:
 		# Position relative to player at bottom center

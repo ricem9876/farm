@@ -4,6 +4,7 @@ extends Node2D
 @onready var weapon_chest = %WeaponChest
 @onready var weapon_hud = $WeaponHUD
 @onready var farm_exit = $FarmExit
+
 var player: Node2D
 var weapon_storage: WeaponStorageManager
 
@@ -54,30 +55,45 @@ func _ready():
 	add_child(weapon_storage)
 	print("✓ WeaponStorageManager created")
 	
+	# Get player's weapon manager
+	var player_weapon_manager = player.get_weapon_manager()
+	
 	# Setup UI - this will auto-populate with weapons
-	weapon_storage_ui.setup_storage(
-		weapon_storage,
-		player.get_weapon_manager(),
-		player
-	)
-	print("✓ WeaponStorageUI setup complete (auto-populated with weapons)")
+	if player_weapon_manager:
+		weapon_storage_ui.setup_storage(
+			weapon_storage,
+			player_weapon_manager,
+			player
+		)
+		print("✓ WeaponStorageUI setup complete (auto-populated with weapons)")
+	else:
+		print("⚠ Warning: Player has no weapon manager, storage UI may not work correctly")
 	
 	# Connect chest
 	weapon_chest.set_storage_ui(weapon_storage_ui)
 	print("✓ WeaponChest connected")
 	
-	# Setup weapon HUD (ADD THIS)
+	# Setup weapon HUD
 	if weapon_hud:
 		print("✓ WeaponHUD found")
-		weapon_hud.setup_hud(player.get_weapon_manager(), player)
-		print("  - Weapon HUD setup complete")
+		if player_weapon_manager:
+			weapon_hud.setup_hud(player_weapon_manager, player)
+			print("  - Weapon HUD setup complete")
+		else:
+			print("  ⚠ No weapon manager - hiding WeaponHUD")
+			weapon_hud.visible = false
 	else:
 		print("ERROR: WeaponHUD not found!")
 	
 	# Connect to weapon manager signals to auto-disable guns when equipped
-	if player.has_method("get_weapon_manager"):
-		var weapon_mgr = player.get_weapon_manager()
-		weapon_mgr.weapon_equipped.connect(_on_weapon_equipped_in_safehouse)
+	if player_weapon_manager:
+		if player_weapon_manager.has_signal("weapon_equipped"):
+			player_weapon_manager.weapon_equipped.connect(_on_weapon_equipped_in_safehouse)
+			print("✓ Connected to weapon_equipped signal")
+		else:
+			print("⚠ Warning: weapon_manager doesn't have weapon_equipped signal")
+	else:
+		print("⚠ Warning: No weapon manager found")
 	
 	# Restore player state from GameManager
 	await get_tree().process_frame
@@ -98,11 +114,26 @@ func _restore_player_state():
 	
 	# Restore inventory
 	if player.has_method("get_inventory_manager"):
-		GameManager.restore_player_inventory(player.get_inventory_manager())
+		var inv_manager = player.get_inventory_manager()
+		if inv_manager:
+			GameManager.restore_player_inventory(inv_manager)
+		else:
+			print("  ⚠ No inventory manager to restore")
 	
 	# Restore weapons
 	if player.has_method("get_weapon_manager"):
-		GameManager.restore_player_weapons(player.get_weapon_manager())
+		var weap_manager = player.get_weapon_manager()
+		if weap_manager:
+			GameManager.restore_player_weapons(weap_manager)
+		else:
+			print("  ⚠ No weapon manager to restore")
+	
+	# Restore level system
+	if player.level_system:
+		GameManager.restore_player_level_system(player.level_system)
+		print("✓ Level system restored: Level ", player.level_system.current_level)
+	else:
+		print("  ⚠ No level system to restore")
 
 func _on_weapon_equipped_in_safehouse(slot: int, weapon_item: WeaponItem):
 	"""Called whenever a weapon is equipped - disable it immediately if in safehouse"""
@@ -111,9 +142,13 @@ func _on_weapon_equipped_in_safehouse(slot: int, weapon_item: WeaponItem):
 	_disable_all_guns()
 
 func _disable_gun_in_safehouse():
-	print("\n=== DISABLING GUN IN SAFEHOUSE ===")
-	_disable_all_guns()
-	print("===================================\n")
+	print("Setting location state to Safehouse...")
+	
+	if player and player.has_node("LocationStateMachine"):
+		var loc_state = player.get_node("LocationStateMachine")
+		loc_state.change_state("SafehouseState")
+	else:
+		print("✗ No LocationStateMachine found on player")
 
 func _disable_all_guns():
 	"""Disable ALL guns (both primary and secondary)"""

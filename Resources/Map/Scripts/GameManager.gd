@@ -14,6 +14,12 @@ var saved_primary_weapon: WeaponItem = null
 var saved_secondary_weapon: WeaponItem = null
 var saved_active_slot: int = 0
 
+# Player level system persistence
+var saved_player_level: int = 1
+var saved_player_xp: int = 0
+var saved_skill_points: int = 0
+var saved_stat_points: Dictionary = {}
+
 # Scene paths
 const FARM_SCENE = "res://Resources/Scenes/farm.tscn"
 const SAFEHOUSE_SCENE = "res://Resources/Scenes/safehouse.tscn"
@@ -21,9 +27,15 @@ const SAFEHOUSE_SCENE = "res://Resources/Scenes/safehouse.tscn"
 func _ready():
 	print("GameManager initialized")
 
+# ========== INVENTORY PERSISTENCE ==========
+
 func save_player_inventory(inventory_manager: InventoryManager):
 	"""Save the current inventory state"""
 	print("Saving inventory state...")
+	
+	if not inventory_manager:
+		print("  ⚠ Warning: inventory_manager is null, cannot save inventory")
+		return
 	
 	saved_inventory_items.clear()
 	saved_inventory_quantities.clear()
@@ -31,14 +43,18 @@ func save_player_inventory(inventory_manager: InventoryManager):
 	saved_inventory_items = inventory_manager.items.duplicate()
 	saved_inventory_quantities = inventory_manager.quantities.duplicate()
 	
-	print("Inventory saved: ", saved_inventory_items.size(), " slots")
+	print("  ✓ Inventory saved: ", saved_inventory_items.size(), " slots")
 
 func restore_player_inventory(inventory_manager: InventoryManager):
 	"""Restore the saved inventory state"""
 	print("Restoring inventory state...")
 	
+	if not inventory_manager:
+		print("  ⚠ Warning: inventory_manager is null, cannot restore inventory")
+		return
+	
 	if saved_inventory_items.is_empty():
-		print("No saved inventory to restore")
+		print("  ℹ No saved inventory to restore")
 		return
 	
 	inventory_manager.items.clear()
@@ -52,11 +68,17 @@ func restore_player_inventory(inventory_manager: InventoryManager):
 	
 	inventory_manager.inventory_changed.emit()
 	
-	print("Inventory restored successfully")
+	print("  ✓ Inventory restored successfully")
+
+# ========== WEAPON PERSISTENCE ==========
 
 func save_player_weapons(weapon_manager: WeaponManager):
 	"""Save the current weapon loadout"""
 	print("Saving weapon loadout...")
+	
+	if not weapon_manager:
+		print("  ⚠ Warning: weapon_manager is null, cannot save weapons")
+		return
 	
 	saved_primary_weapon = weapon_manager.primary_slot
 	saved_secondary_weapon = weapon_manager.secondary_slot
@@ -64,36 +86,145 @@ func save_player_weapons(weapon_manager: WeaponManager):
 	
 	if saved_primary_weapon:
 		print("  Primary: ", saved_primary_weapon.name)
+	else:
+		print("  Primary: (empty)")
+	
 	if saved_secondary_weapon:
 		print("  Secondary: ", saved_secondary_weapon.name)
+	else:
+		print("  Secondary: (empty)")
+	
 	print("  Active slot: ", saved_active_slot)
 
 func restore_player_weapons(weapon_manager: WeaponManager):
 	"""Restore the saved weapon loadout"""
 	print("Restoring weapon loadout...")
 	
-	# Unequip current weapons first
-	weapon_manager.unequip_weapon(0)
-	weapon_manager.unequip_weapon(1)
+	if not weapon_manager:
+		print("  ⚠ Warning: weapon_manager is null, cannot restore weapons")
+		return
+	
+	# Unequip current weapons first (if any)
+	if weapon_manager.has_weapon_in_slot(0):
+		weapon_manager.unequip_weapon(0)
+		print("  Unequipped current primary weapon")
+	
+	if weapon_manager.has_weapon_in_slot(1):
+		weapon_manager.unequip_weapon(1)
+		print("  Unequipped current secondary weapon")
 	
 	# Restore saved weapons
 	if saved_primary_weapon:
-		weapon_manager.equip_weapon(saved_primary_weapon, 0)
-		print("  Restored primary: ", saved_primary_weapon.name)
+		var success = weapon_manager.equip_weapon(saved_primary_weapon, 0)
+		if success:
+			print("  ✓ Restored primary: ", saved_primary_weapon.name)
+		else:
+			print("  ✗ Failed to restore primary weapon")
+	else:
+		print("  ℹ No primary weapon to restore")
 	
 	if saved_secondary_weapon:
-		weapon_manager.equip_weapon(saved_secondary_weapon, 1)
-		print("  Restored secondary: ", saved_secondary_weapon.name)
+		var success = weapon_manager.equip_weapon(saved_secondary_weapon, 1)
+		if success:
+			print("  ✓ Restored secondary: ", saved_secondary_weapon.name)
+		else:
+			print("  ✗ Failed to restore secondary weapon")
+	else:
+		print("  ℹ No secondary weapon to restore")
 	
-	# Restore active slot
+	# Restore active slot (only if we have a weapon in that slot)
 	if saved_active_slot != weapon_manager.active_slot:
-		weapon_manager.switch_weapon()
+		if weapon_manager.has_weapon_in_slot(saved_active_slot):
+			weapon_manager.switch_weapon()
+			print("  ✓ Switched to slot: ", saved_active_slot)
+		else:
+			print("  ⚠ Cannot switch to slot ", saved_active_slot, " - no weapon equipped")
 	
-	print("Weapons restored successfully")
+	print("  ✓ Weapons restored successfully")
+
+# ========== LEVEL SYSTEM PERSISTENCE ==========
+
+func save_player_level_system(level_system: PlayerLevelSystem):
+	"""Save the player's level and skill progression"""
+	print("Saving player level system...")
+	
+	if not level_system:
+		print("  ⚠ Warning: level_system is null, cannot save")
+		return
+	
+	saved_player_level = level_system.current_level
+	saved_player_xp = level_system.current_experience
+	saved_skill_points = level_system.skill_points
+	
+	# Save all stat points
+	saved_stat_points = {
+		"health": level_system.points_in_health,
+		"speed": level_system.points_in_speed,
+		"damage": level_system.points_in_damage,
+		"fire_rate": level_system.points_in_fire_rate,
+		"reload": level_system.points_in_reload,
+		"crit_chance": level_system.points_in_crit_chance,
+		"crit_damage": level_system.points_in_crit_damage
+	}
+	
+	print("  ✓ Level: ", saved_player_level)
+	print("  ✓ XP: ", saved_player_xp)
+	print("  ✓ Skill Points: ", saved_skill_points)
+	print("  ✓ Stat points saved")
+
+func restore_player_level_system(level_system: PlayerLevelSystem):
+	"""Restore the player's level and skill progression"""
+	print("Restoring player level system...")
+	
+	if not level_system:
+		print("  ⚠ Warning: level_system is null, cannot restore")
+		return
+	
+	if saved_player_level <= 0:
+		print("  ℹ No saved level data to restore")
+		return
+	
+	# Restore level and XP
+	level_system.current_level = saved_player_level
+	level_system.current_experience = saved_player_xp
+	level_system.skill_points = saved_skill_points
+	
+	# Restore stat points
+	if not saved_stat_points.is_empty():
+		level_system.points_in_health = saved_stat_points.get("health", 0)
+		level_system.points_in_speed = saved_stat_points.get("speed", 0)
+		level_system.points_in_damage = saved_stat_points.get("damage", 0)
+		level_system.points_in_fire_rate = saved_stat_points.get("fire_rate", 0)
+		level_system.points_in_reload = saved_stat_points.get("reload", 0)
+		level_system.points_in_crit_chance = saved_stat_points.get("crit_chance", 0)
+		level_system.points_in_crit_damage = saved_stat_points.get("crit_damage", 0)
+		
+		# Recalculate all stats based on points invested
+		level_system._initialize_stats()
+		
+		# Apply stat upgrades
+		level_system.max_health = level_system.base_max_health + (level_system.points_in_health * 10)
+		level_system.move_speed = level_system.base_move_speed + (level_system.points_in_speed * 5)
+		level_system.damage_multiplier = 1.0 + (level_system.points_in_damage * 0.05)
+		level_system.fire_rate_multiplier = 1.0 + (level_system.points_in_fire_rate * 0.04)
+		level_system.reload_speed_multiplier = 1.0 + (level_system.points_in_reload * 0.06)
+		level_system.critical_chance = level_system.points_in_crit_chance * 0.02
+		level_system.critical_damage = 1.5 + (level_system.points_in_crit_damage * 0.1)
+	
+	print("  ✓ Level system restored")
+	print("  ✓ Level: ", level_system.current_level)
+	print("  ✓ XP: ", level_system.current_experience)
+	print("  ✓ Skill Points: ", level_system.skill_points)
+
+# ========== STORAGE PERSISTENCE ==========
 
 func save_storage_data(storage_id: String, storage_manager: InventoryManager):
 	"""Save storage data for a specific storage container"""
 	print("Saving storage data for: ", storage_id)
+	
+	if not storage_manager:
+		print("  ⚠ Warning: storage_manager is null")
+		return
 	
 	var storage_data = {
 		"items": storage_manager.items.duplicate(),
@@ -102,14 +233,18 @@ func save_storage_data(storage_id: String, storage_manager: InventoryManager):
 	}
 	
 	saved_storage_data[storage_id] = storage_data
-	print("Storage data saved for: ", storage_id)
+	print("  ✓ Storage data saved for: ", storage_id)
 
 func restore_storage_data(storage_id: String, storage_manager: InventoryManager):
 	"""Restore storage data for a specific storage container"""
 	print("Restoring storage data for: ", storage_id)
 	
+	if not storage_manager:
+		print("  ⚠ Warning: storage_manager is null")
+		return
+	
 	if not saved_storage_data.has(storage_id):
-		print("No saved storage data found for: ", storage_id)
+		print("  ℹ No saved storage data found for: ", storage_id)
 		return
 	
 	var storage_data = saved_storage_data[storage_id]
@@ -125,7 +260,9 @@ func restore_storage_data(storage_id: String, storage_manager: InventoryManager)
 	
 	storage_manager.inventory_changed.emit()
 	
-	print("Storage data restored for: ", storage_id)
+	print("  ✓ Storage data restored for: ", storage_id)
+
+# ========== SCENE TRANSITIONS ==========
 
 func change_to_safehouse():
 	"""Change to safehouse scene with full state persistence"""
@@ -134,10 +271,21 @@ func change_to_safehouse():
 	# Save current player state
 	var player = get_tree().get_first_node_in_group("player")
 	if player:
+		# Save inventory
 		if player.has_method("get_inventory_manager"):
-			save_player_inventory(player.get_inventory_manager())
+			var inv_mgr = player.get_inventory_manager()
+			if inv_mgr:
+				save_player_inventory(inv_mgr)
+		
+		# Save weapons
 		if player.has_method("get_weapon_manager"):
-			save_player_weapons(player.get_weapon_manager())
+			var wep_mgr = player.get_weapon_manager()
+			if wep_mgr:
+				save_player_weapons(wep_mgr)
+		
+		# Save level system
+		if player.level_system:
+			save_player_level_system(player.level_system)
 	
 	# Save all storage containers
 	_save_all_storage_in_scene()
@@ -159,10 +307,21 @@ func change_to_farm():
 	# Save current player state
 	var player = get_tree().get_first_node_in_group("player")
 	if player:
+		# Save inventory
 		if player.has_method("get_inventory_manager"):
-			save_player_inventory(player.get_inventory_manager())
+			var inv_mgr = player.get_inventory_manager()
+			if inv_mgr:
+				save_player_inventory(inv_mgr)
+		
+		# Save weapons
 		if player.has_method("get_weapon_manager"):
-			save_player_weapons(player.get_weapon_manager())
+			var wep_mgr = player.get_weapon_manager()
+			if wep_mgr:
+				save_player_weapons(wep_mgr)
+		
+		# Save level system
+		if player.level_system:
+			save_player_level_system(player.level_system)
 	
 	# Save all storage containers
 	_save_all_storage_in_scene()

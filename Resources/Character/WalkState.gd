@@ -1,6 +1,6 @@
 extends state
 
-
+@export var move_speed: float = 100.0
 @export var speed: float = 200.0
 var player: CharacterBody2D
 
@@ -10,6 +10,24 @@ func enter(msg := {}):
 
 func physics_update(delta: float):
 	var direction = Vector2.ZERO
+	var player = get_parent().get_parent()  # Get the player node
+	
+	# Get input
+	var input_vector = Vector2.ZERO
+	input_vector.x = Input.get_axis("ui_left", "ui_right")
+	input_vector.y = Input.get_axis("ui_up", "ui_down")
+	
+	if input_vector != Vector2.ZERO:
+		input_vector = input_vector.normalized()
+		
+		# Get speed from player's level system if available
+		var current_speed = move_speed
+		if player.has_node("PlayerLevelSystem"):
+			var level_system = player.get_node("PlayerLevelSystem")
+			current_speed = level_system.move_speed
+		
+		player.velocity = input_vector * current_speed
+		
 
 	if Input.is_action_pressed("move_right"):
 		direction.x += 1

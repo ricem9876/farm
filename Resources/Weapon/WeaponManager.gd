@@ -46,8 +46,7 @@ func equip_weapon(weapon_item: WeaponItem, slot: int = 0) -> bool:
 	gun.base_bullet_speed = weapon_item.base_bullet_speed
 	gun.base_accuracy = weapon_item.base_accuracy
 	gun.base_bullet_count = weapon_item.base_bullet_count
-	gun.gun_tier = weapon_item.weapon_tier
-	gun.gun_name = weapon_item.name
+	
 	
 	# IMPORTANT: Set the gun sprite from the weapon item!
 	if gun.gun_sprite and weapon_item.weapon_sprite:
@@ -112,21 +111,44 @@ func switch_weapon():
 		print("No weapon in slot ", new_slot)
 		return
 	
-	# Hide current weapon
+	# Hide and disable current weapon
 	var current_gun = get_active_gun()
 	if current_gun:
 		current_gun.visible = false
 		current_gun.process_mode = Node.PROCESS_MODE_DISABLED
 		current_gun.stop_firing()
+		current_gun.set_can_fire(false)
 	
-	# Show new weapon
+	# Switch active slot
 	active_slot = new_slot
 	var new_gun = get_active_gun()
+	
 	if new_gun:
-		new_gun.visible = true
-		new_gun.process_mode = Node.PROCESS_MODE_INHERIT
+		# Let the location state decide if the gun should be enabled
+		var location_state = player.get_node_or_null("LocationStateMachine")
+		
+		if location_state:
+			var current_state = location_state.get_current_state()
+			
+			# Check if we're in a state that allows weapons
+			if current_state and current_state.name == "FarmState":
+				new_gun.set_can_fire(true)
+				new_gun.visible = true
+				new_gun.process_mode = Node.PROCESS_MODE_INHERIT
+				print("Switched to ", "primary" if active_slot == 0 else "secondary", " weapon: ", new_weapon.name, " (ENABLED)")
+			else:
+				# In safehouse or other no-combat zone
+				new_gun.set_can_fire(false)
+				new_gun.visible = false
+				new_gun.process_mode = Node.PROCESS_MODE_DISABLED
+				print("Switched to ", "primary" if active_slot == 0 else "secondary", " weapon: ", new_weapon.name, " (DISABLED)")
+		else:
+			# No location state machine - default to enabled
+			new_gun.set_can_fire(true)
+			new_gun.visible = true
+			new_gun.process_mode = Node.PROCESS_MODE_INHERIT
+		
 		weapon_switched.emit(active_slot, new_gun)
-		print("Switched to ", "primary" if active_slot == 0 else "secondary", " weapon: ", new_weapon.name)
 
 func get_active_gun() -> Gun:
 	return primary_gun if active_slot == 0 else secondary_gun

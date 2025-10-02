@@ -2,6 +2,7 @@ extends Area2D
 class_name WeaponChest
 
 @export var interaction_prompt: String = "Press E to open Weapon Storage"
+
 @onready var sprite = $Sprite2D if has_node("Sprite2D") else null
 @onready var collision_shape = $CollisionShape2D if has_node("CollisionShape2D") else null
 @onready var prompt_label = $PromptLabel if has_node("PromptLabel") else null
@@ -19,24 +20,27 @@ func _ready():
 
 func _input(event):
 	if player_nearby and event.is_action_pressed("interact"):
-		_open_storage()
+		open_storage()
 
 func _on_body_entered(body):
-	if body.name == "player" or body is player:
+	# Check if it's the player by name or if it's in the "player" group
+	if body.name == "player" or body.is_in_group("player"):
 		player_nearby = true
 		if prompt_label:
 			prompt_label.visible = true
 		print("Player entered weapon chest area")
 
 func _on_body_exited(body):
-	if body.name == "player" or body is player:
+	# Check if it's the player by name or if it's in the "player" group
+	if body.name == "player" or body.is_in_group("player"):
 		player_nearby = false
 		if prompt_label:
 			prompt_label.visible = false
 		print("Player left weapon chest area")
 
-func _open_storage():
+func open_storage():
 	print("Opening weapon storage...")
+	
 	if weapon_storage_ui:
 		weapon_storage_ui.toggle_visibility()
 	else:

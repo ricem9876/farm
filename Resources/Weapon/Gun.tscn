@@ -5,7 +5,6 @@
 
 [node name="Gun" type="Node2D"]
 script = ExtResource("1_0rnkf")
-points_needed_for_next_tier = 50
 
 [node name="GunSprite" type="Sprite2D" parent="."]
 position = Vector2(9.50001, 4.3125)

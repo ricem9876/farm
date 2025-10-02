@@ -51,22 +51,36 @@ func _ready():
 	# Setup inventory UI
 	if inventory_ui:
 		print("✓ InventoryUI found")
-		print("  - Connecting inventory_toggle_requested signal...")
-		player.inventory_toggle_requested.connect(_on_inventory_toggle_requested)
-		print("  - Signal connected!")
 		
-		print("  - Setting up inventory UI...")
-		inventory_ui.setup_inventory(player.get_inventory_manager(), camera, player)
-		print("  - Inventory UI setup complete")
-		print("  - Initial visibility: ", inventory_ui.visible)
+		if player.has_signal("inventory_toggle_requested"):
+			print("  - Connecting inventory_toggle_requested signal...")
+			player.inventory_toggle_requested.connect(_on_inventory_toggle_requested)
+			print("  - Signal connected!")
+		else:
+			print("  ✗ Player doesn't have inventory_toggle_requested signal")
+		
+		var inv_mgr = player.get_inventory_manager()
+		if inv_mgr:
+			print("  - Setting up inventory UI...")
+			inventory_ui.setup_inventory(inv_mgr, camera, player)
+			print("  - Inventory UI setup complete")
+			print("  - Initial visibility: ", inventory_ui.visible)
+		else:
+			print("  ✗ No inventory manager found")
 	else:
 		print("ERROR: InventoryUI not found!")
 	
 	# Setup weapon HUD
 	if weapon_hud:
 		print("✓ WeaponHUD found")
-		weapon_hud.setup_hud(player.get_weapon_manager(), player)
-		print("  - Weapon HUD setup complete")
+		var weapon_mgr = player.get_weapon_manager()
+		
+		if weapon_mgr:
+			weapon_hud.setup_hud(weapon_mgr, player)
+			print("  - Weapon HUD setup complete")
+		else:
+			print("  ⚠ No weapon manager - hiding WeaponHUD")
+			weapon_hud.visible = false
 	else:
 		print("ERROR: WeaponHUD not found!")
 	
@@ -88,32 +102,35 @@ func _restore_player_state():
 	
 	# Restore inventory
 	if player.has_method("get_inventory_manager"):
-		GameManager.restore_player_inventory(player.get_inventory_manager())
+		var inv_mgr = player.get_inventory_manager()
+		if inv_mgr:
+			GameManager.restore_player_inventory(inv_mgr)
+		else:
+			print("  ⚠ No inventory manager to restore")
 	
 	# Restore weapons
 	if player.has_method("get_weapon_manager"):
-		GameManager.restore_player_weapons(player.get_weapon_manager())
+		var wep_mgr = player.get_weapon_manager()
+		if wep_mgr:
+			GameManager.restore_player_weapons(wep_mgr)
+		else:
+			print("  ⚠ No weapon manager to restore")
+	
+	# Restore level system
+	if player.level_system:
+		GameManager.restore_player_level_system(player.level_system)
+		print("✓ Level system restored: Level ", player.level_system.current_level)
+	else:
+		print("  ⚠ No level system to restore")
 
 func _enable_gun_on_farm():
-	print("Attempting to enable gun on farm...")
+	print("Setting location state to Farm...")
 	
-	if not player:
-		print("✗ No player reference")
-		return
-	
-	var weapon_manager = player.get_weapon_manager()
-	if not weapon_manager:
-		print("✗ No weapon manager")
-		return
-	
-	var gun = weapon_manager.get_active_gun()
-	if gun:
-		gun.set_can_fire(true)
-		gun.visible = true
-		gun.process_mode = Node.PROCESS_MODE_INHERIT
-		print("✓ Gun enabled, visible, and processing resumed on farm")
+	if player and player.has_node("LocationStateMachine"):
+		var loc_state = player.get_node("LocationStateMachine")
+		loc_state.change_state("FarmState")
 	else:
-		print("✗ No active gun found (this is OK if player has no weapon)")
+		print("✗ No LocationStateMachine found on player")
 
 func _on_inventory_toggle_requested():
 	print("=== INVENTORY TOGGLE REQUESTED ===")

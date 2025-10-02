@@ -25,11 +25,9 @@ func _ready():
 	
 	# Apply scale to the entire UI
 	scale = Vector2(UI_SCALE, UI_SCALE)
-		# FIX BLUR - Add these lines!
-	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	
-	# Apply to scale
-	scale = Vector2(UI_SCALE, UI_SCALE)
+	# FIX BLUR - Add these lines!
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	
 	_setup_styling()
 	
@@ -134,15 +132,39 @@ func _style_button(button: Button, text: String, color: Color):
 	button.add_theme_stylebox_override("pressed", pressed_style)
 
 func setup_storage(storage: WeaponStorageManager, manager: WeaponManager, player_node: Node2D):
+	print("\n=== WEAPON STORAGE SETUP ===")
+	print("storage: ", storage)
+	print("manager: ", manager)
+	print("player_node: ", player_node)
+	
 	weapon_storage = storage
 	weapon_manager = manager
 	player = player_node
 	
-	weapon_storage.storage_changed.connect(_on_storage_changed)
+	if weapon_storage:
+		weapon_storage.storage_changed.connect(_on_storage_changed)
+		print("✓ Connected to storage_changed signal")
+	else:
+		print("✗ weapon_storage is NULL!")
+		return
 	
+	if not weapon_manager:
+		print("⚠ Warning: No weapon manager - equip buttons won't work")
+	
+	print("Creating slots...")
 	_create_slots()
+	print("✓ Slots created: ", slots.size())
+	
+	print("Populating with weapons...")
 	_populate_with_weapons()
+	print("✓ Population complete")
+	
+	print("Updating display...")
 	_update_display()
+	print("✓ Display updated")
+	
+	print("Storage has ", weapon_storage.get_weapon_count(), " weapons")
+	print("=== SETUP COMPLETE ===\n")
 
 func _create_slots():
 	if not weapon_grid:
@@ -171,43 +193,58 @@ func _create_slots():
 func _populate_with_weapons():
 	"""Auto-populate storage with one of each weapon type"""
 	if not weapon_storage:
+		print("✗ ERROR: weapon_storage is NULL in _populate_with_weapons!")
 		return
 	
-	print("Auto-populating weapon storage...")
+	print("\n--- Starting weapon population ---")
+	print("Storage max slots: ", weapon_storage.max_slots)
+	print("Storage current count: ", weapon_storage.get_weapon_count())
 	
 	var weapons_to_add = []
 	
-	# Tier 1 weapons
-	weapons_to_add.append(WeaponFactory.create_pistol(1))
-	weapons_to_add.append(WeaponFactory.create_shotgun(1))
-	weapons_to_add.append(WeaponFactory.create_rifle(1))
-	weapons_to_add.append(WeaponFactory.create_sniper(1))
-	weapons_to_add.append(WeaponFactory.create_machine_gun(1))
-	weapons_to_add.append(WeaponFactory.create_burst_rifle(1))
-	weapons_to_add.append(WeaponFactory.create_laser(1))
-	weapons_to_add.append(WeaponFactory.create_plasma(1))
+	# All weapons (no tiers - everything is tier 1)
+	weapons_to_add.append(WeaponFactory.create_pistol())
+	weapons_to_add.append(WeaponFactory.create_shotgun())
+	weapons_to_add.append(WeaponFactory.create_rifle())
+	weapons_to_add.append(WeaponFactory.create_sniper())
+	weapons_to_add.append(WeaponFactory.create_machine_gun())
+	weapons_to_add.append(WeaponFactory.create_burst_rifle())
 	
-	# Add tier 2 versions
-	weapons_to_add.append(WeaponFactory.create_pistol(2))
-	weapons_to_add.append(WeaponFactory.create_shotgun(2))
-	weapons_to_add.append(WeaponFactory.create_rifle(2))
-	weapons_to_add.append(WeaponFactory.create_sniper(2))
+	print("Created ", weapons_to_add.size(), " weapons to add")
 	
+	var added_count = 0
 	for weapon in weapons_to_add:
-		if not weapon_storage.add_weapon(weapon):
-			print("Storage full, couldn't add: ", weapon.name)
+		print("Attempting to add: ", weapon.name if weapon else "NULL WEAPON")
+		if weapon_storage.add_weapon(weapon):
+			added_count += 1
+			print("  ✓ Added successfully")
+		else:
+			print("  ✗ Failed to add (storage full?)")
 			break
 	
-	print("Weapon storage populated with ", weapon_storage.get_weapon_count(), " weapons")
+	print("Successfully added ", added_count, " weapons")
+	print("Final storage count: ", weapon_storage.get_weapon_count())
+	print("--- Weapon population complete ---\n")
 
 func _update_display():
+	print("\n--- Updating display ---")
+	print("Slots: ", slots.size())
+	print("Storage weapons array size: ", weapon_storage.weapons.size())
+	
 	for i in range(slots.size()):
 		if i < weapon_storage.weapons.size():
 			var weapon = weapon_storage.weapons[i]
 			if weapon:
+				print("Slot ", i, ": ", weapon.name)
 				slots[i].set_item(weapon, 1)
 			else:
+				print("Slot ", i, ": empty")
 				slots[i].set_item(null, 0)
+		else:
+			print("Slot ", i, ": out of range")
+			slots[i].set_item(null, 0)
+	
+	print("--- Display update complete ---\n")
 
 func _on_storage_changed():
 	_update_display()
@@ -246,6 +283,10 @@ func _on_equip_primary_pressed():
 		print("No weapon in selected slot!")
 		return
 	
+	if not weapon_manager:
+		print("No weapon manager!")
+		return
+	
 	weapon_storage.remove_weapon(selected_slot)
 	var old_weapon = weapon_manager.unequip_weapon(0)
 	if old_weapon:
@@ -266,6 +307,10 @@ func _on_equip_secondary_pressed():
 		print("No weapon in selected slot!")
 		return
 	
+	if not weapon_manager:
+		print("No weapon manager!")
+		return
+	
 	weapon_storage.remove_weapon(selected_slot)
 	var old_weapon = weapon_manager.unequip_weapon(1)
 	if old_weapon:
@@ -277,6 +322,11 @@ func _on_equip_secondary_pressed():
 
 func _on_store_pressed():
 	print("Store button pressed!")
+	
+	if not weapon_manager:
+		print("No weapon manager!")
+		return
+	
 	var active_slot = weapon_manager.get_active_slot()
 	var weapon = weapon_manager.unequip_weapon(active_slot)
 	
