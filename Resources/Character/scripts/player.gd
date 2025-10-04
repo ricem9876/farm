@@ -40,12 +40,13 @@ func _ready():
 		# Setup player HUD
 	_setup_player_hud()
 	
+		# Setup weapon HUD
+	_setup_weapon_hud()
+	
 	# Initialize health from level system
 	max_health = level_system.max_health
 	current_health = max_health
 	
-	# Defer weapon equipping until next frame (after parent is fully ready)
-	call_deferred("_equip_starting_weapon")
 	
 	print("Player initialized - Level: ", level_system.current_level, " | Health: ", current_health, "/", max_health)
 
@@ -114,23 +115,15 @@ func refresh_hud():
 			hud._update_display()
 			print("✓ Player HUD refreshed")
 			
-func _equip_starting_weapon():
-	print("\n=== EQUIPPING STARTING WEAPON ===")
-	
-	if not weapon_manager:
-		print("✗ Cannot equip starting weapon - no weapon manager")
-		return
-	
-	var starting_weapon = WeaponFactory.create_pistol()
-	print("Created starting weapon: ", starting_weapon.name)
-	
-	if weapon_manager.equip_weapon(starting_weapon, 0):
-		print("✓ Equipped starting weapon")
-		# Don't enable the gun here - let the location state handle it
+func _setup_weapon_hud():
+	if has_node("WeaponHUD"):
+		var hud = get_node("WeaponHUD")
+		if hud.has_method("setup_hud"):
+			hud.setup_hud(weapon_manager, self)
+			hud.visible = true
+			print("✓ Weapon HUD setup complete")
 	else:
-		print("✗ Failed to equip")
-	
-	print("=================================\n")
+		print("ℹ WeaponHUD not found in player scene")
 
 func _physics_process(delta):
 	# Movement is handled by state machine
@@ -246,7 +239,13 @@ func get_inventory_manager() -> InventoryManager:
 
 func get_weapon_manager() -> WeaponManager:
 	return weapon_manager
-
+	
+func refresh_weapon_hud():
+	if has_node("WeaponHUD"):
+		var hud = get_node("WeaponHUD")
+		if hud.has_method("_update_display"):
+			hud._update_display()
+			print("✓ Weapon HUD refreshed after restoration")
 # === LEVEL SYSTEM CALLBACKS ===
 
 func _on_player_level_up(new_level: int, skill_points_gained: int):

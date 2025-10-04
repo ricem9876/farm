@@ -160,11 +160,16 @@ func restore_weapon_storage(weapon_storage: WeaponStorageManager):
 	print("Weapon storage restored")
 func restore_player_weapons(weapon_manager: WeaponManager):
 	"""Restore the saved weapon loadout"""
+	print("\n=== RESTORING WEAPONS ===")
 	print("Restoring weapon loadout...")
 	
 	if not weapon_manager:
 		print("  ⚠ Warning: weapon_manager is null, cannot restore weapons")
 		return
+	
+	print("Saved primary weapon: ", saved_primary_weapon)
+	print("Saved secondary weapon: ", saved_secondary_weapon)
+	print("Saved active slot: ", saved_active_slot)
 	
 	# Unequip current weapons first (if any)
 	if weapon_manager.has_weapon_in_slot(0):
@@ -194,7 +199,7 @@ func restore_player_weapons(weapon_manager: WeaponManager):
 	else:
 		print("  ℹ No secondary weapon to restore")
 	
-	# Restore active slot (only if we have a weapon in that slot)
+	# Restore active slot
 	if saved_active_slot != weapon_manager.active_slot:
 		if weapon_manager.has_weapon_in_slot(saved_active_slot):
 			weapon_manager.switch_weapon()
@@ -203,7 +208,7 @@ func restore_player_weapons(weapon_manager: WeaponManager):
 			print("  ⚠ Cannot switch to slot ", saved_active_slot, " - no weapon equipped")
 	
 	print("  ✓ Weapons restored successfully")
-
+	print("=== WEAPON RESTORATION COMPLETE ===\n")
 
 # ========== LEVEL SYSTEM PERSISTENCE ==========
 

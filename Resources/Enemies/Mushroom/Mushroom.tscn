@@ -419,11 +419,6 @@ visible = false
 position = Vector2(1, 16)
 shape = SubResource("CapsuleShape2D_mhf5x")
 
-[node name="HealthBar" type="ProgressBar" parent="."]
-offset_right = 4.0
-offset_bottom = 27.0
-value = 100.0
-
 [node name="HitArea" type="Area2D" parent="."]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HitArea"]

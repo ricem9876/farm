@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3 uid="uid://3spg7qohn2nr"]
+
+[ext_resource type="Script" uid="uid://4qbrru62g3w3" path="res://Resources/UI/EnemyHealthBar.gd" id="1_t3mwu"]
+
+[node name="EnemyHealthBar" type="Node2D"]
+script = ExtResource("1_t3mwu")
+
+[node name="Background" type="ColorRect" parent="."]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Fill" type="ColorRect" parent="."]
+offset_right = 40.0
+offset_bottom = 40.0

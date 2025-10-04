@@ -20,6 +20,9 @@ var can_attack: bool = true
 var attack_timer: float = 0.0
 var is_attacking: bool = false
 var is_dead: bool = false
+var health_bar: EnemyHealthBar
+var health_bar_scene = preload("res://Resources/UI/EnemyHealthBar.tscn")
+var damage_number_scene = preload("res://Resources/UI/DamageNumber.tscn")
 
 @onready var animated_sprite = $AnimatedSprite2D
 @onready var collision_shape = $CollisionShape2D
@@ -60,8 +63,12 @@ func _ready():
 	if animated_sprite:
 		animated_sprite.play("idle")
 		animated_sprite.animation_finished.connect(_on_animation_finished)
-	
-	print("Wolf spawned with ", max_health, " HP")
+		
+	# Create health bar
+	health_bar = health_bar_scene.instantiate()
+	add_child(health_bar)
+	health_bar.position = Vector2(0, -35)  # Centered above enemy
+	health_bar.z_index = 10  # Draw on top
 
 func _physics_process(delta):
 	if is_dead:  # Stop all physics when dead
@@ -163,13 +170,16 @@ func _on_animation_finished():
 	if animated_sprite.animation == "attack":
 		is_attacking = false
 
-func take_damage(amount: float):
+func take_damage(amount: float, is_crit: bool = false):
 	if is_dead:  # Prevent damage after death
 		return
 	
 	current_health -= amount
 	print("Wolf took ", amount, " damage. HP: ", current_health, "/", max_health)
-	
+	if health_bar:
+		health_bar.update_health(current_health)
+		
+	_spawn_damage_number(amount, is_crit)
 	if current_health <= 0:
 		_die()
 		return  # Don't play hurt animation if dying
@@ -182,7 +192,13 @@ func take_damage(amount: float):
 	# Enrage - chase player when damaged
 	if player:
 		is_chasing = true
-
+		
+func _spawn_damage_number(damage: float, is_crit: bool = false):
+	var damage_num = damage_number_scene.instantiate()
+	get_parent().add_child(damage_num)
+	damage_num.global_position = global_position + Vector2(randf_range(-10, 10), -20)
+	damage_num.setup(damage, is_crit)
+	
 func _die():
 	if is_dead:  # Prevent multiple death calls
 		return

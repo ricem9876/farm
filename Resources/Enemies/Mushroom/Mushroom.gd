@@ -14,7 +14,6 @@ signal died(experience_points: int)  # FIXED: Match other enemies
 
 # References
 @onready var animated_sprite = $AnimatedSprite2D
-@onready var health_bar = $HealthBar
 @onready var hit_area = $HitArea
 @onready var attack_area = $AttackArea
 @onready var detection_area = $DetectionArea
@@ -27,6 +26,9 @@ var is_attacking: bool = false
 var is_dead: bool = false
 var stun_timer: float = 0.0
 var attack_cooldown: float = 0.0
+var health_bar: EnemyHealthBar
+var health_bar_scene = preload("res://Resources/UI/EnemyHealthBar.tscn")
+var damage_number_scene = preload("res://Resources/UI/DamageNumber.tscn")
 
 # State machine
 enum State {
@@ -43,7 +45,6 @@ func _ready():
 	add_to_group("enemies")
 	current_health = max_health
 	_setup_areas()
-	_update_health_bar()
 	
 	# Connect area signals
 	if detection_area:
@@ -53,6 +54,12 @@ func _ready():
 	if attack_area:
 		attack_area.body_entered.connect(_on_attack_range_entered)
 		attack_area.body_exited.connect(_on_attack_range_exited)
+		
+	# Create health bar
+	health_bar = health_bar_scene.instantiate()
+	add_child(health_bar)
+	health_bar.position = Vector2(0, -35)  # Centered above enemy
+	health_bar.z_index = 10  # Draw on top
 
 func _setup_areas():
 	# Setup detection area (circular)
@@ -155,25 +162,29 @@ func _play_animation(anim_name: String):
 			if animated_sprite.animation != anim_name:
 				animated_sprite.play(anim_name)
 
-func take_damage(damage: float):
+func take_damage(damage: float, is_crit: bool = false):
 	if is_dead:
 		return
 	
 	current_health -= damage
 	current_health = max(0, current_health)
-	_update_health_bar()
+	if health_bar:
+		health_bar.update_health(current_health)
+		# Spawn damage number
+	_spawn_damage_number(damage, is_crit)
 	
 	# Enter hit state
 	_change_state(State.HIT)
 	
 	if current_health <= 0:
 		_die()
-
-func _update_health_bar():
-	if health_bar:
-		var health_percentage = (current_health / max_health) * 100
-		health_bar.value = health_percentage
-
+		
+func _spawn_damage_number(damage: float, is_crit: bool = false):
+	var damage_num = damage_number_scene.instantiate()
+	get_parent().add_child(damage_num)
+	damage_num.global_position = global_position + Vector2(randf_range(-10, 10), -20)
+	damage_num.setup(damage, is_crit)
+	
 func _die():
 	if is_dead:
 		return

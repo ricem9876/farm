@@ -17,6 +17,10 @@ var can_attack: bool = true
 var attack_timer: float = 0.0
 var current_direction: String = "down"
 var is_dead: bool = false  # NEW: Prevent damage after death
+var health_bar: EnemyHealthBar
+var health_bar_scene = preload("res://Resources/UI/EnemyHealthBar.tscn")
+var damage_number_scene = preload("res://Resources/UI/DamageNumber.tscn")
+
 
 @onready var animated_sprite = $AnimatedSprite2D
 @onready var collision_shape = $CollisionShape2D
@@ -40,8 +44,13 @@ func _ready():
 		animated_sprite.animation_finished.connect(_on_animation_finished)
 		animated_sprite.play("idle_down")
 	
+	# Create health bar
+	health_bar = health_bar_scene.instantiate()
+	add_child(health_bar)
+	health_bar.position = Vector2(0, -35)  # Centered above enemy
+	health_bar.z_index = 10  # Draw on top
+	
 	print("Plant spawned with ", max_health, " HP")
-
 func _physics_process(delta):
 	if is_dead:  # NEW: Don't do anything if dead
 		return
@@ -104,18 +113,30 @@ func _attack_player(target):
 	can_attack = false
 	attack_timer = attack_cooldown
 
-func take_damage(amount: float):
-	if is_dead:  # NEW: Prevent damage after death
+func take_damage(amount: float, is_crit: bool = false):
+	if is_dead:
 		return
 		
 	current_health -= amount
-	print("Plant took ", amount, " damage. HP: ", current_health, "/", max_health)
+	print("Enemy took ", amount, " damage. HP: ", current_health, "/", max_health)
+	
+	# Update health bar
+	if health_bar:
+		health_bar.update_health(current_health)
+		
+	_spawn_damage_number(amount, is_crit)
 	
 	if current_health <= 0:
 		_die()
 	else:
 		_play_animation("hurt")
-
+		
+func _spawn_damage_number(damage: float, is_crit: bool = false):
+	var damage_num = damage_number_scene.instantiate()
+	get_parent().add_child(damage_num)
+	damage_num.global_position = global_position + Vector2(randf_range(-10, 10), -20)
+	damage_num.setup(damage, is_crit)
+	
 func _on_animation_finished():
 	if is_dead:  # NEW: Only handle death animation when dead
 		if animated_sprite.animation.begins_with("death"):

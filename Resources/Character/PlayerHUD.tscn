@@ -5,30 +5,51 @@
 [node name="PlayerHUD" type="CanvasLayer"]
 script = ExtResource("1_45er6")
 
-[node name="MarginContainer" type="MarginContainer" parent="."]
+[node name="TopCenterContainer" type="MarginContainer" parent="."]
 offset_right = 40.0
 offset_bottom = 40.0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="TopCenterContainer"]
 layout_mode = 2
 
-[node name="Levellabel" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="LeftWeaponPanel" type="VBoxContainer" parent="TopCenterContainer/HBoxContainer"]
 layout_mode = 2
 
-[node name="HealthBarContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+[node name="PrimaryContainer" type="PanelContainer" parent="TopCenterContainer/HBoxContainer/LeftWeaponPanel"]
 layout_mode = 2
 
-[node name="HealthBar" type="ProgressBar" parent="MarginContainer/VBoxContainer/HealthBarContainer"]
+[node name="PrimaryLabel" type="Label" parent="TopCenterContainer/HBoxContainer/LeftWeaponPanel/PrimaryContainer"]
 layout_mode = 2
 
-[node name="HealthLabel" type="Label" parent="MarginContainer/VBoxContainer/HealthBarContainer"]
+[node name="CenterStatsPanel" type="VBoxContainer" parent="TopCenterContainer/HBoxContainer"]
 layout_mode = 2
 
-[node name="XPBarContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+[node name="LevelLabel" type="Label" parent="TopCenterContainer/HBoxContainer/CenterStatsPanel"]
 layout_mode = 2
 
-[node name="XPBar" type="ProgressBar" parent="MarginContainer/VBoxContainer/XPBarContainer"]
+[node name="HealthBarContainer" type="HBoxContainer" parent="TopCenterContainer/HBoxContainer/CenterStatsPanel"]
 layout_mode = 2
 
-[node name="XPLabel" type="Label" parent="MarginContainer/VBoxContainer/XPBarContainer"]
+[node name="HealthBar" type="ProgressBar" parent="TopCenterContainer/HBoxContainer/CenterStatsPanel/HealthBarContainer"]
+layout_mode = 2
+
+[node name="HealthLabel" type="Label" parent="TopCenterContainer/HBoxContainer/CenterStatsPanel/HealthBarContainer"]
+layout_mode = 2
+
+[node name="XPBarContainer" type="HBoxContainer" parent="TopCenterContainer/HBoxContainer/CenterStatsPanel"]
+layout_mode = 2
+
+[node name="XPBar" type="ProgressBar" parent="TopCenterContainer/HBoxContainer/CenterStatsPanel/XPBarContainer"]
+layout_mode = 2
+
+[node name="XPLabel" type="Label" parent="TopCenterContainer/HBoxContainer/CenterStatsPanel/XPBarContainer"]
+layout_mode = 2
+
+[node name="RightWeaponPanel" type="VBoxContainer" parent="TopCenterContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="SecondaryContainer" type="PanelContainer" parent="TopCenterContainer/HBoxContainer/RightWeaponPanel"]
+layout_mode = 2
+
+[node name="SecondaryLabel" type="Label" parent="TopCenterContainer/HBoxContainer/RightWeaponPanel/SecondaryContainer"]
 layout_mode = 2

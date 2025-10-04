@@ -1,7 +1,6 @@
 extends Node2D
 
 @onready var inventory_ui = $InventoryUI
-@onready var weapon_hud = $CanvasLayer/WeaponHUD
 @onready var player = $player
 @onready var camera = $player/Camera2D
 @onready var house_entrance = $HouseEntrance
@@ -9,8 +8,6 @@ var pause_menu_scene = preload("res://Resources/UI/PauseMenu.tscn")
 
 func _ready():
 	print("\n=== FARM SCENE _READY CALLED ===")
-	print("weapon_hud node: ", weapon_hud)
-	print("weapon_hud path exists: ", has_node("CanvasLayer/WeaponHUD"))
 	
 	# Try to find EnemySpawner
 	var spawner = get_node_or_null("EnemySpawner")
@@ -81,25 +78,7 @@ func _ready():
 		print("ERROR: InventoryUI not found!")
 	
 	# Setup weapon HUD
-# Setup weapon HUD
-	if weapon_hud:
-		print("✓ WeaponHUD found")
-	
-	# Wait for player to be fully ready
-		await get_tree().process_frame
-	
-		var weapon_mgr = player.get_weapon_manager()
-		print("Weapon manager: ", weapon_mgr)
-	
-		if weapon_mgr:
-			weapon_hud.setup_hud(weapon_mgr, player)
-			weapon_hud.visible = true  # Explicitly show it
-			print("  - Weapon HUD setup complete and visible")
-		else:
-			print("  ⚠ No weapon manager - hiding WeaponHUD")
-			weapon_hud.visible = false
-	else:
-		print("ERROR: WeaponHUD not found!")
+
 	
 	# Restore player state from GameManager
 	await get_tree().process_frame
@@ -111,6 +90,8 @@ func _ready():
 	# NOW enable the gun
 	_enable_gun_on_farm()
 	
+	
+		
 	var pause_menu = pause_menu_scene.instantiate()
 	add_child(pause_menu)
 	print("✓ Pause menu added")
@@ -124,6 +105,9 @@ func _restore_player_state():
 		print("Loading from save file...")
 		SaveSystem.apply_player_data(player, GameManager.pending_load_data.get("player", {}))
 		GameManager.pending_load_data = {}  # Clear after loading
+		player.refresh_hud()
+		player.refresh_weapon_hud()  # Add this line
+		
 		return
 	# Restore inventory
 	if player.has_method("get_inventory_manager"):
@@ -144,11 +128,12 @@ func _restore_player_state():
 	# Restore level system
 	if player.level_system:
 		GameManager.restore_player_level_system(player.level_system)
-		print("✓ Level system restored: Level ", player.level_system.current_level)
-	else:
-		print("  ⚠ No level system to restore")
+
 	player.refresh_hud()
+	player.refresh_weapon_hud()  # Add this line
 			
+
+
 func _enable_gun_on_farm():
 	print("Setting location state to Farm...")
 	

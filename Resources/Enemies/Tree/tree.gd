@@ -13,6 +13,9 @@ var player: Node2D
 var is_dead: bool = false
 var is_falling: bool = false
 var fall_direction: String = ""  # "left" or "right"
+var health_bar: EnemyHealthBar
+var health_bar_scene = preload("res://Resources/UI/EnemyHealthBar.tscn")
+var damage_number_scene = preload("res://Resources/UI/DamageNumber.tscn")
 
 @onready var animated_sprite = $AnimatedSprite2D
 @onready var collision_shape = $CollisionShape2D
@@ -39,14 +42,19 @@ func _ready():
 	if animated_sprite:
 		animated_sprite.play("idle")
 		animated_sprite.animation_finished.connect(_on_animation_finished)
-	
+		
+	# Create health bar
+	health_bar = health_bar_scene.instantiate()
+	add_child(health_bar)
+	health_bar.position = Vector2(0, -35)  # Centered above enemy
+	health_bar.z_index = 10  # Draw on top
 	print("Tree spawned with ", max_health, " HP")
 
 func _physics_process(delta):
 	# Trees don't move
 	pass
 
-func take_damage(amount: float):
+func take_damage(amount: float, is_crit: bool = false):
 	if is_dead:
 		return
 	
@@ -70,10 +78,19 @@ func take_damage(amount: float):
 		# Return to idle if still alive
 		if not is_dead and animated_sprite:
 			animated_sprite.play("idle")
-	
+		# Update health bar
+	if health_bar:
+		health_bar.update_health(current_health)
+	_spawn_damage_number(amount, is_crit)	
 	if current_health <= 0:
 		_die()
-
+		
+func _spawn_damage_number(damage: float, is_crit: bool = false):
+	var damage_num = damage_number_scene.instantiate()
+	get_parent().add_child(damage_num)
+	damage_num.global_position = global_position + Vector2(randf_range(-10, 10), -20)
+	damage_num.setup(damage, is_crit)
+	
 func _die():
 	if is_dead:
 		return

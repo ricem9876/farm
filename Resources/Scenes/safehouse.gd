@@ -2,7 +2,6 @@ extends Node2D
 
 @onready var weapon_storage_ui = %WeaponStorageUI
 @onready var weapon_chest = %WeaponChest
-@onready var weapon_hud = $CanvasLayer/WeaponHUD
 @onready var farm_exit = $FarmExit
 
 var pause_menu_scene = preload("res://Resources/UI/PauseMenu.tscn")
@@ -82,17 +81,7 @@ func _ready():
 	weapon_chest.set_storage_ui(weapon_storage_ui)
 	print("✓ WeaponChest connected")
 	
-	# Setup weapon HUD
-	if weapon_hud:
-		print("✓ WeaponHUD found")
-		if player_weapon_manager:
-			weapon_hud.setup_hud(player_weapon_manager, player)
-			print("  - Weapon HUD setup complete")
-		else:
-			print("  ⚠ No weapon manager - hiding WeaponHUD")
-			weapon_hud.visible = false
-	else:
-		print("ERROR: WeaponHUD not found!")
+	
 	
 	# Connect to weapon manager signals to auto-disable guns when equipped
 	if player_weapon_manager:
