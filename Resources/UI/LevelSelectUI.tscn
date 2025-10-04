@@ -1,0 +1,35 @@
+[gd_scene load_steps=2 format=3 uid="uid://5rknrmksx0t2"]
+
+[ext_resource type="Script" uid="uid://l6t5v6fy1wkq" path="res://Resources/UI/LevelSelectUI.gd" id="1_42co3"]
+
+[node name="LevelSelectUI" type="CanvasLayer"]
+script = ExtResource("1_42co3")
+
+[node name="Panel" type="PanelContainer" parent="."]
+custom_minimum_size = Vector2(500, 400)
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="TitleLabel" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+
+[node name="LevelContainer" type="VBoxContainer" parent="Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="BackButton" type="Button" parent="Panel/VBoxContainer"]
+layout_mode = 2
+text = "Back to Safehouse"

@@ -1,0 +1,169 @@
+[gd_scene load_steps=31 format=3 uid="uid://bhf74dwctln6d"]
+
+[ext_resource type="Script" uid="uid://cbd2b8s8uaqj2" path="res://Resources/Enemies/Tree/tree.gd" id="1_v1w7q"]
+[ext_resource type="Texture2D" uid="uid://cwqsci5okmcns" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_cut_left1_s.png" id="2_36bvn"]
+[ext_resource type="Texture2D" uid="uid://b317tpf4wglne" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_cut_left2_s.png" id="3_g3p8f"]
+[ext_resource type="Texture2D" uid="uid://e25kgvj3i0ea" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_cut_left3_s.png" id="4_nx2ed"]
+[ext_resource type="Texture2D" uid="uid://bufsep1l1n861" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_cut_left4_s.png" id="5_gbvq0"]
+[ext_resource type="Texture2D" uid="uid://clfxvpyhvbqcg" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_cut_left5_s.png" id="6_evhxc"]
+[ext_resource type="Texture2D" uid="uid://hue54dyl5kip" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_cut_left6_s.png" id="7_qtk18"]
+[ext_resource type="Texture2D" uid="uid://b7y22wmfxwrkh" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_cut_left7_s.png" id="8_h0lpk"]
+[ext_resource type="Texture2D" uid="uid://mwnqpse10l4e" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_cut_right1_s.png" id="9_o0yc1"]
+[ext_resource type="Texture2D" uid="uid://dvdkmg4e337lb" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_cut_right2_s.png" id="10_xdk2y"]
+[ext_resource type="Texture2D" uid="uid://dwbr5h5ivvs7i" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_cut_right3_s.png" id="11_mwxiw"]
+[ext_resource type="Texture2D" uid="uid://e3bb7ay60csn" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_cut_right4_s.png" id="12_velyx"]
+[ext_resource type="Texture2D" uid="uid://d3t8rtng15vdc" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_cut_right5_s.png" id="13_gvlec"]
+[ext_resource type="Texture2D" uid="uid://cd4f35egmwllb" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_cut_right6_s.png" id="14_lht4x"]
+[ext_resource type="Texture2D" uid="uid://88lrr6fmiju3" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_cut_right7_s.png" id="15_0jam6"]
+[ext_resource type="Texture2D" uid="uid://b2pr8yv867v8e" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_hit_left1_s.png" id="16_nq8ay"]
+[ext_resource type="Texture2D" uid="uid://bldn7xt2fnerd" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_hit_left2_s.png" id="17_tygw5"]
+[ext_resource type="Texture2D" uid="uid://cvmt1v6rbvfbw" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_hit_left3_s.png" id="18_r4fjp"]
+[ext_resource type="Texture2D" uid="uid://16pybxu8qf5k" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_hit_left4_s.png" id="19_ol7ph"]
+[ext_resource type="Texture2D" uid="uid://d130k6skx16ga" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_hit_left5_s.png" id="20_secq3"]
+[ext_resource type="Texture2D" uid="uid://dm17b07drdt7c" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_hit_right1_s.png" id="21_2v3fm"]
+[ext_resource type="Texture2D" uid="uid://3p7qvfnmwdve" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_hit_right2_s.png" id="22_xmqk1"]
+[ext_resource type="Texture2D" uid="uid://bl7208sp134k" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_hit_right3_s.png" id="23_w73tg"]
+[ext_resource type="Texture2D" uid="uid://dtpcqyqdd3ohg" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_hit_right4_s.png" id="24_0yyiu"]
+[ext_resource type="Texture2D" uid="uid://dls3hx4c15ltt" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_hit_right5_s.png" id="25_uxm14"]
+[ext_resource type="Texture2D" uid="uid://hqnwpt3slfi6" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_idle_s.png" id="26_ejm2b"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_j8e23"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_36bvn")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_g3p8f")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_nx2ed")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_gbvq0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_evhxc")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_qtk18")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_h0lpk")
+}],
+"loop": false,
+"name": &"die_left",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("9_o0yc1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_xdk2y")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_mwxiw")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_velyx")
+}, {
+"duration": 1.0,
+"texture": ExtResource("13_gvlec")
+}, {
+"duration": 1.0,
+"texture": ExtResource("14_lht4x")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_0jam6")
+}],
+"loop": false,
+"name": &"die_right",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("16_nq8ay")
+}, {
+"duration": 1.0,
+"texture": ExtResource("17_tygw5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("18_r4fjp")
+}, {
+"duration": 1.0,
+"texture": ExtResource("19_ol7ph")
+}, {
+"duration": 1.0,
+"texture": ExtResource("20_secq3")
+}],
+"loop": false,
+"name": &"hit_left",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("21_2v3fm")
+}, {
+"duration": 1.0,
+"texture": ExtResource("22_xmqk1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("23_w73tg")
+}, {
+"duration": 1.0,
+"texture": ExtResource("24_0yyiu")
+}, {
+"duration": 1.0,
+"texture": ExtResource("25_uxm14")
+}],
+"loop": false,
+"name": &"hit_right",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("26_ejm2b")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_8kggn"]
+size = Vector2(46, 52)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_nwj5s"]
+size = Vector2(54, 21)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_o2aq2"]
+size = Vector2(50, 24)
+
+[node name="Tree" type="CharacterBody2D"]
+collision_layer = 5
+collision_mask = 3
+script = ExtResource("1_v1w7q")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_j8e23")
+animation = &"idle"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+visible = false
+position = Vector2(0, 4)
+shape = SubResource("RectangleShape2D_8kggn")
+
+[node name="DamageAreaLeft" type="Area2D" parent="."]
+monitoring = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DamageAreaLeft"]
+visible = false
+position = Vector2(9, 3.5)
+shape = SubResource("RectangleShape2D_nwj5s")
+
+[node name="DamageAreaRight" type="Area2D" parent="."]
+monitoring = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DamageAreaRight"]
+position = Vector2(1, 2)
+shape = SubResource("RectangleShape2D_o2aq2")

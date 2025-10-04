@@ -15,9 +15,14 @@ var is_being_attracted: bool = false
 
 
 func _ready():
+	#print("\n!!! ITEMPICKUP _READY CALLED !!!")
+	#print("Item name: ", item_name)
+	
 	body_entered.connect(_on_body_entered)
+	#print("body_entered signal connected")
 	
 	if pickup_area:
+		#print("pickup_area found")
 		pickup_area.body_entered.connect(_on_magnet_range_entered)
 		pickup_area.body_exited.connect(_on_magnet_range_exited)
 		
@@ -25,30 +30,52 @@ func _ready():
 			var magnet_shape = pickup_area.get_child(0) as CollisionShape2D
 			if magnet_shape and magnet_shape.shape is CircleShape2D:
 				magnet_shape.shape.radius = magnet_range
+	#else:
+		#print("WARNING: pickup_area is NULL!")
 				
 	if collision_shape and collision_shape.shape is CircleShape2D:
 		collision_shape.shape.radius = pickup_range
-		
+		#print("collision_shape configured")
+	#else:
+		#print("WARNING: collision_shape issue!")
+	
 	# Set sprite based on item type
+	#print("About to call _setup_item_appearance()")
 	_setup_item_appearance()
+	#print("_setup_item_appearance() completed")
 	
 	# Add some bounce/float animation
 	_animate_item()
+	#print("!!! ITEMPICKUP _READY COMPLETE !!!\n")
 
 func _setup_item_appearance():
+	if not sprite:
+		#print("ERROR: Sprite is NULL in _setup_item_appearance!")
+		return
+	
+	#print("ITEM APPEARANCE: ", item_name, " | Sprite exists: ", sprite != null)
+	
 	match item_name:
 		"mushroom":
-			# You can set different sprites for different items
-			# sprite.texture = preload("res://sprites/mushroom_pickup.png")
-			if sprite:
-				sprite.texture = preload("res://Resources/Inventory/Sprites/mushroom.png")
-			
+			sprite.texture = preload("res://Resources/Inventory/Sprites/mushroom.png")
+			sprite.scale = Vector2(.5,.5)
+		"fiber":
+			sprite.texture = preload("res://Resources/Inventory/Sprites/fiber.png")
+			sprite.scale = Vector2(.5,.5)
+		"fur":
+			sprite.texture = preload("res://Resources/Inventory/Sprites/fur.png")
+			sprite.scale = Vector2(.5,.5)
+		"wood":
+			sprite.texture = preload("res://Resources/Inventory/Sprites/wood.png")
+			sprite.scale = Vector2(.5,.5)
 		"health_potion":
-			if sprite:
-				sprite.modulate = Color.RED
+			sprite.modulate = Color.RED
 		"coin":
-			if sprite:
-				sprite.modulate = Color.YELLOW
+			sprite.modulate = Color.YELLOW
+		_:
+			sprite.modulate = Color.WHITE
+	
+	#print("AFTER SETUP: texture=", sprite.texture, " visible=", sprite.visible, " scale=", sprite.scale)
 
 func _animate_item():
 	# Simple floating animation
@@ -91,28 +118,49 @@ func _pickup_item(player_node):
 	queue_free()
 
 func _create_item_resource() -> Item:
-	# Create an Item resource based on item_name
 	var item = Item.new()
 	match item_name:
 		"mushroom":
 			item.name = "Mushroom"
 			item.description = "A tasty mushroom dropped by an enemy"
 			item.stack_size = 99
-			item.item_type = "consumable"
-			# IMPORTANT: Set the icon for UI display
-			item.icon = preload("res://Resources/Inventory/Sprites/mushroom.png")  # Replace with actual mushroom icon
+			item.item_type = "material"
+			item.icon = preload("res://Resources/Inventory/Sprites/mushroom.png")
+		
+		"fiber":
+			item.name = "Plant Fiber"
+			item.description = "Tough plant fibers used for crafting"
+			item.stack_size = 99
+			item.item_type = "material"
+			item.icon = preload("res://Resources/Inventory/Sprites/fiber.png")  # Replace with actual fiber icon
+		
+		"fur":
+			item.name = "Wolf Fur"
+			item.description = "Soft fur from a wolf, useful for crafting"
+			item.stack_size = 99
+			item.item_type = "material"
+			item.icon = preload("res://Resources/Inventory/Sprites/fur.png")  # Replace with actual fur icon
+			
+		"wood":
+			item.name = "Wood"
+			item.description = "A log"
+			item.stack_size=  99
+			item.item_type = "material"
+			item.icon = preload("res://Resources/Inventory/Sprites/wood.png")
+			
 		"health_potion":
 			item.name = "Health Potion"
 			item.description = "Restores health when consumed"
 			item.stack_size = 10
 			item.item_type = "consumable"
-			item.icon = preload("res://icon.svg")  # Replace with actual potion icon
+			item.icon = preload("res://icon.svg")
+		
 		"coin":
 			item.name = "Coin"
 			item.description = "Currency used for purchases"
 			item.stack_size = 999
 			item.item_type = "currency"
-			item.icon = preload("res://icon.svg")  # Replace with actual coin icon
+			item.icon = preload("res://icon.svg")
 	
 	return item
 

@@ -7,7 +7,7 @@ func enter():
 	print("=== SAFEHOUSE STATE ACTIVE ===")
 	print("  Weapons: DISABLED")
 	print("  Combat: DISABLED")
-	
+
 	# Wait a frame for guns to be ready
 	await get_tree().process_frame
 	disable_weapons()

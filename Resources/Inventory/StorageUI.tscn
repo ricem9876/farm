@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://d1y8knxeelrx1"]
 
-[ext_resource type="Script" uid="uid://dvb8lmbdfq8vs" path="res://StorageUI.gd" id="1_omk60"]
+[ext_resource type="Script" uid="uid://dvb8lmbdfq8vs" path="res://Resources/UI/StorageUI.gd" id="1_omk60"]
 
 [node name="StorageUI" type="Control"]
 layout_mode = 3

@@ -1,0 +1,36 @@
+[gd_scene load_steps=2 format=3 uid="uid://c2ome76xmq7ev"]
+
+[ext_resource type="Script" uid="uid://duuo8b8qyftgl" path="res://Resources/UI/PauseMenu.gd" id="1_nov15"]
+
+[node name="PauseMenu" type="CanvasLayer"]
+script = ExtResource("1_nov15")
+
+[node name="MenuPanel" type="PanelContainer" parent="."]
+custom_minimum_size = Vector2(400, 300)
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -23.5
+offset_right = 20.0
+offset_bottom = 23.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MenuPanel"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="MenuPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="ButtonContainer" type="VBoxContainer" parent="MenuPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="ResumeButton" type="Button" parent="MenuPanel/VBoxContainer/ButtonContainer"]
+layout_mode = 2
+
+[node name="ExitButton" type="Button" parent="MenuPanel/VBoxContainer/ButtonContainer"]
+layout_mode = 2

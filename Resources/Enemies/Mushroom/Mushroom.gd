@@ -1,9 +1,8 @@
-# Mushroom.gd - Walking Mushroom Enemy
+# Mushroom.gd - Fixed version
 extends CharacterBody2D
 class_name Mushroom
 
-signal mushroom_died(experience_points: int)
-signal item_dropped(item_name: String, position: Vector2)
+signal died(experience_points: int)  # FIXED: Match other enemies
 
 # Enemy Stats
 @export var max_health: float = 20.0
@@ -11,7 +10,7 @@ signal item_dropped(item_name: String, position: Vector2)
 @export var attack_damage: float = 10.0
 @export var attack_range: float = 30.0
 @export var detection_range: float = 100.0
-@export var experience_reward: int = 50
+@export var experience_value: int = 50  # FIXED: Renamed from experience_reward
 
 # References
 @onready var animated_sprite = $AnimatedSprite2D
@@ -41,6 +40,7 @@ enum State {
 var current_state: State = State.IDLE
 
 func _ready():
+	add_to_group("enemies")
 	current_health = max_health
 	_setup_areas()
 	_update_health_bar()
@@ -123,9 +123,6 @@ func _running_state():
 func _attacking_state():
 	velocity = Vector2.ZERO
 	_play_animation("Attack")
-	
-	# Attack animation should handle timing via signal
-	# For now, we'll use a simple timer approach
 
 func _stunned_state():
 	velocity = Vector2.ZERO
@@ -153,25 +150,18 @@ func _change_state(new_state: State):
 
 func _play_animation(anim_name: String):
 	if animated_sprite:
-		# Check if animation exists by getting sprite frames
 		var sprite_frames = animated_sprite.sprite_frames
 		if sprite_frames and sprite_frames.has_animation(anim_name):
 			if animated_sprite.animation != anim_name:
 				animated_sprite.play(anim_name)
-		#else:
-			#print("Warning: Animation '", anim_name, "' not found in AnimatedSprite2D")
 
 func take_damage(damage: float):
 	if is_dead:
 		return
 	
-	#print("Mushroom taking damage: ", damage, " | Health before: ", current_health)
-	
 	current_health -= damage
-	current_health = max(0, current_health)  # Ensure health doesn't go below 0
+	current_health = max(0, current_health)
 	_update_health_bar()
-	
-	#print("Health after damage: ", current_health)
 	
 	# Enter hit state
 	_change_state(State.HIT)
@@ -183,7 +173,6 @@ func _update_health_bar():
 	if health_bar:
 		var health_percentage = (current_health / max_health) * 100
 		health_bar.value = health_percentage
-		#print("Health bar updated: ", health_percentage, "%")
 
 func _die():
 	if is_dead:
@@ -191,6 +180,9 @@ func _die():
 	
 	is_dead = true
 	current_state = State.DEAD
+	
+	print("Mushroom died!")
+	died.emit(experience_value)  # FIXED: Use standard signal
 	
 	# Stop all movement
 	velocity = Vector2.ZERO
@@ -204,24 +196,33 @@ func _die():
 		detection_area.set_deferred("monitoring", false)
 	
 	# Play death animation or effect
-	_play_animation("Hit")  # Use hit animation as death for now
+	_play_animation("Hit")
 	
-	# Drop item with 25% chance
-	if randf() < 0.99:  # 25% chance
-		item_dropped.emit("mushroom", global_position)
-	
-	# Give experience to player
-	mushroom_died.emit(experience_reward)
+	# FIXED: Use ItemSpawner like other enemies
+	_drop_loot()
 	
 	# Remove after brief delay
 	await get_tree().create_timer(1.0).timeout
 	queue_free()
 
+func _drop_loot():
+	var drop_count = 1
+	
+	# Check for double drops from player luck
+	if player and player.level_system:
+		if randf() < player.level_system.luck:
+			drop_count = 2
+			print("DOUBLE DROPS! 2x mushroom!")
+	
+	# Spawn mushroom drops
+	for i in range(drop_count):
+		ItemSpawner.spawn_item("mushroom", global_position, get_parent())
+
 func _perform_attack():
 	if attack_cooldown > 0 or is_dead:
 		return
 	
-	attack_cooldown = 2.0  # 2 second cooldown
+	attack_cooldown = 2.0
 	
 	# Deal damage to player if in range
 	if player and global_position.distance_to(player.global_position) <= attack_range:
@@ -229,7 +230,7 @@ func _perform_attack():
 			player.take_damage(attack_damage)
 	
 	# Return to appropriate state after attack
-	await get_tree().create_timer(0.5).timeout  # Attack animation time
+	await get_tree().create_timer(0.5).timeout
 	if not is_dead:
 		if player and global_position.distance_to(player.global_position) <= detection_range:
 			_change_state(State.RUNNING)
@@ -238,7 +239,7 @@ func _perform_attack():
 
 # Signal handlers
 func _on_player_detected(body):
-	if body.name == "Player" or body.has_method("take_damage"):  # Adjust condition as needed
+	if body.is_in_group("player"):
 		player = body
 
 func _on_player_lost(body):
@@ -254,7 +255,6 @@ func _on_attack_range_exited(body):
 	if body == player and current_state == State.ATTACKING:
 		is_attacking = false
 
-# Connect this to your AnimatedSprite2D's animation_finished signal
 func _on_animation_finished():
 	match current_state:
 		State.ATTACKING:

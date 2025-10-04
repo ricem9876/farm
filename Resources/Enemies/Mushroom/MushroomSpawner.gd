@@ -2,9 +2,9 @@ extends Node2D
 class_name MushroomSpawner
 
 @export var mushroom_scene: PackedScene
-@export var spawn_interval: float = 5.0
-@export var spawn_radius: float = 200.0
-@export var max_mushrooms: int = 25
+@export var spawn_interval: float = 1.0
+@export var spawn_radius: float = 100.0
+@export var max_mushrooms: int = 50
 
 var player: Node2D
 var spawn_timer: float = 0.0
@@ -57,9 +57,24 @@ func _spawn_mushroom():
 	active_mushrooms.append(mushroom)
 	
 func _on_mushroom_died(experience_points: int):
-	if player and player.has_method("gain_experience"):
-		player.gain_experience(experience_points)
+	if player:
+		# Give experience normally
+		if player.has_method("gain_experience"):
+			player.gain_experience(experience_points)
 		
+		# Drop items with luck-based doubling
+		var drop_count = 1
+		
+		if player.level_system:
+			var double_drop_chance = player.level_system.luck
+			if randf() < double_drop_chance:
+				drop_count = 2
+				print("DOUBLE DROPS! 2x items!")
+		
+		# Spawn the item drops
+		for i in range(drop_count):
+			ItemSpawner.spawn_item("mushroom", global_position, get_parent())
+			
 func _on_item_dropped(item_name: String, position: Vector2):
 	
 	# Use the ItemSpawner utility to create pickup

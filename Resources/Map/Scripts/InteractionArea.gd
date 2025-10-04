@@ -131,14 +131,24 @@ func handle_interaction():
 			print("Changing to safehouse...")
 			GameManager.change_to_safehouse()
 		"farm_exit":
-			print("Changing to farm...")
-			GameManager.change_to_farm()
+			print("Changing to level select")
+			_open_level_select()
 		"crafting_station":
 			print("Opening crafting station...")
 		_:
 			print("Unknown interaction type: ", interaction_type)
 	print("============================")
-
+	
+func _open_level_select():
+	# Find the LevelSelectUI in the scene
+	var level_select = get_tree().current_scene.get_node_or_null("LevelSelectUI")
+	
+	if level_select and level_select.has_method("open"):
+		level_select.open()
+		print("Level select opened")
+	else:
+		print("ERROR: LevelSelectUI not found or missing open() method")
+		
 func _input(event):
 	if player_in_area and event.is_action_pressed("interact"):
 		print("Interact pressed! Handling interaction...")

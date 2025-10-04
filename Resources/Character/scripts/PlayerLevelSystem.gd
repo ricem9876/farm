@@ -17,40 +17,40 @@ var base_max_health: float = 100.0
 var base_move_speed: float = 100.0
 var base_damage_multiplier: float = 1.0
 var base_fire_rate_multiplier: float = 1.0
-var base_reload_speed_multiplier: float = 1.0
 var base_critical_chance: float = 0.0
 var base_critical_damage: float = 1.5
+var base_luck: float = 0.0
 
 # Upgraded values (what's actually used)
 var max_health: float = 100.0
 var move_speed: float = 100.0
 var damage_multiplier: float = 1.0
 var fire_rate_multiplier: float = 1.0
-var reload_speed_multiplier: float = 1.0
 var critical_chance: float = 0.0
 var critical_damage: float = 1.5
+var luck: float = 0.0 #0.0 to 1.0
 
 # Track points invested in each stat
 var points_in_health: int = 0
 var points_in_speed: int = 0
 var points_in_damage: int = 0
 var points_in_fire_rate: int = 0
-var points_in_reload: int = 0
 var points_in_crit_chance: int = 0
 var points_in_crit_damage: int = 0
+var points_in_luck: int = 0
 
 func _ready():
 	_initialize_stats()
 
 func _initialize_stats():
-	max_health = base_max_health
-	move_speed = base_move_speed
-	damage_multiplier = base_damage_multiplier
-	fire_rate_multiplier = base_fire_rate_multiplier
-	reload_speed_multiplier = base_reload_speed_multiplier
-	critical_chance = base_critical_chance
-	critical_damage = base_critical_damage
-
+	max_health = base_max_health + (points_in_health * 10)
+	move_speed = base_move_speed + (points_in_speed * 5)
+	damage_multiplier = 1.0 + (points_in_damage * 0.05)
+	fire_rate_multiplier = 1.0 + (points_in_fire_rate * 0.04)
+	luck = base_luck + (points_in_luck * 0.01)  # Fixed: add points invested
+	critical_chance = base_critical_chance + (points_in_crit_chance * 0.02)
+	critical_damage = base_critical_damage + (points_in_crit_damage * 0.1)
+	
 func gain_experience(amount: int):
 	current_experience += amount
 	experience_gained.emit(amount, current_experience)
@@ -99,12 +99,12 @@ func upgrade_stat(stat_name: String) -> bool:
 			points_in_fire_rate += 1
 			fire_rate_multiplier = 1.0 + (points_in_fire_rate * 0.04)  # +4% per point
 		
-		"reload":
-			if points_in_reload >= 50:
+		"luck":
+			if points_in_luck >= 50:
 				return false
-			points_in_reload += 1
-			reload_speed_multiplier = 1.0 + (points_in_reload * 0.06)  # +6% per point
-		
+			points_in_luck += 1
+			luck = base_luck + (points_in_luck * 0.01)  # Add base_luck to the calculation
+			
 		"crit_chance":
 			if points_in_crit_chance >= 25:  # Lower cap for crit
 				return false
@@ -130,7 +130,7 @@ func get_stat_value(stat_name: String) -> float:
 		"speed": return move_speed
 		"damage": return damage_multiplier
 		"fire_rate": return fire_rate_multiplier
-		"reload": return reload_speed_multiplier
+		"luck": return luck
 		"crit_chance": return critical_chance
 		"crit_damage": return critical_damage
 	return 0.0
@@ -141,7 +141,7 @@ func get_points_in_stat(stat_name: String) -> int:
 		"speed": return points_in_speed
 		"damage": return points_in_damage
 		"fire_rate": return points_in_fire_rate
-		"reload": return points_in_reload
+		"luck": return points_in_luck	
 		"crit_chance": return points_in_crit_chance
 		"crit_damage": return points_in_crit_damage
 	return 0

@@ -23,10 +23,10 @@ const UI_SCALE = 0.15
 func _ready():
 	visible = false
 	
-	# Apply scale to the entire UI
-	scale = Vector2(UI_SCALE, UI_SCALE)
+	# Apply scavisible = false
 	
-	# FIX BLUR - Add these lines!
+	# Apply scale
+	scale = Vector2(UI_SCALE, UI_SCALE)
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	
 	_setup_styling()
@@ -133,10 +133,7 @@ func _style_button(button: Button, text: String, color: Color):
 
 func setup_storage(storage: WeaponStorageManager, manager: WeaponManager, player_node: Node2D):
 	print("\n=== WEAPON STORAGE SETUP ===")
-	print("storage: ", storage)
-	print("manager: ", manager)
-	print("player_node: ", player_node)
-	
+
 	weapon_storage = storage
 	weapon_manager = manager
 	player = player_node
@@ -148,22 +145,26 @@ func setup_storage(storage: WeaponStorageManager, manager: WeaponManager, player
 		print("✗ weapon_storage is NULL!")
 		return
 	
-	if not weapon_manager:
-		print("⚠ Warning: No weapon manager - equip buttons won't work")
-	
 	print("Creating slots...")
 	_create_slots()
 	print("✓ Slots created: ", slots.size())
 	
-	print("Populating with weapons...")
-	_populate_with_weapons()
-	print("✓ Population complete")
+	# Wait a frame for GameManager to restore weapons
+	await get_tree().process_frame
+	
+	# Check if weapons were restored from save
+	var has_weapons = weapon_storage.get_weapon_count() > 0
+	print("After waiting, storage has ", weapon_storage.get_weapon_count(), " weapons")
+	
+	# Only populate with defaults if storage is truly empty
+	if not has_weapons:
+		print("Storage is empty - populating with default weapons...")
+		_populate_with_weapons()
+	else:
+		print("Storage already has weapons (loaded from save or previous population)")
 	
 	print("Updating display...")
 	_update_display()
-	print("✓ Display updated")
-	
-	print("Storage has ", weapon_storage.get_weapon_count(), " weapons")
 	print("=== SETUP COMPLETE ===\n")
 
 func _create_slots():
@@ -343,7 +344,19 @@ func _on_close_button_pressed():
 	toggle_visibility()
 
 func toggle_visibility():
+	#print("\n=== TOGGLE VISIBILITY CALLED ===")
+	#print("Current visible state: ", visible)
+	#print("About to set visible to: ", !visible)
+	
 	visible = !visible
+	
+	#print("New visible state: ", visible)
+	#print("Position: ", position)
+	#print("Global position: ", global_position)
+	#print("Size: ", size)
+	#print("Scale: ", scale)
+	#print("================================\n")
+	
 	selected_slot = -1
 	
 	if not visible:

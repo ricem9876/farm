@@ -43,11 +43,11 @@ var skill_data = {
 		"icon": "🔥",
 		"color": Color(1, 0.8, 0.2)
 	},
-	"reload": {
-		"display_name": "Reload Speed",
-		"description": "+6% reload speed per point",
-		"icon": "🔄",
-		"color": Color(0.5, 0.5, 1)
+	"luck": {
+		"display_name": "luck",
+		"description": "+1% dodge & double drops per point",
+		"icon": "🍀",
+		"color": Color(0.3, 0.8, 0.3)
 	},
 	"crit_chance": {
 		"display_name": "Critical Chance",
@@ -110,7 +110,7 @@ func setup(player_level_system: PlayerLevelSystem):
 	
 	# Connect to level system signals
 	if level_system:
-		level_system.level_up.connect(_on_level_up)
+		#level_system.level_up.connect(_on_level_up)
 		level_system.experience_gained.connect(_on_experience_gained)
 		level_system.skill_point_spent.connect(_on_skill_point_spent)
 		print("✓ Connected to level system signals")
@@ -254,7 +254,7 @@ func _update_skill_button(stat_name: String):
 				value_label.text = "Current: %.0f HP" % current_value
 			"speed":
 				value_label.text = "Current: %.0f" % current_value
-			"damage", "fire_rate", "reload":
+			"damage", "fire_rate", "luck":
 				value_label.text = "Current: %.0f%% (x%.2f)" % [(current_value * 100), current_value]
 			"crit_chance":
 				value_label.text = "Current: %.1f%%" % (current_value * 100)
@@ -312,11 +312,11 @@ func _on_reset_button_pressed():
 	print("Reset not implemented - add confirmation dialog")
 	# You can add a confirmation dialog here
 
-func _on_level_up(new_level: int, skill_points_gained: int):
-	# Auto-open when leveling up
-	print("Level up detected! Opening skill tree...")
-	open()
-	_update_ui()
+#func _on_level_up(new_level: int, skill_points_gained: int):
+	## Auto-open when leveling up
+	#print("Level up detected! Opening skill tree...")
+	#open()
+	#_update_ui()
 
 func _on_experience_gained(amount: int, total: int):
 	# Update XP bar in real-time if UI is open

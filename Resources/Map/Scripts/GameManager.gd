@@ -1,18 +1,25 @@
 # GameManager.gd - Improved version with better state management
 extends Node
 
+var current_level_settings: Dictionary = {}
+
 # Persistent inventory data
 var saved_inventory_items: Array[Item] = []
 var saved_inventory_quantities: Array[int] = []
 var current_scene_type: String = "farm"
 
+
 # Persistent storage data
 var saved_storage_data: Dictionary = {}
+var current_save_slot: int = -1
+var pending_load_data: Dictionary = {}
 
 # Weapon data persistence
 var saved_primary_weapon: WeaponItem = null
 var saved_secondary_weapon: WeaponItem = null
 var saved_active_slot: int = 0
+
+var saved_weapon_storage: Array = []
 
 # Player level system persistence
 var saved_player_level: int = 1
@@ -96,6 +103,61 @@ func save_player_weapons(weapon_manager: WeaponManager):
 	
 	print("  Active slot: ", saved_active_slot)
 
+func save_weapon_storage(weapon_storage: WeaponStorageManager):
+	"""Save weapon storage contents"""
+	print("Saving weapon storage...")
+	saved_weapon_storage.clear()
+	
+	for weapon in weapon_storage.weapons:
+		if weapon:
+			saved_weapon_storage.append({
+				"name": weapon.name,
+				"type": weapon.weapon_type
+			})
+		else:
+			saved_weapon_storage.append({})
+	
+	print("Saved ", saved_weapon_storage.size(), " weapon storage slots")
+
+func restore_weapon_storage(weapon_storage: WeaponStorageManager):
+	"""Restore weapon storage contents"""
+	print("Restoring weapon storage...")
+	
+	if saved_weapon_storage.is_empty():
+		print("No saved storage data")
+		return
+	
+	# Clear current storage
+	for i in range(weapon_storage.max_slots):
+		weapon_storage.weapons[i] = null
+	
+	# Restore weapons by recreating them from saved data
+	for i in range(saved_weapon_storage.size()):
+		var weapon_data = saved_weapon_storage[i]
+		if weapon_data.is_empty():
+			continue
+		
+		# Recreate weapon based on name
+		var weapon: WeaponItem = null
+		match weapon_data.name:
+			"Pistol":
+				weapon = WeaponFactory.create_pistol()
+			"Shotgun":
+				weapon = WeaponFactory.create_shotgun()
+			"Assault Rifle":
+				weapon = WeaponFactory.create_rifle()
+			"Sniper Rifle":
+				weapon = WeaponFactory.create_sniper()
+			"Machine Gun":
+				weapon = WeaponFactory.create_machine_gun()
+			"Burst Rifle":
+				weapon = WeaponFactory.create_burst_rifle()
+		
+		if weapon and i < weapon_storage.weapons.size():
+			weapon_storage.weapons[i] = weapon
+	
+	weapon_storage.storage_changed.emit()
+	print("Weapon storage restored")
 func restore_player_weapons(weapon_manager: WeaponManager):
 	"""Restore the saved weapon loadout"""
 	print("Restoring weapon loadout...")
@@ -142,6 +204,7 @@ func restore_player_weapons(weapon_manager: WeaponManager):
 	
 	print("  ✓ Weapons restored successfully")
 
+
 # ========== LEVEL SYSTEM PERSISTENCE ==========
 
 func save_player_level_system(level_system: PlayerLevelSystem):
@@ -162,7 +225,7 @@ func save_player_level_system(level_system: PlayerLevelSystem):
 		"speed": level_system.points_in_speed,
 		"damage": level_system.points_in_damage,
 		"fire_rate": level_system.points_in_fire_rate,
-		"reload": level_system.points_in_reload,
+		"luck": level_system.points_in_luck,
 		"crit_chance": level_system.points_in_crit_chance,
 		"crit_damage": level_system.points_in_crit_damage
 	}
@@ -195,7 +258,7 @@ func restore_player_level_system(level_system: PlayerLevelSystem):
 		level_system.points_in_speed = saved_stat_points.get("speed", 0)
 		level_system.points_in_damage = saved_stat_points.get("damage", 0)
 		level_system.points_in_fire_rate = saved_stat_points.get("fire_rate", 0)
-		level_system.points_in_reload = saved_stat_points.get("reload", 0)
+		level_system.luck = saved_stat_points.get("luck", 0)
 		level_system.points_in_crit_chance = saved_stat_points.get("crit_chance", 0)
 		level_system.points_in_crit_damage = saved_stat_points.get("crit_damage", 0)
 		
@@ -207,7 +270,7 @@ func restore_player_level_system(level_system: PlayerLevelSystem):
 		level_system.move_speed = level_system.base_move_speed + (level_system.points_in_speed * 5)
 		level_system.damage_multiplier = 1.0 + (level_system.points_in_damage * 0.05)
 		level_system.fire_rate_multiplier = 1.0 + (level_system.points_in_fire_rate * 0.04)
-		level_system.reload_speed_multiplier = 1.0 + (level_system.points_in_reload * 0.06)
+		level_system.luck = 1.0 + (level_system.points_in_luck * 0.01)
 		level_system.critical_chance = level_system.points_in_crit_chance * 0.02
 		level_system.critical_damage = 1.5 + (level_system.points_in_crit_damage * 0.1)
 	

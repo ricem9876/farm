@@ -22,8 +22,8 @@ func physics_update(delta: float):
 		
 		# Get speed from player's level system if available
 		var current_speed = move_speed
-		if player.has_node("PlayerLevelSystem"):
-			var level_system = player.get_node("PlayerLevelSystem")
+		if player.level_system:
+			var level_system = player.level_system
 			current_speed = level_system.move_speed
 		
 		player.velocity = input_vector * current_speed

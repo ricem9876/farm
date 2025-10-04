@@ -5,8 +5,11 @@ extends Node2D
 @onready var weapon_hud = $CanvasLayer/WeaponHUD
 @onready var farm_exit = $FarmExit
 
+var pause_menu_scene = preload("res://Resources/UI/PauseMenu.tscn")
 var player: Node2D
 var weapon_storage: WeaponStorageManager
+var level_select_scene = preload("res://Resources/UI/LevelSelectUI.tscn")
+
 
 func _ready():
 	print("\n=== SAFEHOUSE SETUP START ===")
@@ -22,6 +25,9 @@ func _ready():
 	
 	print("✓ Player found at position: ", player.global_position)
 	
+		# IMPORTANT: Wait for player's _ready() to complete
+	await get_tree().process_frame
+	await get_tree().process_frame
 	# Make sure player is in the player group
 	if not player.is_in_group("player"):
 		player.add_to_group("player")
@@ -30,6 +36,9 @@ func _ready():
 		print("✓ Player already in 'player' group")
 	
 	# Setup farm exit interaction
+	var level_select = level_select_scene.instantiate()
+	add_child(level_select)
+
 	if farm_exit:
 		print("✓ FarmExit found")
 		if not farm_exit.is_in_group("interaction_areas"):
@@ -105,6 +114,16 @@ func _ready():
 	# NOW disable the gun
 	_disable_gun_in_safehouse()
 	
+	# Restore weapon storage after creating it
+	if weapon_storage:
+		GameManager.restore_weapon_storage(weapon_storage)
+		
+	var pause_menu = pause_menu_scene.instantiate()
+	add_child(pause_menu)
+	
+
+
+	print("✓ Pause menu added")
 	print("=== SAFEHOUSE SETUP COMPLETE ===")
 	print("Storage has ", weapon_storage.get_weapon_count(), " weapons\n")
 
@@ -134,7 +153,8 @@ func _restore_player_state():
 		print("✓ Level system restored: Level ", player.level_system.current_level)
 	else:
 		print("  ⚠ No level system to restore")
-
+		
+	player.refresh_hud()
 func _on_weapon_equipped_in_safehouse(slot: int, weapon_item: WeaponItem):
 	"""Called whenever a weapon is equipped - disable it immediately if in safehouse"""
 	print("Weapon equipped in safehouse - disabling it!")
@@ -181,3 +201,13 @@ func _disable_all_guns():
 	
 	if not primary_gun and not secondary_gun:
 		print("✗ No guns found (this is OK if player has no weapons)")
+
+func _exit_tree():
+	if weapon_storage:
+		GameManager.save_weapon_storage(weapon_storage)
+	
+	# Save player data
+	if GameManager.current_save_slot >= 0 and player:
+		print("Auto-saving to slot ", GameManager.current_save_slot)
+		var player_data = SaveSystem.collect_player_data(player)
+		SaveSystem.save_game(GameManager.current_save_slot, player_data)

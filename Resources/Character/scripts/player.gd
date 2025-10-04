@@ -20,7 +20,11 @@ var weapon_manager: WeaponManager
 # State Machine Reference
 @onready var state_machine = $StateMachine
 
+const SKILL_TREE_ALLOWED_STATES = ["SafehouseState"]  # Add more as needed
+
 func _ready():
+	add_to_group("player")  # IMPORTANT: Ensure player is in "player" group
+	
 	# Create and setup level system
 	_setup_level_system()
 	
@@ -32,6 +36,9 @@ func _ready():
 	
 	# Setup skill tree UI if it exists
 	_setup_skill_tree_ui()
+	
+		# Setup player HUD
+	_setup_player_hud()
 	
 	# Initialize health from level system
 	max_health = level_system.max_health
@@ -63,7 +70,7 @@ func _setup_weapon_manager():
 func _setup_inventory_manager():
 	# Create the inventory manager
 	inventory_manager = InventoryManager.new()
-	inventory_manager.max_slots = 8
+	inventory_manager.max_slots = 20  # UPDATED: Match InventoryManager default
 	add_child(inventory_manager)
 	print("✓ InventoryManager created")
 
@@ -90,7 +97,23 @@ func _setup_skill_tree_ui():
 			print("  Make sure SkillTreeUI.gd script is attached")
 	else:
 		print("ℹ SkillTreeUI not found - you can add it later")
-
+		
+func _setup_player_hud():
+	if has_node("PlayerHUD"):
+		var hud = get_node("PlayerHUD")
+		if hud.has_method("setup"):
+			hud.setup(self, level_system)
+			print("✓ Player HUD setup complete")
+	else:
+		print("ℹ PlayerHUD not found in player scene")
+		
+func refresh_hud():
+	if has_node("PlayerHUD"):
+		var hud = get_node("PlayerHUD")
+		if hud.has_method("_update_display"):
+			hud._update_display()
+			print("✓ Player HUD refreshed")
+			
 func _equip_starting_weapon():
 	print("\n=== EQUIPPING STARTING WEAPON ===")
 	
@@ -113,7 +136,7 @@ func _physics_process(delta):
 	# Movement is handled by state machine
 	move_and_slide()
 
-# Called by MushroomSpawner when enemies die
+# Called by enemies when they die (via EnemySpawner)
 func gain_experience(amount: int):
 	if level_system:
 		level_system.gain_experience(amount)
@@ -126,6 +149,13 @@ func get_movement_speed() -> float:
 
 # Take damage from enemies
 func take_damage(damage: float):
+	if level_system:
+		var dodge_chance = level_system.luck
+		if randf() < dodge_chance:
+			print("⚡ DODGED! No damage taken")
+			# TODO: Add visual effect for dodge
+			return
+	
 	current_health -= damage
 	current_health = max(0, current_health)
 	
@@ -142,11 +172,25 @@ func heal(amount: float):
 func _die():
 	print("Player died!")
 	# TODO: Add death logic (game over screen, respawn, etc.)
-	# For now, just respawn at full health
-	current_health = max_health
-	global_position = Vector2.ZERO
+	# For now, just go to title screen
+	get_tree().change_scene_to_file("res://Resources/Scenes/TitleScreen.tscn")
 
-# Collect item pickups
+# === ITEM COLLECTION METHODS ===
+
+# NEW: Method expected by ItemPickup (using Item resource)
+func add_item_to_inventory(item: Item, quantity: int = 1) -> bool:
+	if not inventory_manager:
+		print("Cannot collect item - no inventory manager")
+		return false
+	
+	if inventory_manager.add_item(item, quantity):
+		print("✓ Collected: ", item.name, " x", quantity)
+		return true
+	else:
+		print("✗ Inventory full! Couldn't collect: ", item.name)
+		return false
+
+# KEPT: Fallback method for string-based collection
 func collect_item(item_name: String):
 	if not inventory_manager:
 		print("Cannot collect item - no inventory manager")
@@ -155,11 +199,9 @@ func collect_item(item_name: String):
 	# Create item resource based on item_name
 	var item = _create_item_from_name(item_name)
 	if item:
-		if inventory_manager.add_item(item, 1):
-			print("✓ Collected: ", item.name)
-		else:
-			print("✗ Inventory full! Couldn't collect: ", item.name)
+		add_item_to_inventory(item, 1)
 
+# UPDATED: Now includes all 4 enemy drops with correct paths
 func _create_item_from_name(item_name: String) -> Item:
 	var item = Item.new()
 	match item_name:
@@ -167,11 +209,34 @@ func _create_item_from_name(item_name: String) -> Item:
 			item.name = "Mushroom"
 			item.description = "A tasty mushroom dropped by an enemy"
 			item.stack_size = 99
-			item.item_type = "consumable"
+			item.item_type = "material"
 			item.icon = preload("res://Resources/Inventory/Sprites/mushroom.png")
+		
+		"fiber":
+			item.name = "Plant Fiber"
+			item.description = "Tough plant fibers used for crafting"
+			item.stack_size = 99
+			item.item_type = "material"
+			item.icon = preload("res://Resources/Inventory/Sprites/fiber.png")
+		
+		"fur":
+			item.name = "Wolf Fur"
+			item.description = "Soft fur from a wolf, useful for crafting"
+			item.stack_size = 99
+			item.item_type = "material"
+			item.icon = preload("res://Resources/Inventory/Sprites/fur.png")
+		
+		"wood":  # NEW: Added wood for tree drops
+			item.name = "Wood"
+			item.description = "Sturdy wood from a fallen tree"
+			item.stack_size = 99
+			item.item_type = "material"
+			item.icon = preload("res://Resources/Inventory/Sprites/wood.png")
+		
 		_:
 			print("Unknown item: ", item_name)
 			return null
+	
 	return item
 
 # === MANAGER GETTERS ===
@@ -191,6 +256,7 @@ func _on_player_level_up(new_level: int, skill_points_gained: int):
 	print("Total Skill Points: ", level_system.skill_points)
 	
 	# Heal to full on level up (optional)
+	max_health = level_system.max_health
 	current_health = max_health
 	print("Restored to full health!")
 
@@ -220,8 +286,8 @@ func _on_skill_point_spent(stat_name: String, new_value: float):
 		"fire_rate":
 			print("Fire Rate Multiplier: x", level_system.fire_rate_multiplier)
 		
-		"reload":
-			print("Reload Speed Multiplier: x", level_system.reload_speed_multiplier)
+		"luck":
+			print("Luck Multiplier: x", level_system.luck * 100, "% (dodge & double drops)")
 		
 		"crit_chance":
 			print("Critical Chance: ", level_system.critical_chance * 100, "%")
@@ -238,6 +304,13 @@ func _input(event):
 	# Don't process input if skill tree is open
 	if skill_tree_ui and skill_tree_ui.visible:
 		return
+	if event.is_action_pressed("open_skill_tree"):
+		if _is_skill_tree_allowed():
+			if skill_tree_ui and skill_tree_ui.has_method("open"):
+				if not skill_tree_ui.visible:
+					skill_tree_ui.open()
+		else:
+			print("Skill tree not available in this location!")
 	
 	# Toggle inventory
 	if event.is_action_pressed("toggle_inventory"):
@@ -264,6 +337,18 @@ func _input(event):
 			elif event.keycode == KEY_Q:
 				weapon_manager.switch_weapon()
 
+func _is_skill_tree_allowed() -> bool:
+	if not has_node("LocationStateMachine"):
+		return false
+	
+	var loc_state = get_node("LocationStateMachine")
+	var current_state = loc_state.get_current_state()
+	
+	if not current_state:
+		return false
+	
+	return current_state.name in SKILL_TREE_ALLOWED_STATES
+
 func _switch_to_slot(slot: int):
 	if not weapon_manager:
 		return
@@ -274,6 +359,8 @@ func _switch_to_slot(slot: int):
 		print("Switched to weapon slot ", slot)
 	elif not weapon_manager.has_weapon_in_slot(slot):
 		print("No weapon in slot ", slot)
+
+# === DEBUG METHODS ===
 
 func debug_add_xp(amount: int = 100):
 	gain_experience(amount)

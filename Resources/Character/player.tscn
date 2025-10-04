@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3 uid="uid://rhebvs8qauqd"]
+[gd_scene load_steps=23 format=3 uid="uid://rhebvs8qauqd"]
 
 [ext_resource type="Script" uid="uid://banmwipl3lkhs" path="res://Resources/Character/scripts/player.gd" id="1_13ehe"]
 [ext_resource type="Texture2D" uid="uid://cr0eib1t3nahd" path="res://Resources/Character/mainIdle.png" id="1_tcqxc"]
@@ -13,6 +13,7 @@
 [ext_resource type="Script" uid="uid://bvet17hw2cfue" path="res://Resources/Weapon/WeaponManager.gd" id="11_j5vo7"]
 [ext_resource type="Script" uid="uid://dj5r5ky5jg58q" path="res://Resources/Character/scripts/State/LocationStateMachine.gd" id="12_25ma8"]
 [ext_resource type="Script" uid="uid://bt3u4ciyln77x" path="res://Resources/Character/FarmState.gd" id="13_paeun"]
+[ext_resource type="PackedScene" uid="uid://chmbncpfja5tx" path="res://Resources/Character/PlayerHUD.tscn" id="14_paeun"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qawys"]
 size = Vector2(13.5, 21.5)
@@ -333,6 +334,7 @@ script = ExtResource("6_68bqj")
 script = ExtResource("7_3s00l")
 
 [node name="SkillTreeUI" parent="." instance=ExtResource("8_y50du")]
+visible = false
 script = ExtResource("9_yhu08")
 
 [node name="PlayerLevelSystem" type="Node" parent="."]
@@ -349,3 +351,5 @@ script = ExtResource("13_paeun")
 
 [node name="SafehouseState" type="Node" parent="LocationStateMachine"]
 script = ExtResource("7_3s00l")
+
+[node name="PlayerHUD" parent="." instance=ExtResource("14_paeun")]

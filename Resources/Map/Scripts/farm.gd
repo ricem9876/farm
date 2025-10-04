@@ -5,10 +5,20 @@ extends Node2D
 @onready var player = $player
 @onready var camera = $player/Camera2D
 @onready var house_entrance = $HouseEntrance
+var pause_menu_scene = preload("res://Resources/UI/PauseMenu.tscn")
 
 func _ready():
-	print("\n=== FARM SCENE SETUP START ===")
+	print("\n=== FARM SCENE _READY CALLED ===")
+	print("weapon_hud node: ", weapon_hud)
+	print("weapon_hud path exists: ", has_node("CanvasLayer/WeaponHUD"))
 	
+	# Try to find EnemySpawner
+	var spawner = get_node_or_null("EnemySpawner")
+	print("EnemySpawner node: ", spawner)
+	if spawner:
+		print("EnemySpawner script: ", spawner.get_script())
+	print("\n=== FARM SCENE SETUP START ===")
+
 	if not player:
 		print("ERROR: Player not found!")
 		return
@@ -71,13 +81,20 @@ func _ready():
 		print("ERROR: InventoryUI not found!")
 	
 	# Setup weapon HUD
+# Setup weapon HUD
 	if weapon_hud:
 		print("✓ WeaponHUD found")
+	
+	# Wait for player to be fully ready
+		await get_tree().process_frame
+	
 		var weapon_mgr = player.get_weapon_manager()
-		
+		print("Weapon manager: ", weapon_mgr)
+	
 		if weapon_mgr:
 			weapon_hud.setup_hud(weapon_mgr, player)
-			print("  - Weapon HUD setup complete")
+			weapon_hud.visible = true  # Explicitly show it
+			print("  - Weapon HUD setup complete and visible")
 		else:
 			print("  ⚠ No weapon manager - hiding WeaponHUD")
 			weapon_hud.visible = false
@@ -94,12 +111,20 @@ func _ready():
 	# NOW enable the gun
 	_enable_gun_on_farm()
 	
+	var pause_menu = pause_menu_scene.instantiate()
+	add_child(pause_menu)
+	print("✓ Pause menu added")
+	
 	print("=== FARM SCENE SETUP COMPLETE ===\n")
 
 func _restore_player_state():
 	"""Restore player state when entering farm"""
 	print("Checking for saved player state...")
-	
+	if not GameManager.pending_load_data.is_empty():
+		print("Loading from save file...")
+		SaveSystem.apply_player_data(player, GameManager.pending_load_data.get("player", {}))
+		GameManager.pending_load_data = {}  # Clear after loading
+		return
 	# Restore inventory
 	if player.has_method("get_inventory_manager"):
 		var inv_mgr = player.get_inventory_manager()
@@ -122,7 +147,8 @@ func _restore_player_state():
 		print("✓ Level system restored: Level ", player.level_system.current_level)
 	else:
 		print("  ⚠ No level system to restore")
-
+	player.refresh_hud()
+			
 func _enable_gun_on_farm():
 	print("Setting location state to Farm...")
 	
@@ -149,3 +175,10 @@ func _input(event):
 	if event.is_action_pressed("toggle_inventory"):
 		print(">>> TAB/SHIFT PRESSED IN FARM SCENE <<<")
 		_on_inventory_toggle_requested()
+		
+func _exit_tree():
+	# Auto-save when leaving scene
+	if GameManager.current_save_slot >= 0 and player:
+		print("Auto-saving to slot ", GameManager.current_save_slot)
+		var player_data = SaveSystem.collect_player_data(player)
+		SaveSystem.save_game(GameManager.current_save_slot, player_data)

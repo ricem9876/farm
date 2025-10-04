@@ -44,8 +44,6 @@ offset_bottom = 353.0
 
 [node name="FarmExit" type="Area2D" parent="."]
 script = ExtResource("5_vabqk")
-interaction_type = null
-show_prompt = null
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="FarmExit"]
 position = Vector2(503.75, 381.5)
@@ -64,6 +62,7 @@ position = Vector2(411, 251)
 unique_name_in_owner = true
 visible = false
 top_level = true
+z_index = 5
 offset_left = 404.0
 offset_top = 282.0
 offset_right = 404.0

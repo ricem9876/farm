@@ -114,7 +114,7 @@ func _handle_firing(delta):
 	
 	# Get player's fire rate multiplier for timer calculation
 	var fire_rate_multiplier = 1.0
-	if player and player.has_node("PlayerLevelSystem"):
+	if player and player.level_system:
 		var player_level_system = player.get_node("PlayerLevelSystem")
 		fire_rate_multiplier = player_level_system.fire_rate_multiplier
 	
@@ -149,41 +149,66 @@ func stop_firing():
 	is_firing = false
 
 func fire():
-	print("=== fire() called ===")
-	print("  can_fire: ", can_fire)
-	print("  muzzle_point: ", muzzle_point)
+	#print("\n=== DETAILED FIRE DEBUG ===")
+	#print("1. can_fire: ", can_fire)
+	#print("2. muzzle_point exists: ", muzzle_point != null)
 	
 	if not can_fire:
-		print("  BLOCKED: can_fire is false")
+		print("BLOCKED: can_fire is false")
 		return
 		
 	if not muzzle_point:
-		print("  BLOCKED: no muzzle_point")
+		print("BLOCKED: no muzzle_point")
 		return
 	
-	print("  >>> FIRING BULLET <<<")
-	# Get player's level system for stat multipliers
+	#print("3. player reference: ", player)
+	#print("4. player is valid: ", is_instance_valid(player))
+	#
+	#if player:
+		#print("5. player.level_system exists: ", player.level_system != null)
+		
+		#if player.level_system:
+			#print("6. Reading stats from level_system:")
+			#print("   - damage_multiplier: ", player.level_system.damage_multiplier)
+			#print("   - critical_chance: ", player.level_system.critical_chance)
+			#print("   - critical_damage: ", player.level_system.critical_damage)
+			#print("   - points_in_damage: ", player.level_system.points_in_damage)
+			#print("   - points_in_crit_chance: ", player.level_system.points_in_crit_chance)
+		#else:
+			#print("ERROR: player.level_system is NULL!")
+	#else:
+		#print("ERROR: player is NULL!")
+	
+	# Access level_system directly
 	var damage_multiplier = 1.0
 	var crit_chance = 0.0
 	var crit_damage = 1.5
 	
-	if player and player.has_node("PlayerLevelSystem"):
-		var player_level_system = player.get_node("PlayerLevelSystem")
-		damage_multiplier = player_level_system.damage_multiplier
-		crit_chance = player_level_system.critical_chance
-		crit_damage = player_level_system.critical_damage
+	if player and player.level_system:
+		damage_multiplier = player.level_system.damage_multiplier
+		crit_chance = player.level_system.critical_chance
+		crit_damage = player.level_system.critical_damage
+	
+	#print("7. Final multipliers being used:")
+	#print("   - damage_multiplier: ", damage_multiplier)
+	#print("   - crit_chance: ", crit_chance)
 	
 	# Apply damage multiplier to base damage
 	var final_damage = current_damage * damage_multiplier
+	
+	#print("8. Damage calculation:")
+	#print("   - current_damage (base): ", current_damage)
+	#print("   - final_damage (after mult): ", final_damage)
 	
 	# Check for critical hit
 	var is_critical = randf() < crit_chance
 	if is_critical:
 		final_damage *= crit_damage
-		print("💥 CRITICAL HIT! Damage: ", final_damage)
-	
-	print("Gun.fire() - FIRING BULLET | Damage: ", final_damage)
-		
+		#print("   - CRITICAL HIT! Final: ", final_damage)
+	#
+	#print("================================\n")
+	#
+	# Rest of your firing code...
 	_calculate_spread_pattern()
 	
 	for i in range(current_bullet_count):
@@ -200,9 +225,8 @@ func fire():
 			
 		var final_direction = base_direction.rotated(spread_angle)
 		
-		# Use final_damage which includes player multipliers and crit
 		bullet.setup(final_damage, current_bullet_speed, final_direction)
-
+		
 func _calculate_spread_pattern():
 	spread_pattern.clear()
 	
@@ -245,8 +269,8 @@ func get_gun_info() -> Dictionary:
 	gun_info.bullet_count = current_bullet_count
 	
 	# Include player multipliers if available
-	if player and player.has_node("PlayerLevelSystem"):
-		var player_level_system = player.get_node("PlayerLevelSystem")
+	if player and player.level_system:
+		var player_level_system = player.level_system
 		gun_info.effective_damage = current_damage * player_level_system.damage_multiplier
 		gun_info.effective_fire_rate = current_fire_rate * player_level_system.fire_rate_multiplier
 		gun_info.crit_chance = player_level_system.critical_chance
