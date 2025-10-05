@@ -139,7 +139,8 @@ func collect_player_data(player: Node2D) -> Dictionary:
 		"max_health": 100,
 		"inventory": [],
 		"weapons": {},
-		"current_scene": "farm"
+		"current_scene": "farm",
+		"player_stats": {}  # NEW: Add stats tracking
 	}
 	
 	# Detect current scene - SAFE version
@@ -154,6 +155,9 @@ func collect_player_data(player: Node2D) -> Dictionary:
 				scene_name = "farm"
 	
 	data.current_scene = scene_name
+	data.player_stats = StatsTracker.get_stats_data()
+	
+
 	
 	# Level system
 	if player.level_system:
@@ -175,31 +179,46 @@ func collect_player_data(player: Node2D) -> Dictionary:
 	data.health = player.current_health
 	
 	# Inventory
-	if player.inventory_manager:
-		var inv_data = []
-		for i in range(player.inventory_manager.items.size()):
-			var item = player.inventory_manager.items[i]
-			if item:
-				inv_data.append({
-					"name": item.name,
-					"quantity": player.inventory_manager.quantities[i]
-				})
-			else:
-				inv_data.append(null)
-		data.inventory = inv_data
+	if player.has_method("get_inventory_manager"):
+		var inv_mgr = player.get_inventory_manager()
+		if inv_mgr:
+			var inv_data = []
+			for i in range(inv_mgr.items.size()):  # FIXED: use inv_mgr
+				var item = inv_mgr.items[i]  # FIXED
+				if item:
+					inv_data.append({
+						"name": item.name,
+						"quantity": inv_mgr.quantities[i]  # FIXED
+					})
+				else:
+					inv_data.append(null)
+			data.inventory = inv_data
+			print("DEBUG: Saved inventory with ", inv_data.size(), " slots")  # Debug
 	
 	# Weapons
-	if player.weapon_manager:
-		data.weapons = {
-			"primary": player.weapon_manager.primary_slot.name if player.weapon_manager.primary_slot else null,
-			"secondary": player.weapon_manager.secondary_slot.name if player.weapon_manager.secondary_slot else null,
-			"active_slot": player.weapon_manager.active_slot
-		}
-	
+	if player.has_method("get_weapon_manager"):
+		var weapon_mgr = player.get_weapon_manager()
+		if weapon_mgr:
+			data.weapons = {
+				"primary": weapon_mgr.primary_slot.name if weapon_mgr.primary_slot else null,
+				"secondary": weapon_mgr.secondary_slot.name if weapon_mgr.secondary_slot else null,
+				"active_slot": weapon_mgr.active_slot
+			}
+		print("DEBUG collect_player_data - Weapon data collected: ", data.weapons)
 	# Weapon Storage (from GameManager)
 	data.weapon_storage = []
 	for weapon_data in GameManager.saved_weapon_storage:
 		data.weapon_storage.append(weapon_data)
+	
+	data.storage_chests = {}
+	if player.is_inside_tree():
+		var storage_containers = player.get_tree().get_nodes_in_group("storage_containers")
+		for container in storage_containers:
+			if container.has_method("get_save_data"):
+				var chest_data = container.get_save_data()
+				data.storage_chests[chest_data.storage_id] = chest_data
+	
+
 	
 	return data
 
@@ -248,10 +267,80 @@ func apply_player_data(player: Node2D, data: Dictionary):
 			player.level_system.luck = 1.0 + (player.level_system.points_in_luck * 0.01)
 			player.level_system.critical_chance = player.level_system.points_in_crit_chance * 0.02
 			player.level_system.critical_damage = 1.5 + (player.level_system.points_in_crit_damage * 0.1)
-	
+			
+			# Add this section after level system restoration:
+# Restore inventory
+	if data.has("inventory") and data.inventory != null:
+		var inv_mgr = player.get_inventory_manager()
+		if inv_mgr:
+			print("Restoring inventory from save...")
+			# Clear current inventory
+			for i in range(inv_mgr.max_slots):
+				inv_mgr.items[i] = null
+				inv_mgr.quantities[i] = 0
+			
+			# Restore saved items
+			for i in range(min(data.inventory.size(), inv_mgr.max_slots)):
+				var item_data = data.inventory[i]
+				if item_data != null and item_data is Dictionary:
+					var item = player._create_item_from_name(item_data.name)
+					if item:
+						inv_mgr.items[i] = item
+						inv_mgr.quantities[i] = item_data.quantity
+			
+			inv_mgr.inventory_changed.emit()
+			print("  ✓ Restored inventory")
+			
+	if data.has("weapons") and data.weapons != null:
+		var weapon_manager = player.get_node_or_null("WeaponManager")
+		if weapon_manager:
+			print("Restoring weapons from save data...")
+			print("DEBUG: Weapon data: ", data.weapons)  # ADD THIS
+			
+			# Restore primary weapon
+			if data.weapons.has("primary") and data.weapons.primary != null:
+				print("DEBUG: Attempting to create primary weapon: ", data.weapons.primary)  # ADD THIS
+				var primary_weapon = _create_weapon_from_name(data.weapons.primary)
+				print("DEBUG: Created weapon result: ", primary_weapon)  # ADD THIS
+				if primary_weapon:
+					weapon_manager.equip_weapon(primary_weapon, 0)
+					print("  ✓ Restored primary: ", primary_weapon.name)
+				else:
+					print("  ✗ Failed to create primary weapon!")  # ADD THIS
 	# Restore weapon storage from saved data
 	if data.has("weapon_storage") and data.weapon_storage != null:
 		GameManager.saved_weapon_storage = data.weapon_storage.duplicate()
 		print("Weapon storage data loaded")
+		
+	if data.has("player_stats") and data.player_stats != null:
+		StatsTracker.load_stats_data(data.player_stats)
+		print("Player statistics restored")
+	
+	if data.has("storage_chests") and data.storage_chests != null:
+	# Storage will be restored when safehouse scene loads
+	# Store it temporarily so safehouse can access it
+		GameManager.pending_storage_data = data.storage_chests
+	print("Storage chest data queued for restoration")
 	
 	print("Player data applied successfully")
+	
+	#helper code for restoring weapons
+func _create_weapon_from_name(weapon_name: String) -> WeaponItem:
+	"""Create a weapon item from its name"""
+	match weapon_name:
+		"Pistol":
+			return WeaponFactory.create_pistol()
+			print("DEBUG: Creating pistol...") 
+		"Shotgun":
+			return WeaponFactory.create_shotgun()
+		"Assault Rifle":
+			return WeaponFactory.create_rifle()
+		"Sniper Rifle":
+			return WeaponFactory.create_sniper()
+		"Machine Gun":
+			return WeaponFactory.create_machine_gun()
+		"Burst Rifle":
+			return WeaponFactory.create_burst_rifle()
+		_:
+			print("Unknown weapon name: ", weapon_name)
+			return null

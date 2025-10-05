@@ -18,3 +18,4 @@ shape = SubResource("RectangleShape2D_cj0iy")
 [node name="InteractionPrompt" type="Label" parent="."]
 offset_right = 40.0
 offset_bottom = 23.0
+metadata/_edit_use_anchors_ = true

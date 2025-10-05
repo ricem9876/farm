@@ -4,9 +4,8 @@ extends Node2D
 @export var spawn_enabled: bool = true
 @export var max_enemies: int = 15
 @export var spawn_interval: float = 5.0
-@export var spawn_boundary: Rect2 = Rect2(0, 0, 1000, 1000)  # Set in inspector
+@export var spawn_boundary: Rect2 = Rect2(0, 0, 1000, 1000)
 
-# Enemy scenes
 var enemy_scenes = {
 	"plant": preload("res://Resources/Enemies/Plant/plant.tscn"),
 	"wolf": preload("res://Resources/Enemies/Wolf/wolf.tscn"),
@@ -14,7 +13,6 @@ var enemy_scenes = {
 	"mushroom": preload("res://Resources/Enemies/Mushroom/Mushroom.tscn")
 }
 
-# Spawn weights (higher = more likely to spawn)
 var spawn_weights = {
 	"plant": 40,
 	"wolf": 20,
@@ -42,21 +40,16 @@ func _process(delta):
 		spawn_timer = spawn_interval
 
 func _spawn_random_enemy():
-	# Choose enemy type based on weights
 	var enemy_type = _weighted_random_choice()
-	
-	# Get random position within spawn boundary
 	var spawn_pos = _get_random_spawn_position()
-	
-	# Spawn the enemy
 	var enemy_scene = enemy_scenes[enemy_type]
 	var enemy = enemy_scene.instantiate()
 	
 	get_parent().add_child(enemy)
 	enemy.global_position = spawn_pos
 	
-	# Connect to death signal - THIS IS CRITICAL!
-	enemy.died.connect(_on_enemy_died)
+	# Connect to death signal with enemy type
+	enemy.died.connect(_on_enemy_died.bind(enemy_type))
 	
 	current_enemy_count += 1
 	print("Spawned ", enemy_type, " at ", spawn_pos, " (", current_enemy_count, "/", max_enemies, ")")
@@ -74,22 +67,18 @@ func _weighted_random_choice() -> String:
 		if random_value <= cumulative_weight:
 			return enemy_type
 	
-	return "plant"  # Fallback
+	return "plant"
 
 func _get_random_spawn_position() -> Vector2:
-	# Random position within boundary
 	var x = spawn_boundary.position.x + randf() * spawn_boundary.size.x
 	var y = spawn_boundary.position.y + randf() * spawn_boundary.size.y
-	
 	var spawn_pos = Vector2(x, y)
 	
-	# Ensure not too close to player
 	if player:
 		var min_distance = 150.0
 		var distance_to_player = spawn_pos.distance_to(player.global_position)
 		
 		if distance_to_player < min_distance:
-			# Try again up to 5 times
 			for i in range(5):
 				x = spawn_boundary.position.x + randf() * spawn_boundary.size.x
 				y = spawn_boundary.position.y + randf() * spawn_boundary.size.y
@@ -100,10 +89,14 @@ func _get_random_spawn_position() -> Vector2:
 	
 	return spawn_pos
 
-# FIXED: Now actually gives experience to the player!
-func _on_enemy_died(experience_points: int):
+# UPDATED: Now tracks kills by enemy type!
+func _on_enemy_died(experience_points: int, enemy_type: String):
 	current_enemy_count -= 1
-	print("Enemy died. XP gained: ", experience_points, " | Remaining enemies: ", current_enemy_count)
+	print("Enemy died: ", enemy_type, " | XP: ", experience_points, " | Remaining: ", current_enemy_count)
+	
+	# Track the kill in StatsTracker
+	StatsTracker.record_kill(enemy_type)
+	StatsTracker.record_experience_gained(experience_points)
 	
 	# Give experience to the player
 	if player and player.has_method("gain_experience"):

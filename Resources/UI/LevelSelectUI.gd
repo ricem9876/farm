@@ -115,35 +115,15 @@ func close():
 func _on_level_selected(level_data: Dictionary):
 	print("Selected level: ", level_data.name)
 	
-	# Save level settings to GameManager
 	GameManager.current_level_settings = level_data
 	
-	# IMPORTANT: Save player state before changing scenes
+	# Auto-save FIRST, before any scene changes
 	var player = get_tree().get_first_node_in_group("player")
-	if player:
-		# Save inventory
-		if player.has_method("get_inventory_manager"):
-			var inv_mgr = player.get_inventory_manager()
-			if inv_mgr:
-				GameManager.save_player_inventory(inv_mgr)
-		
-		# Save weapons
-		if player.has_method("get_weapon_manager"):
-			var wep_mgr = player.get_weapon_manager()
-			if wep_mgr:
-				GameManager.save_player_weapons(wep_mgr)
-		
-		# Save level system
-		if player.level_system:
-			GameManager.save_player_level_system(player.level_system)
+	if player and GameManager.current_save_slot >= 0:
+		print("Auto-saving before farm transition...")
+		var player_data = SaveSystem.collect_player_data(player)
+		SaveSystem.save_game(GameManager.current_save_slot, player_data)
 	
-	# Save all storage containers in safehouse
-	var storage_containers = get_tree().get_nodes_in_group("storage_containers")
-	for container in storage_containers:
-		if container.has_method("get_storage_id") and container.has_method("get_storage_manager"):
-			GameManager.save_storage_data(container.get_storage_id(), container.get_storage_manager())
-	
-	# Close UI and load level
 	close()
 	get_tree().change_scene_to_file(level_data.scene)
 

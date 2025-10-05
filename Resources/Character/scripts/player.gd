@@ -148,6 +148,7 @@ func take_damage(damage: float):
 			print("⚡ DODGED! No damage taken")
 			# TODO: Add visual effect for dodge
 			return
+	StatsTracker.record_damage_taken(damage)  # ADD THIS LINE
 	
 	current_health -= damage
 	current_health = max(0, current_health)
@@ -165,6 +166,7 @@ func heal(amount: float):
 func _die():
 	print("Player died!")
 	# TODO: Add death logic (game over screen, respawn, etc.)
+	StatsTracker.record_death()  # ADD THIS LINE
 	# For now, just go to title screen
 	get_tree().change_scene_to_file("res://Resources/Scenes/TitleScreen.tscn")
 
@@ -178,6 +180,7 @@ func add_item_to_inventory(item: Item, quantity: int = 1) -> bool:
 	
 	if inventory_manager.add_item(item, quantity):
 		print("✓ Collected: ", item.name, " x", quantity)
+		StatsTracker.record_item_collected()  # ADD THIS LINE
 		return true
 	else:
 		print("✗ Inventory full! Couldn't collect: ", item.name)

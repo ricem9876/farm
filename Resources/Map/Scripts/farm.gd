@@ -101,47 +101,75 @@ func _ready():
 func _restore_player_state():
 	"""Restore player state when entering farm"""
 	print("Checking for saved player state...")
+	
 	if not GameManager.pending_load_data.is_empty():
 		print("Loading from save file...")
 		SaveSystem.apply_player_data(player, GameManager.pending_load_data.get("player", {}))
-		GameManager.pending_load_data = {}  # Clear after loading
+		GameManager.pending_load_data = {}
 		player.refresh_hud()
-		player.refresh_weapon_hud()  # Add this line
-		
+		player.refresh_weapon_hud()
 		return
-	# Restore inventory
-	if player.has_method("get_inventory_manager"):
-		var inv_mgr = player.get_inventory_manager()
-		if inv_mgr:
-			GameManager.restore_player_inventory(inv_mgr)
-		else:
-			print("  ⚠ No inventory manager to restore")
 	
-	# Restore weapons
-	if player.has_method("get_weapon_manager"):
-		var wep_mgr = player.get_weapon_manager()
-		if wep_mgr:
-			GameManager.restore_player_weapons(wep_mgr)
-		else:
-			print("  ⚠ No weapon manager to restore")
-	
-	# Restore level system
-	if player.level_system:
-		GameManager.restore_player_level_system(player.level_system)
-
+	# Scene transition - data already current
+	print("Scene transition - player data already current")
 	player.refresh_hud()
-	player.refresh_weapon_hud()  # Add this line
-			
+	player.refresh_weapon_hud()
 
 
 func _enable_gun_on_farm():
+	print("\n=== DETAILED GUN ENABLE DEBUG ===")
 	print("Setting location state to Farm...")
 	
-	if player and player.has_node("LocationStateMachine"):
+	if not player:
+		print("ERROR: No player!")
+		return
+	
+	var weapon_manager = player.get_node_or_null("WeaponManager")
+	if not weapon_manager:
+		print("ERROR: No WeaponManager!")
+		return
+	
+	print("WeaponManager found")
+	print("  Primary slot: ", weapon_manager.primary_slot)
+	print("  Secondary slot: ", weapon_manager.secondary_slot)
+	print("  Active slot: ", weapon_manager.active_slot)
+	print("  Primary gun node: ", weapon_manager.primary_gun)
+	print("  Secondary gun node: ", weapon_manager.secondary_gun)
+	
+	if weapon_manager.primary_gun:
+		print("  Primary gun exists:")
+		print("    - Name: ", weapon_manager.primary_gun.name)
+		print("    - Visible: ", weapon_manager.primary_gun.visible)
+		print("    - Can fire: ", weapon_manager.primary_gun.can_fire)
+		print("    - Parent: ", weapon_manager.primary_gun.get_parent())
+		print("    - Is inside tree: ", weapon_manager.primary_gun.is_inside_tree())
+	
+	if weapon_manager.secondary_gun:
+		print("  Secondary gun exists:")
+		print("    - Name: ", weapon_manager.secondary_gun.name)
+		print("    - Visible: ", weapon_manager.secondary_gun.visible)
+		print("    - Can fire: ", weapon_manager.secondary_gun.can_fire)
+		print("    - Parent: ", weapon_manager.secondary_gun.get_parent())
+	
+	if player.has_node("LocationStateMachine"):
 		var loc_state = player.get_node("LocationStateMachine")
+		print("LocationStateMachine found")
+		print("  Current state: ", loc_state.current_state.name if loc_state.current_state else "None")
+		
 		loc_state.change_state("FarmState")
+		
+		# Check gun status AFTER state change
+		await get_tree().process_frame
+		print("\nAfter FarmState enter:")
+		if weapon_manager.primary_gun:
+			print("  Primary gun:")
+			print("    - Visible: ", weapon_manager.primary_gun.visible)
+			print("    - Can fire: ", weapon_manager.primary_gun.can_fire)
+			print("    - Is queued for deletion: ", weapon_manager.primary_gun.is_queued_for_deletion())
 	else:
-		print("✗ No LocationStateMachine found on player")
+		print("ERROR: No LocationStateMachine!")
+	
+	print("=================================\n")
 
 func _on_inventory_toggle_requested():
 	print("=== INVENTORY TOGGLE REQUESTED ===")
@@ -162,8 +190,8 @@ func _input(event):
 		_on_inventory_toggle_requested()
 		
 func _exit_tree():
-	# Auto-save when leaving scene
+	# Auto-save when leaving farm
 	if GameManager.current_save_slot >= 0 and player:
-		print("Auto-saving to slot ", GameManager.current_save_slot)
+		print("Auto-saving when leaving farm...")
 		var player_data = SaveSystem.collect_player_data(player)
 		SaveSystem.save_game(GameManager.current_save_slot, player_data)

@@ -1,5 +1,5 @@
 # WeaponFactory.gd
-class_name WeaponFactory
+extends Node
 
 const DEFAULT_SPRITE = preload("res://Resources/Weapon/assaultrifle.png")
 const DEFAULT_ICON = preload("res://Resources/Weapon/assaultrifle.png")

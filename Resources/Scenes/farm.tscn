@@ -45,4 +45,7 @@ tile_set = ExtResource("3_6x1uo")
 
 [node name="EnemySpawner" type="Node2D" parent="."]
 script = ExtResource("8_pxeeg")
+spawn_enabled = null
+max_enemies = null
+spawn_interval = null
 spawn_boundary = Rect2(0, 0, 1150, 640)

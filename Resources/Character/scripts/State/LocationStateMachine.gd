@@ -20,9 +20,9 @@ func _ready():
 			print("Registered state: ", child.name)
 	
 	# Start with farm state by default
-	if states.has("FarmState"):
-		change_state("FarmState")
-
+	#if states.has("FarmState"):
+		#change_state("FarmState")
+	print("LocationStateMachine ready - waiting for scene to set state")
 func change_state(state_name: String):
 	print("\n=== LOCATION STATE CHANGE ===")
 	print("Previous state: ", current_state.name if current_state else "None")

@@ -8,7 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://bgm1ctebbs1l4" path="res://Resources/Map/Objects/StorageChest.tscn" id="6_vabqk"]
 [ext_resource type="PackedScene" uid="uid://dcmnp8k6fb2bj" path="res://Resources/Weapon/WeaponChest.tscn" id="7_k87ip"]
 [ext_resource type="PackedScene" uid="uid://cthordbq5t404" path="res://Resources/Weapon/WeaponStorageUI.tscn" id="8_3fhve"]
-[ext_resource type="PackedScene" uid="uid://1q5yvjcmhl5p" path="res://Resources/Map/Objects/records.tscn" id="9_7dn8k"]
+[ext_resource type="PackedScene" uid="uid://1q5yvjcmhl5p" path="res://Resources/Map/Objects/Records.tscn" id="9_7dn8k"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_k87ip"]
 size = Vector2(12.5, 21)

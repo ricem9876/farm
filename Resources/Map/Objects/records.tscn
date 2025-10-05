@@ -1,11 +1,13 @@
-[gd_scene load_steps=3 format=3 uid="uid://1q5yvjcmhl5p"]
+[gd_scene load_steps=4 format=3 uid="uid://1q5yvjcmhl5p"]
 
 [ext_resource type="Texture2D" uid="uid://dxi25ed7vvpsx" path="res://Resources/Map/Objects/book.png" id="1_bxmwb"]
+[ext_resource type="Script" uid="uid://d2jfnnkqrqdm6" path="res://Resources/Map/Objects/RecordsBook.gd" id="1_x8nb0"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_x8nb0"]
 size = Vector2(50.5, 38)
 
 [node name="Records" type="Area2D"]
+script = ExtResource("1_x8nb0")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 position = Vector2(1.125, 1.3125)

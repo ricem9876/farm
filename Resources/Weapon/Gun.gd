@@ -163,26 +163,9 @@ func fire():
 	
 	# Play bullet shot sound
 	AudioManager.play_bullet_shot()
-	
-	#print("3. player reference: ", player)
-	#print("4. player is valid: ", is_instance_valid(player))
-	#
-	#if player:
-		#print("5. player.level_system exists: ", player.level_system != null)
-		
-		#if player.level_system:
-			#print("6. Reading stats from level_system:")
-			#print("   - damage_multiplier: ", player.level_system.damage_multiplier)
-			#print("   - critical_chance: ", player.level_system.critical_chance)
-			#print("   - critical_damage: ", player.level_system.critical_damage)
-			#print("   - points_in_damage: ", player.level_system.points_in_damage)
-			#print("   - points_in_crit_chance: ", player.level_system.points_in_crit_chance)
-		#else:
-			#print("ERROR: player.level_system is NULL!")
-	#else:
-		#print("ERROR: player is NULL!")
-	
-	# Access level_system directly
+	StatsTracker.record_shot_fired()
+
+
 	var damage_multiplier = 1.0
 	var crit_chance = 0.0
 	var crit_damage = 1.5
@@ -192,26 +175,16 @@ func fire():
 		crit_chance = player.level_system.critical_chance
 		crit_damage = player.level_system.critical_damage
 	
-	#print("7. Final multipliers being used:")
-	#print("   - damage_multiplier: ", damage_multiplier)
-	#print("   - crit_chance: ", crit_chance)
-	
-	# Apply damage multiplier to base damage
+
 	var final_damage = current_damage * damage_multiplier
 	
-	#print("8. Damage calculation:")
-	#print("   - current_damage (base): ", current_damage)
-	#print("   - final_damage (after mult): ", final_damage)
-	
-	# Check for critical hit
+
 	var is_critical = randf() < crit_chance
 	if is_critical:
 		final_damage *= crit_damage
-		#print("   - CRITICAL HIT! Final: ", final_damage)
-	#
-	#print("================================\n")
-	#
-	# Rest of your firing code...
+		StatsTracker.record_critical_hit()
+		
+	StatsTracker.record_damage_dealt(final_damage * current_bullet_count)
 	_calculate_spread_pattern()
 	
 	for i in range(current_bullet_count):
