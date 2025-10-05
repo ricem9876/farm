@@ -2,17 +2,20 @@ extends CanvasLayer
 class_name PlayerHUD
 
 # Stats elements
-@onready var level_label = $TopContainer/HBoxContainer/CenterStatsPanel/LevelLabel
-@onready var health_bar = $TopContainer/HBoxContainer/CenterStatsPanel/HealthBarContainer/HealthBar
-@onready var health_label = $TopContainer/HBoxContainer/CenterStatsPanel/HealthBarContainer/HealthLabel
-@onready var xp_bar = $TopContainer/HBoxContainer/CenterStatsPanel/XPBarContainer/XPBar
-@onready var xp_label = $TopContainer/HBoxContainer/CenterStatsPanel/XPBarContainer/XPLabel
+@onready var level_label = $TopCenterContainer/HBoxContainer/CenterStatsPanel/LevelLabel
+@onready var health_bar = $TopCenterContainer/HBoxContainer/CenterStatsPanel/HealthBarContainer/HealthBar
+@onready var health_label = $TopCenterContainer/HBoxContainer/CenterStatsPanel/HealthBarContainer/HealthLabel
+@onready var xp_bar = $TopCenterContainer/HBoxContainer/CenterStatsPanel/XPBarContainer/XPBar
+@onready var xp_label = $TopCenterContainer/HBoxContainer/CenterStatsPanel/XPBarContainer/XPLabel
 
 # Weapon elements
-@onready var primary_container = $TopContainer/HBoxContainer/LeftWeaponPanel/PrimaryContainer
-@onready var primary_label = $TopContainer/HBoxContainer/LeftWeaponPanel/PrimaryContainer/PrimaryLabel
-@onready var secondary_container = $TopContainer/HBoxContainer/RightWeaponPanel/SecondaryContainer
-@onready var secondary_label = $TopContainer/HBoxContainer/RightWeaponPanel/SecondaryContainer/SecondaryLabel
+@onready var primary_container = $TopCenterContainer/HBoxContainer/LeftWeaponPanel/PrimaryContainer
+@onready var primary_label = $TopCenterContainer/HBoxContainer/LeftWeaponPanel/PrimaryContainer/PrimaryLabel
+@onready var primary_icon = $TopCenterContainer/HBoxContainer/LeftWeaponPanel/PrimaryContainer/PrimaryIcon if has_node("TopCenterContainer/HBoxContainer/LeftWeaponPanel/PrimaryContainer/PrimaryIcon") else null
+
+@onready var secondary_container = $TopCenterContainer/HBoxContainer/RightWeaponPanel/SecondaryContainer
+@onready var secondary_label = $TopCenterContainer/HBoxContainer/RightWeaponPanel/SecondaryContainer/SecondaryLabel
+@onready var secondary_icon = $TopCenterContainer/HBoxContainer/RightWeaponPanel/SecondaryContainer/SecondaryIcon if has_node("TopCenterContainer/HBoxContainer/RightWeaponPanel/SecondaryContainer/SecondaryIcon") else null
 
 var level_system: PlayerLevelSystem
 var weapon_manager: WeaponManager
@@ -21,17 +24,29 @@ var player: Node2D
 func _ready():
 	print("\n=== PlayerHUD _ready ===")
 	
-	var top_container = $TopContainer
+	var top_container = $TopCenterContainer
 	if top_container:
-		# Position at top center
-		top_container.anchor_left = 0
-		top_container.anchor_right = 1
+		# Position at top center with proper anchoring
+		top_container.anchor_left = 0.5
+		top_container.anchor_right = 0.5
 		top_container.anchor_top = 0
 		top_container.anchor_bottom = 0
 		
-		top_container.add_theme_constant_override("margin_left", 100)
-		top_container.add_theme_constant_override("margin_right", 100)
+		# Center the container by offsetting from the center anchor
+		top_container.grow_horizontal = Control.GROW_DIRECTION_BOTH
+		top_container.pivot_offset = Vector2(0, 0)
+		
+		# Set margins
 		top_container.add_theme_constant_override("margin_top", 10)
+		top_container.add_theme_constant_override("margin_bottom", 0)
+		top_container.add_theme_constant_override("margin_left", 0)
+		top_container.add_theme_constant_override("margin_right", 0)
+	
+	# Add spacing to the HBoxContainer
+	var hbox = $TopCenterContainer/HBoxContainer
+	if hbox:
+		hbox.add_theme_constant_override("separation", 15)
+		hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	
 	_style_ui()
 
@@ -108,59 +123,53 @@ func _style_ui():
 	
 	# === WEAPON STYLING ===
 	
+	# === WEAPON STYLING ===
+
+# Primary weapon (left)
 	# Primary weapon (left)
 	if primary_container:
-		primary_container.custom_minimum_size = Vector2(150, 50)
-		var style = StyleBoxFlat.new()
-		style.bg_color = Color(0.2, 0.2, 0.2, 0.8)
-		style.border_width_left = 2
-		style.border_width_right = 2
-		style.border_width_top = 2
-		style.border_width_bottom = 2
-		style.border_color = Color(0.4, 0.6, 1.0)  # Blue
-		style.corner_radius_top_left = 5
-		style.corner_radius_top_right = 5
-		style.corner_radius_bottom_left = 5
-		style.corner_radius_bottom_right = 5
-		primary_container.add_theme_stylebox_override("panel", style)
-	
+		primary_container.custom_minimum_size = Vector2(150, 80)
+		primary_container.add_theme_constant_override("separation", 5)  # Space between icon and label
+
+	if primary_icon:
+		primary_icon.custom_minimum_size = Vector2(50, 50)
+		primary_icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		primary_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+
 	if primary_label:
 		primary_label.text = "Empty"
 		primary_label.add_theme_font_override("font", pixel_font)
-		primary_label.add_theme_font_size_override("font_size", 16)
+		primary_label.add_theme_font_size_override("font_size", 14)
 		primary_label.add_theme_color_override("font_color", Color.WHITE)
 		primary_label.add_theme_color_override("font_outline_color", Color.BLACK)
 		primary_label.add_theme_constant_override("outline_size", 2)
 		primary_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		primary_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	
-	# Secondary weapon (right)
+
+	# Same for secondary
 	if secondary_container:
-		secondary_container.custom_minimum_size = Vector2(150, 50)
-		var style = StyleBoxFlat.new()
-		style.bg_color = Color(0.2, 0.2, 0.2, 0.8)
-		style.border_width_left = 2
-		style.border_width_right = 2
-		style.border_width_top = 2
-		style.border_width_bottom = 2
-		style.border_color = Color(0.6, 0.4, 1.0)  # Purple
-		style.corner_radius_top_left = 5
-		style.corner_radius_top_right = 5
-		style.corner_radius_bottom_left = 5
-		style.corner_radius_bottom_right = 5
-		secondary_container.add_theme_stylebox_override("panel", style)
-	
+		secondary_container.custom_minimum_size = Vector2(150, 80)
+		secondary_container.add_theme_constant_override("separation", 5)
+
+	if secondary_icon:
+		secondary_icon.custom_minimum_size = Vector2(50, 50)
+		secondary_icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		secondary_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+
 	if secondary_label:
 		secondary_label.text = "Empty"
 		secondary_label.add_theme_font_override("font", pixel_font)
-		secondary_label.add_theme_font_size_override("font_size", 16)
+		secondary_label.add_theme_font_size_override("font_size", 14)
 		secondary_label.add_theme_color_override("font_color", Color.WHITE)
 		secondary_label.add_theme_color_override("font_outline_color", Color.BLACK)
 		secondary_label.add_theme_constant_override("outline_size", 2)
 		secondary_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		secondary_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-
+			
 func setup(player_node: Node2D, player_level_system: PlayerLevelSystem, player_weapon_manager: WeaponManager = null):
+	print("\n=== PlayerHUD setup called ===")
+	print("Player: ", player_node)
+	print("Level System: ", player_level_system)
+	print("Weapon Manager: ", player_weapon_manager)
+	
 	player = player_node
 	level_system = player_level_system
 	weapon_manager = player_weapon_manager
@@ -169,13 +178,22 @@ func setup(player_node: Node2D, player_level_system: PlayerLevelSystem, player_w
 	if level_system:
 		level_system.level_up.connect(_on_level_up)
 		level_system.experience_gained.connect(_on_experience_gained)
+		print("Connected to level system signals")
 	
 	# Connect weapon manager signals
 	if weapon_manager:
+		print("Weapon manager found, connecting signals...")
 		weapon_manager.weapon_equipped.connect(_on_weapon_equipped)
 		weapon_manager.weapon_unequipped.connect(_on_weapon_unequipped)
 		weapon_manager.weapon_switched.connect(_on_weapon_switched)
 		print("Connected to weapon manager signals")
+		
+		# Debug current weapons
+		print("Active slot: ", weapon_manager.active_slot)
+		print("Primary weapon: ", weapon_manager.get_weapon_in_slot(0))
+		print("Secondary weapon: ", weapon_manager.get_weapon_in_slot(1))
+	else:
+		print("WARNING: No weapon manager provided to HUD!")
 	
 	_update_display()
 
@@ -218,26 +236,38 @@ func _update_weapons():
 	var primary_weapon = weapon_manager.get_weapon_in_slot(0)
 	if primary_weapon:
 		primary_label.text = primary_weapon.name
+		if primary_icon and primary_weapon.icon:
+			primary_icon.texture = primary_weapon.icon
+			primary_icon.visible = true
+		
 		if weapon_manager.active_slot == 0:
 			primary_container.modulate = Color(1.2, 1.2, 1.2)
 		else:
 			primary_container.modulate = Color(1, 1, 1)
 	else:
 		primary_label.text = "Empty"
+		if primary_icon:
+			primary_icon.visible = false
 		primary_container.modulate = Color(0.6, 0.6, 0.6)
 	
 	# Update secondary weapon
 	var secondary_weapon = weapon_manager.get_weapon_in_slot(1)
 	if secondary_weapon:
 		secondary_label.text = secondary_weapon.name
+		if secondary_icon and secondary_weapon.icon:
+			secondary_icon.texture = secondary_weapon.icon
+			secondary_icon.visible = true
+		
 		if weapon_manager.active_slot == 1:
 			secondary_container.modulate = Color(1.2, 1.2, 1.2)
 		else:
 			secondary_container.modulate = Color(1, 1, 1)
 	else:
 		secondary_label.text = "Empty"
+		if secondary_icon:
+			secondary_icon.visible = false
 		secondary_container.modulate = Color(0.6, 0.6, 0.6)
-
+		
 # Signal handlers
 func _on_level_up(new_level: int, skill_points_gained: int):
 	_update_display()

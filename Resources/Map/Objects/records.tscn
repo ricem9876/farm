@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3 uid="uid://1q5yvjcmhl5p"]
+
+[ext_resource type="Texture2D" uid="uid://dxi25ed7vvpsx" path="res://Resources/Map/Objects/book.png" id="1_bxmwb"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_x8nb0"]
+size = Vector2(50.5, 38)
+
+[node name="Records" type="Area2D"]
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(1.125, 1.3125)
+scale = Vector2(0.152344, 0.192797)
+texture = ExtResource("1_bxmwb")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(1, -1)
+shape = SubResource("RectangleShape2D_x8nb0")
+
+[node name="InteractionPrompt" type="Label" parent="."]
+offset_right = 40.0
+offset_bottom = 23.0
+metadata/_edit_use_anchors_ = true

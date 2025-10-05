@@ -44,6 +44,9 @@ theme_override_constants/separation = 20
 [node name="StartButton" type="Button" parent="VBoxContainer/ButtonContainer"]
 layout_mode = 2
 
+[node name="SettingsButton" type="Button" parent="VBoxContainer/ButtonContainer"]
+layout_mode = 2
+
 [node name="QuitButton" type="Button" parent="VBoxContainer/ButtonContainer"]
 layout_mode = 2
 
@@ -58,3 +61,60 @@ offset_left = -40.0
 offset_top = -23.0
 grow_horizontal = 0
 grow_vertical = 0
+
+[node name="SettingsMenu" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -150.0
+offset_right = 200.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BackgroundPanel" type="Panel" parent="SettingsMenu"]
+custom_minimum_size = Vector2(400, 300)
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="SettingsVBox" type="VBoxContainer" parent="SettingsMenu/BackgroundPanel"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+theme_override_constants/separation = 20
+
+[node name="MasterVolumeLabel" type="Label" parent="SettingsMenu/BackgroundPanel/SettingsVBox"]
+layout_mode = 2
+
+[node name="MasterVolumeSlider" type="HSlider" parent="SettingsMenu/BackgroundPanel/SettingsVBox"]
+layout_mode = 2
+max_value = 1.0
+step = 0.1
+value = 1.0
+
+[node name="MusicVolumeLabel" type="Label" parent="SettingsMenu/BackgroundPanel/SettingsVBox"]
+layout_mode = 2
+mouse_filter = 1
+
+[node name="MusicVolumeSlider" type="HSlider" parent="SettingsMenu/BackgroundPanel/SettingsVBox"]
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 1.0
+
+[node name="SFXVolumeLabel" type="Label" parent="SettingsMenu/BackgroundPanel/SettingsVBox"]
+layout_mode = 2
+
+[node name="SFXVolumeSlider" type="HSlider" parent="SettingsMenu/BackgroundPanel/SettingsVBox"]
+layout_mode = 2
+max_value = 1.0
+step = 0.1
+value = 1.0
+
+[node name="CloseButton" type="Button" parent="SettingsMenu/BackgroundPanel/SettingsVBox"]
+layout_mode = 2

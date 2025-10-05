@@ -8,7 +8,7 @@ var pause_menu_scene = preload("res://Resources/UI/PauseMenu.tscn")
 
 func _ready():
 	print("\n=== FARM SCENE _READY CALLED ===")
-	
+	AudioManager.play_music(AudioManager.farm_music)
 	# Try to find EnemySpawner
 	var spawner = get_node_or_null("EnemySpawner")
 	print("EnemySpawner node: ", spawner)

@@ -20,6 +20,7 @@ config/icon="res://icon.svg"
 GameManager="*res://Resources/Map/Scripts/GameManager.gd"
 GlobalWeaponStorage="*res://Resources/Weapon/GlobalWeaponStorage.gd"
 SaveSystem="*res://Resources/Scripts/SaveSystem.gd"
+AudioManager="*res://Resources/Scripts/AudioManager.gd"
 
 [display]
 

@@ -12,7 +12,7 @@ var level_select_scene = preload("res://Resources/UI/LevelSelectUI.tscn")
 
 func _ready():
 	print("\n=== SAFEHOUSE SETUP START ===")
-	
+	AudioManager.play_music(AudioManager.safehouse_music)
 	# Find player
 	player = get_tree().get_first_node_in_group("player")
 	if not player:

@@ -103,7 +103,7 @@ func _setup_player_hud():
 	if has_node("PlayerHUD"):
 		var hud = get_node("PlayerHUD")
 		if hud.has_method("setup"):
-			hud.setup(self, level_system)
+			hud.setup(self, level_system, weapon_manager)
 			print("✓ Player HUD setup complete")
 	else:
 		print("ℹ PlayerHUD not found in player scene")

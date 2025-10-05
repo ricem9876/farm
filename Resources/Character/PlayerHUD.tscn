@@ -15,7 +15,10 @@ layout_mode = 2
 [node name="LeftWeaponPanel" type="VBoxContainer" parent="TopCenterContainer/HBoxContainer"]
 layout_mode = 2
 
-[node name="PrimaryContainer" type="PanelContainer" parent="TopCenterContainer/HBoxContainer/LeftWeaponPanel"]
+[node name="PrimaryContainer" type="VBoxContainer" parent="TopCenterContainer/HBoxContainer/LeftWeaponPanel"]
+layout_mode = 2
+
+[node name="PrimaryIcon" type="TextureRect" parent="TopCenterContainer/HBoxContainer/LeftWeaponPanel/PrimaryContainer"]
 layout_mode = 2
 
 [node name="PrimaryLabel" type="Label" parent="TopCenterContainer/HBoxContainer/LeftWeaponPanel/PrimaryContainer"]
@@ -48,7 +51,10 @@ layout_mode = 2
 [node name="RightWeaponPanel" type="VBoxContainer" parent="TopCenterContainer/HBoxContainer"]
 layout_mode = 2
 
-[node name="SecondaryContainer" type="PanelContainer" parent="TopCenterContainer/HBoxContainer/RightWeaponPanel"]
+[node name="SecondaryContainer" type="VBoxContainer" parent="TopCenterContainer/HBoxContainer/RightWeaponPanel"]
+layout_mode = 2
+
+[node name="SecondaryIcon" type="TextureRect" parent="TopCenterContainer/HBoxContainer/RightWeaponPanel/SecondaryContainer"]
 layout_mode = 2
 
 [node name="SecondaryLabel" type="Label" parent="TopCenterContainer/HBoxContainer/RightWeaponPanel/SecondaryContainer"]

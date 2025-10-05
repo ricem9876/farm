@@ -161,6 +161,9 @@ func fire():
 		print("BLOCKED: no muzzle_point")
 		return
 	
+	# Play bullet shot sound
+	AudioManager.play_bullet_shot()
+	
 	#print("3. player reference: ", player)
 	#print("4. player is valid: ", is_instance_valid(player))
 	#

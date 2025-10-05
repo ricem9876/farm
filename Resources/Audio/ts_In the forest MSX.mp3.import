@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://bn0d8u5kbpfg6"
+path="res://.godot/imported/ts_In the forest MSX.mp3-0d1e4c936a8d52bcff8b213c479cb8ab.mp3str"
+
+[deps]
+
+source_file="res://Resources/Audio/ts_In the forest MSX.mp3"
+dest_files=["res://.godot/imported/ts_In the forest MSX.mp3-0d1e4c936a8d52bcff8b213c479cb8ab.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4
