@@ -47,6 +47,7 @@ func load_from_save_data(storage_data: Dictionary):
 		return
 	
 	print("Loading storage from save data for: ", storage_id)
+	print("DEBUG: Storage data items: ", storage_data.items)
 	
 	# Clear current contents
 	for i in range(storage_manager.max_slots):
@@ -56,16 +57,21 @@ func load_from_save_data(storage_data: Dictionary):
 	# Restore items from save data
 	if storage_data.has("items"):
 		var items_data = storage_data.items
+		print("DEBUG: Items array size: ", items_data.size())
 		for i in range(min(items_data.size(), storage_manager.max_slots)):
 			var item_data = items_data[i]
 			if item_data != null and item_data is Dictionary:
+				print("DEBUG: Restoring item at slot ", i, ": ", item_data)
 				# Get player to use its item creation method
 				var player = get_tree().get_first_node_in_group("player")
 				if player and player.has_method("_create_item_from_name"):
 					var item = player._create_item_from_name(item_data.name)
 					if item:
 						storage_manager.items[i] = item
-						storage_manager.quantities[i] = item_data.quantity
+						storage_manager.quantities[i] = int(item_data.quantity)
+						print("DEBUG: Set slot ", i, " to ", item.name, " x", storage_manager.quantities[i])
+					else:
+						print("DEBUG: Failed to create item: ", item_data.name)
 	
 	storage_manager.inventory_changed.emit()
 	print("  ✓ Storage loaded: ", storage_id)

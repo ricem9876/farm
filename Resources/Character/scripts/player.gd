@@ -49,6 +49,9 @@ func _ready():
 	
 	
 	print("Player initialized - Level: ", level_system.current_level, " | Health: ", current_health, "/", max_health)
+	
+# In your player.gd for top-down aiming
+
 
 func _setup_level_system():
 	# Create the level system
@@ -105,6 +108,13 @@ func _setup_player_hud():
 		if hud.has_method("setup"):
 			hud.setup(self, level_system, weapon_manager)
 			print("✓ Player HUD setup complete")
+			print("  HUD has level_system: ", hud.level_system != null)
+			print("  HUD has player: ", hud.player != null)
+			
+			# Test the connection immediately
+			if level_system:
+				print("  Testing HUD update...")
+				hud._update_display()
 	else:
 		print("ℹ PlayerHUD not found in player scene")
 		
@@ -197,10 +207,15 @@ func collect_item(item_name: String):
 	if item:
 		add_item_to_inventory(item, 1)
 
-# UPDATED: Now includes all 4 enemy drops with correct paths
+# UPDATED: Now handles both display names AND internal keys
 func _create_item_from_name(item_name: String) -> Item:
 	var item = Item.new()
-	match item_name:
+	
+	# Convert to lowercase for matching
+	var name_lower = item_name.to_lower()
+	
+	# Match against both internal names and display names
+	match name_lower:
 		"mushroom":
 			item.name = "Mushroom"
 			item.description = "A tasty mushroom dropped by an enemy"
@@ -208,21 +223,21 @@ func _create_item_from_name(item_name: String) -> Item:
 			item.item_type = "material"
 			item.icon = preload("res://Resources/Inventory/Sprites/mushroom.png")
 		
-		"fiber":
+		"fiber", "plant fiber":
 			item.name = "Plant Fiber"
 			item.description = "Tough plant fibers used for crafting"
 			item.stack_size = 99
 			item.item_type = "material"
 			item.icon = preload("res://Resources/Inventory/Sprites/fiber.png")
 		
-		"fur":
+		"fur", "wolf fur":
 			item.name = "Wolf Fur"
 			item.description = "Soft fur from a wolf, useful for crafting"
 			item.stack_size = 99
 			item.item_type = "material"
 			item.icon = preload("res://Resources/Inventory/Sprites/fur.png")
 		
-		"wood":  # NEW: Added wood for tree drops
+		"wood":
 			item.name = "Wood"
 			item.description = "Sturdy wood from a fallen tree"
 			item.stack_size = 99
@@ -303,6 +318,7 @@ func _on_skill_tree_closed():
 # === INPUT HANDLING ===
 
 func _input(event):
+
 	# Don't process input if skill tree is open
 	if skill_tree_ui and skill_tree_ui.visible:
 		return

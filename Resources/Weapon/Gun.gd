@@ -28,10 +28,17 @@ var is_firing: bool = false
 var spread_pattern: Array[float] = []
 var can_fire: bool = true
 
+# Mouse sensitivity for smooth aiming
+var target_rotation: float = 0.0
+@export var base_rotation_speed: float = 15.0  # How fast the gun rotates (radians per second)
+
 func _ready():
 	_initialize_stats()
 	_setup_gun_appearance()
 	_calculate_spread_pattern()
+	
+	# CRITICAL: Check location state on spawn
+	call_deferred("_check_location_state")
 	
 	# DEBUG: Print sprite info
 	if gun_sprite:
@@ -42,6 +49,39 @@ func _ready():
 			print("Texture size: ", gun_sprite.texture.get_size())
 		print("Sprite position: ", gun_sprite.position)
 		print("========================\n")
+
+func _check_location_state():
+	"""Check if we're in a location that allows firing"""
+	print("=== Gun _check_location_state called ===")
+	print("Player: ", player)
+	
+	if not player:
+		print("No player yet")
+		return
+	
+	if not player.has_node("LocationStateMachine"):
+		print("No LocationStateMachine on player")
+		return
+	
+	var loc_state = player.get_node("LocationStateMachine")
+	var current_state = loc_state.get_current_state()
+	
+	print("Current state: ", current_state)
+	
+	if current_state:
+		print("Gun checking location state: ", current_state.name)
+		if current_state.name == "SafehouseState":
+			set_can_fire(false)
+			visible = false
+			process_mode = Node.PROCESS_MODE_DISABLED
+			print("Gun auto-disabled in safehouse")
+		elif current_state.name == "FarmState":
+			set_can_fire(true)
+			visible = true
+			process_mode = Node.PROCESS_MODE_INHERIT
+			print("Gun auto-enabled in farm")
+	else:
+		print("No current state yet")
 
 func _initialize_stats():
 	current_damage = base_damage
@@ -72,6 +112,40 @@ func _setup_gun_appearance():
 
 func setup_with_player(player_node: Node2D):
 	player = player_node
+	
+	# Connect to location state changes
+	if player.has_node("LocationStateMachine"):
+		var loc_state = player.get_node("LocationStateMachine")
+		if not loc_state.state_changed.is_connected(_on_location_state_changed):
+			loc_state.state_changed.connect(_on_location_state_changed)
+			print("Gun connected to location state changes")
+		
+		# Check current state immediately
+		var current = loc_state.get_current_state()
+		if current:
+			_on_location_state_changed(current)
+	
+	# Check location state after player is assigned
+	_check_location_state()
+
+func _on_location_state_changed(new_state: LocationState):
+	"""Called when player changes location (farm/safehouse)"""
+	if not new_state:
+		return
+	
+	print("Gun received location change: ", new_state.name)
+	
+	match new_state.name:
+		"SafehouseState":
+			set_can_fire(false)
+			visible = false
+			process_mode = Node.PROCESS_MODE_DISABLED
+			print("✓ Gun disabled (safehouse)")
+		"FarmState":
+			set_can_fire(true)
+			visible = true
+			process_mode = Node.PROCESS_MODE_INHERIT
+			print("✓ Gun enabled (farm)")
 
 func set_can_fire(enabled: bool):
 	can_fire = enabled
@@ -81,7 +155,7 @@ func set_can_fire(enabled: bool):
 	
 func _process(delta):
 	if player:
-		_aim_at_mouse()
+		_aim_at_mouse(delta)
 	
 	# DEBUG: Check firing state
 	if visible and can_fire:
@@ -91,11 +165,21 @@ func _process(delta):
 	
 	_handle_firing(delta)
 
-func _aim_at_mouse():
+func _aim_at_mouse(delta):
 	var mouse_pos = get_global_mouse_position()
 	var direction_to_mouse = (mouse_pos - global_position).normalized()
 	
-	rotation = direction_to_mouse.angle()
+	# Calculate target rotation
+	target_rotation = direction_to_mouse.angle()
+	
+	# Get mouse sensitivity from GameSettings
+	var sensitivity = GameSettings.mouse_sensitivity if GameSettings else 1.0
+	
+	# Apply smooth rotation with sensitivity
+	var rotation_speed = base_rotation_speed * sensitivity
+	
+	# Interpolate rotation smoothly (higher sensitivity = faster rotation)
+	rotation = lerp_angle(rotation, target_rotation, rotation_speed * delta)
 	
 	if gun_sprite:
 		# Store the original scale magnitude
@@ -149,10 +233,6 @@ func stop_firing():
 	is_firing = false
 
 func fire():
-	#print("\n=== DETAILED FIRE DEBUG ===")
-	#print("1. can_fire: ", can_fire)
-	#print("2. muzzle_point exists: ", muzzle_point != null)
-	
 	if not can_fire:
 		print("BLOCKED: can_fire is false")
 		return
@@ -165,7 +245,6 @@ func fire():
 	AudioManager.play_bullet_shot()
 	StatsTracker.record_shot_fired()
 
-
 	var damage_multiplier = 1.0
 	var crit_chance = 0.0
 	var crit_damage = 1.5
@@ -175,10 +254,8 @@ func fire():
 		crit_chance = player.level_system.critical_chance
 		crit_damage = player.level_system.critical_damage
 	
-
 	var final_damage = current_damage * damage_multiplier
 	
-
 	var is_critical = randf() < crit_chance
 	if is_critical:
 		final_damage *= crit_damage

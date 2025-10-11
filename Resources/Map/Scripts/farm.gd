@@ -1,197 +1,186 @@
+# farm.gd
+# Clean version - mirrors safehouse logic, loads from save when needed
 extends Node2D
 
 @onready var inventory_ui = $InventoryUI
 @onready var player = $player
 @onready var camera = $player/Camera2D
 @onready var house_entrance = $HouseEntrance
+@onready var enemy_spawner = $EnemySpawner
+@onready var enemy_count_label = $HUD/EnemyCountLabel if has_node("HUD/EnemyCountLabel") else null
+
 var pause_menu_scene = preload("res://Resources/UI/PauseMenu.tscn")
+var current_enemy_count: int = 0
 
 func _ready():
-	print("\n=== FARM SCENE _READY CALLED ===")
-	AudioManager.play_music(AudioManager.farm_music)
-	# Try to find EnemySpawner
-	var spawner = get_node_or_null("EnemySpawner")
-	print("EnemySpawner node: ", spawner)
-	if spawner:
-		print("EnemySpawner script: ", spawner.get_script())
 	print("\n=== FARM SCENE SETUP START ===")
-
+	AudioManager.play_music(AudioManager.farm_music)
+	
+	# CRITICAL FIX: Wait for scene tree to be ready
+	await get_tree().process_frame
+	
+	# Find player
+	if not player:
+		player = get_tree().get_first_node_in_group("player")
+	
+	if not player:
+		player = get_node_or_null("player")
+	
 	if not player:
 		print("ERROR: Player not found!")
 		return
 	
-	print("✓ Player found at position: ", player.global_position)
+	print("✓ Player found: ", player.name)
 	
-	# Make sure player is in the player group
+	# Ensure player is in correct group
 	if not player.is_in_group("player"):
 		player.add_to_group("player")
-		print("✓ Added player to 'player' group")
-	else:
-		print("✓ Player already in 'player' group")
 	
 	# Setup house entrance interaction
 	if house_entrance:
-		print("✓ HouseEntrance found at position: ", house_entrance.global_position)
-		
-		var collision_shape = house_entrance.get_node_or_null("CollisionShape2D")
-		if collision_shape:
-			print("  ✓ CollisionShape2D found")
-			print("    - Shape: ", collision_shape.shape)
-			print("    - Position: ", collision_shape.position)
-		else:
-			print("  ✗ ERROR: CollisionShape2D not found!")
-		
 		if not house_entrance.is_in_group("interaction_areas"):
 			house_entrance.add_to_group("interaction_areas")
-		
-		if house_entrance is InteractionArea:
-			house_entrance.interaction_type = "house"
-			house_entrance.show_prompt = true
-			print("  ✓ Set interaction type to: ", house_entrance.interaction_type)
-			print("  ✓ HouseEntrance is InteractionArea type")
-		else:
-			print("  ✗ ERROR: HouseEntrance is not InteractionArea type!")
-			print("    Current script: ", house_entrance.get_script())
-	else:
-		print("ERROR: HouseEntrance not found!")
+		house_entrance.interaction_type = "house"
+		house_entrance.show_prompt = true
+		print("✓ House entrance configured")
 	
 	# Setup inventory UI
 	if inventory_ui:
-		print("✓ InventoryUI found")
-		
 		if player.has_signal("inventory_toggle_requested"):
-			print("  - Connecting inventory_toggle_requested signal...")
 			player.inventory_toggle_requested.connect(_on_inventory_toggle_requested)
-			print("  - Signal connected!")
-		else:
-			print("  ✗ Player doesn't have inventory_toggle_requested signal")
 		
 		var inv_mgr = player.get_inventory_manager()
 		if inv_mgr:
-			print("  - Setting up inventory UI...")
 			inventory_ui.setup_inventory(inv_mgr, camera, player)
-			print("  - Inventory UI setup complete")
-			print("  - Initial visibility: ", inventory_ui.visible)
-		else:
-			print("  ✗ No inventory manager found")
-	else:
-		print("ERROR: InventoryUI not found!")
+			print("✓ Inventory UI configured")
 	
-	# Setup weapon HUD
-
+	# Setup enemy counter UI
+	if enemy_count_label:
+		_setup_enemy_counter_ui()
 	
-	# Restore player state from GameManager
+	# Connect to enemy spawner if it exists
+	if enemy_spawner:
+		if enemy_spawner.has_signal("enemy_spawned"):
+			enemy_spawner.enemy_spawned.connect(_on_enemy_spawned)
+		if enemy_spawner.has_signal("enemy_died"):
+			enemy_spawner.enemy_died.connect(_on_enemy_died)
+		print("✓ Connected to enemy spawner signals")
+	
+	# If loading from save file, restore player data
 	await get_tree().process_frame
-	_restore_player_state()
-	
-	# Wait another frame for weapons to be restored and instantiated
-	await get_tree().process_frame
-	
-	# NOW enable the gun
-	_enable_gun_on_farm()
-	
-	
+	if not GameManager.pending_load_data.is_empty():
+		print("Loading player from save file...")
+		SaveSystem.apply_player_data(player, GameManager.pending_load_data.get("player", {}))
+		GameManager.pending_load_data = {}
 		
+		# CRITICAL FIX: Instantiate weapons from the restored WeaponItem data
+		var weapon_mgr = player.get_weapon_manager()
+		if weapon_mgr and weapon_mgr.has_method("instantiate_weapons_from_save"):
+			print("Instantiating weapons from save...")
+			weapon_mgr.instantiate_weapons_from_save()
+		
+		# Refresh HUDs after everything is loaded
+		player.refresh_hud()
+		if player.has_method("refresh_weapon_hud"):
+			player.refresh_weapon_hud()
+	else:
+		# NEW GAME: Clear any default weapons from the scene
+		print("New game in farm - clearing default weapons")
+		var weapon_mgr = player.get_weapon_manager()
+		if weapon_mgr:
+			weapon_mgr.primary_slot = null
+			weapon_mgr.secondary_slot = null
+			if weapon_mgr.primary_gun:
+				weapon_mgr.primary_gun.queue_free()
+				weapon_mgr.primary_gun = null
+			if weapon_mgr.secondary_gun:
+				weapon_mgr.secondary_gun.queue_free()
+				weapon_mgr.secondary_gun = null
+			print("✓ Cleared default weapons for new game")
+	
+	# Wait another frame for weapons to instantiate
+	await get_tree().process_frame
+	
+	# Set location state to enable guns
+	_set_farm_state()
+	
+	# Add pause menu
 	var pause_menu = pause_menu_scene.instantiate()
 	add_child(pause_menu)
-	print("✓ Pause menu added")
 	
 	print("=== FARM SCENE SETUP COMPLETE ===\n")
 
-func _restore_player_state():
-	"""Restore player state when entering farm"""
-	print("Checking for saved player state...")
+func _setup_enemy_counter_ui():
+	"""Style the enemy counter label"""
+	var pixel_font = preload("res://Resources/Fonts/yoster.ttf")
 	
-	if not GameManager.pending_load_data.is_empty():
-		print("Loading from save file...")
-		SaveSystem.apply_player_data(player, GameManager.pending_load_data.get("player", {}))
-		GameManager.pending_load_data = {}
-		player.refresh_hud()
-		player.refresh_weapon_hud()
-		return
+	enemy_count_label.add_theme_font_override("font", pixel_font)
+	enemy_count_label.add_theme_font_size_override("font_size", 24)
+	enemy_count_label.add_theme_color_override("font_color", Color.WHITE)
+	enemy_count_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	enemy_count_label.add_theme_constant_override("outline_size", 3)
 	
-	# Scene transition - data already current
-	print("Scene transition - player data already current")
-	player.refresh_hud()
-	player.refresh_weapon_hud()
+	# Add background panel
+	var bg_style = StyleBoxFlat.new()
+	bg_style.bg_color = Color(0.0, 0.0, 0.0, 0.7)
+	bg_style.border_width_left = 2
+	bg_style.border_width_right = 2
+	bg_style.border_width_top = 2
+	bg_style.border_width_bottom = 2
+	bg_style.border_color = Color(0.8, 0.2, 0.2)
+	bg_style.corner_radius_top_left = 5
+	bg_style.corner_radius_top_right = 5
+	bg_style.corner_radius_bottom_left = 5
+	bg_style.corner_radius_bottom_right = 5
+	bg_style.content_margin_left = 10
+	bg_style.content_margin_right = 10
+	bg_style.content_margin_top = 5
+	bg_style.content_margin_bottom = 5
+	enemy_count_label.add_theme_stylebox_override("normal", bg_style)
+	
+	_update_enemy_counter()
+	print("✓ Enemy counter UI configured")
 
+func _update_enemy_counter():
+	"""Update the enemy counter display"""
+	if enemy_count_label:
+		enemy_count_label.text = "Enemies: " + str(current_enemy_count)
+		
+		# Change color based on enemy count
+		if current_enemy_count == 0:
+			enemy_count_label.add_theme_color_override("font_color", Color(0.2, 1.0, 0.2))  # Green when cleared
+		elif current_enemy_count < 5:
+			enemy_count_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.2))  # Yellow when few left
+		else:
+			enemy_count_label.add_theme_color_override("font_color", Color.WHITE)  # White normally
 
-func _enable_gun_on_farm():
-	print("\n=== DETAILED GUN ENABLE DEBUG ===")
-	print("Setting location state to Farm...")
+func _on_enemy_spawned():
+	"""Called when an enemy spawns"""
+	current_enemy_count += 1
+	_update_enemy_counter()
+
+func _on_enemy_died():
+	"""Called when an enemy dies"""
+	current_enemy_count -= 1
+	current_enemy_count = max(0, current_enemy_count)  # Don't go below 0
+	_update_enemy_counter()
 	
-	if not player:
-		print("ERROR: No player!")
-		return
-	
-	var weapon_manager = player.get_node_or_null("WeaponManager")
-	if not weapon_manager:
-		print("ERROR: No WeaponManager!")
-		return
-	
-	print("WeaponManager found")
-	print("  Primary slot: ", weapon_manager.primary_slot)
-	print("  Secondary slot: ", weapon_manager.secondary_slot)
-	print("  Active slot: ", weapon_manager.active_slot)
-	print("  Primary gun node: ", weapon_manager.primary_gun)
-	print("  Secondary gun node: ", weapon_manager.secondary_gun)
-	
-	if weapon_manager.primary_gun:
-		print("  Primary gun exists:")
-		print("    - Name: ", weapon_manager.primary_gun.name)
-		print("    - Visible: ", weapon_manager.primary_gun.visible)
-		print("    - Can fire: ", weapon_manager.primary_gun.can_fire)
-		print("    - Parent: ", weapon_manager.primary_gun.get_parent())
-		print("    - Is inside tree: ", weapon_manager.primary_gun.is_inside_tree())
-	
-	if weapon_manager.secondary_gun:
-		print("  Secondary gun exists:")
-		print("    - Name: ", weapon_manager.secondary_gun.name)
-		print("    - Visible: ", weapon_manager.secondary_gun.visible)
-		print("    - Can fire: ", weapon_manager.secondary_gun.can_fire)
-		print("    - Parent: ", weapon_manager.secondary_gun.get_parent())
-	
-	if player.has_node("LocationStateMachine"):
+	# Optional: Show victory message when all cleared
+	if current_enemy_count == 0:
+		print("🎉 All enemies cleared!")
+		# You could show a victory popup here
+
+func _set_farm_state():
+	"""Set player location state to farm (enables guns)"""
+	if player and player.has_node("LocationStateMachine"):
 		var loc_state = player.get_node("LocationStateMachine")
-		print("LocationStateMachine found")
-		print("  Current state: ", loc_state.current_state.name if loc_state.current_state else "None")
-		
 		loc_state.change_state("FarmState")
-		
-		# Check gun status AFTER state change
-		await get_tree().process_frame
-		print("\nAfter FarmState enter:")
-		if weapon_manager.primary_gun:
-			print("  Primary gun:")
-			print("    - Visible: ", weapon_manager.primary_gun.visible)
-			print("    - Can fire: ", weapon_manager.primary_gun.can_fire)
-			print("    - Is queued for deletion: ", weapon_manager.primary_gun.is_queued_for_deletion())
-	else:
-		print("ERROR: No LocationStateMachine!")
-	
-	print("=================================\n")
+		print("✓ Location state: Farm")
 
 func _on_inventory_toggle_requested():
-	print("=== INVENTORY TOGGLE REQUESTED ===")
-	print("Current inventory_ui: ", inventory_ui)
-	print("Is inventory_ui valid: ", is_instance_valid(inventory_ui))
 	if inventory_ui:
-		print("Current visibility: ", inventory_ui.visible)
 		inventory_ui.toggle_visibility()
-		print("New visibility: ", inventory_ui.visible)
-	else:
-		print("ERROR: inventory_ui is null!")
-	print("==================================")
 
 func _input(event):
-	# Debug input
 	if event.is_action_pressed("toggle_inventory"):
-		print(">>> TAB/SHIFT PRESSED IN FARM SCENE <<<")
 		_on_inventory_toggle_requested()
-		
-func _exit_tree():
-	# Auto-save when leaving farm
-	if GameManager.current_save_slot >= 0 and player:
-		print("Auto-saving when leaving farm...")
-		var player_data = SaveSystem.collect_player_data(player)
-		SaveSystem.save_game(GameManager.current_save_slot, player_data)

@@ -5,6 +5,8 @@ extends Node2D
 @export var max_enemies: int = 15
 @export var spawn_interval: float = 5.0
 @export var spawn_boundary: Rect2 = Rect2(0, 0, 1000, 1000)
+signal enemy_spawned
+signal enemy_died
 
 var enemy_scenes = {
 	"plant": preload("res://Resources/Enemies/Plant/plant.tscn"),
@@ -47,7 +49,7 @@ func _spawn_random_enemy():
 	
 	get_parent().add_child(enemy)
 	enemy.global_position = spawn_pos
-	
+	enemy_spawned.emit()
 	# Connect to death signal with enemy type
 	enemy.died.connect(_on_enemy_died.bind(enemy_type))
 	
@@ -99,11 +101,13 @@ func _on_enemy_died(experience_points: int, enemy_type: String):
 	StatsTracker.record_experience_gained(experience_points)
 	
 	# Give experience to the player
+	var player = get_tree().get_first_node_in_group("player")
 	if player and player.has_method("gain_experience"):
 		player.gain_experience(experience_points)
 	else:
 		print("WARNING: Player not found or doesn't have gain_experience method!")
-
+	enemy_died.emit()
+	
 func set_spawn_enabled(enabled: bool):
 	spawn_enabled = enabled
 	print("Enemy spawning: ", "ENABLED" if enabled else "DISABLED")

@@ -17,6 +17,7 @@ func _ready():
 	mouse_exited.connect(_on_mouse_exited)
 	_setup_slot_styling()
 	_setup_button_size()
+	_setup_quantity_label()
 
 func _setup_button_size():
 	# Make sure the button fills the entire control
@@ -29,6 +30,20 @@ func _setup_button_size():
 		button.offset_bottom = 0
 		button.stretch_mode = TextureButton.STRETCH_SCALE
 		button.ignore_texture_size = true
+
+func _setup_quantity_label():
+	# Position quantity label in bottom-right corner
+	if quantity_label:
+		quantity_label.anchor_left = 1.0
+		quantity_label.anchor_right = 1.0
+		quantity_label.anchor_top = 1.0
+		quantity_label.anchor_bottom = 1.0
+		quantity_label.offset_left = -28  # Width of badge
+		quantity_label.offset_right = -4
+		quantity_label.offset_top = -24   # Height of badge
+		quantity_label.offset_bottom = -4
+		quantity_label.size_flags_horizontal = Control.SIZE_SHRINK_END
+		quantity_label.size_flags_vertical = Control.SIZE_SHRINK_END
 
 func _setup_slot_styling():
 	# Make slot background fill the entire control
@@ -77,7 +92,8 @@ func _setup_slot_styling():
 		qty_style.shadow_offset = Vector2(1, 1)
 		
 		quantity_label.add_theme_stylebox_override("normal", qty_style)
-		quantity_label.add_theme_font_size_override("font_size", 24)
+		quantity_label.add_theme_font_size_override("font_size", 14)  # Smaller font for badge
+		quantity_label.z_index = 10  # Ensure it appears above icon
 
 func set_item(item: Item, quantity: int):
 	current_item = item
@@ -85,6 +101,7 @@ func set_item(item: Item, quantity: int):
 	if item:
 		button.texture_normal = item.icon
 		
+		# Always show quantity if > 0, even if it's 1 for debugging
 		if quantity > 1:
 			quantity_label.text = str(quantity)
 			quantity_label.visible = true

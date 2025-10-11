@@ -5,11 +5,6 @@
 
 [node name="Gun" type="Node2D"]
 script = ExtResource("1_0rnkf")
-base_damage = null
-base_fire_rate = null
-base_bullet_speed = null
-base_accuracy = null
-base_bullet_count = null
 
 [node name="GunSprite" type="Sprite2D" parent="."]
 position = Vector2(9.50001, 4.3125)

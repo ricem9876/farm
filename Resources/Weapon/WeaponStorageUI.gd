@@ -193,13 +193,13 @@ func _create_slots():
 
 func _populate_with_weapons():
 	"""Auto-populate storage with one of each weapon type"""
-	if not weapon_storage:
-		print("✗ ERROR: weapon_storage is NULL in _populate_with_weapons!")
-		return
+	#if not weapon_storage:
+		#print("✗ ERROR: weapon_storage is NULL in _populate_with_weapons!")
+		#return
 	
-	print("\n--- Starting weapon population ---")
-	print("Storage max slots: ", weapon_storage.max_slots)
-	print("Storage current count: ", weapon_storage.get_weapon_count())
+	#print("\n--- Starting weapon population ---")
+	#print("Storage max slots: ", weapon_storage.max_slots)
+	#print("Storage current count: ", weapon_storage.get_weapon_count())
 	
 	var weapons_to_add = []
 	
@@ -211,38 +211,38 @@ func _populate_with_weapons():
 	weapons_to_add.append(WeaponFactory.create_machine_gun())
 	weapons_to_add.append(WeaponFactory.create_burst_rifle())
 	
-	print("Created ", weapons_to_add.size(), " weapons to add")
+	#print("Created ", weapons_to_add.size(), " weapons to add")
 	
 	var added_count = 0
 	for weapon in weapons_to_add:
-		print("Attempting to add: ", weapon.name if weapon else "NULL WEAPON")
+		#print("Attempting to add: ", weapon.name if weapon else "NULL WEAPON")
 		if weapon_storage.add_weapon(weapon):
 			added_count += 1
-			print("  ✓ Added successfully")
-		else:
-			print("  ✗ Failed to add (storage full?)")
-			break
+			#print("  ✓ Added successfully")
+		#else:
+			#print("  ✗ Failed to add (storage full?)")
+			#break
 	
-	print("Successfully added ", added_count, " weapons")
-	print("Final storage count: ", weapon_storage.get_weapon_count())
-	print("--- Weapon population complete ---\n")
+	#print("Successfully added ", added_count, " weapons")
+	#print("Final storage count: ", weapon_storage.get_weapon_count())
+	#print("--- Weapon population complete ---\n")
 
 func _update_display():
-	print("\n--- Updating display ---")
-	print("Slots: ", slots.size())
-	print("Storage weapons array size: ", weapon_storage.weapons.size())
+	#print("\n--- Updating display ---")
+	#print("Slots: ", slots.size())
+	#print("Storage weapons array size: ", weapon_storage.weapons.size())
 	
 	for i in range(slots.size()):
 		if i < weapon_storage.weapons.size():
 			var weapon = weapon_storage.weapons[i]
 			if weapon:
-				print("Slot ", i, ": ", weapon.name)
+				#print("Slot ", i, ": ", weapon.name)
 				slots[i].set_item(weapon, 1)
 			else:
-				print("Slot ", i, ": empty")
+				#print("Slot ", i, ": empty")
 				slots[i].set_item(null, 0)
 		else:
-			print("Slot ", i, ": out of range")
+			#print("Slot ", i, ": out of range")
 			slots[i].set_item(null, 0)
 	
 	print("--- Display update complete ---\n")

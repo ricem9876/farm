@@ -1,3 +1,5 @@
+# safehouse.gd
+# Clean version - loads from save file when needed, no scattered save/restore calls
 extends Node2D
 
 @onready var weapon_storage_ui = %WeaponStorageUI
@@ -13,182 +15,228 @@ func _ready():
 	print("\n=== SAFEHOUSE SETUP START ===")
 	AudioManager.play_music(AudioManager.safehouse_music)
 	
-	# Find player
+	# CRITICAL FIX: Wait for scene tree to be ready
+	await get_tree().process_frame
+	
+	# Find player - try multiple methods
 	player = get_tree().get_first_node_in_group("player")
+	
 	if not player:
+		# Fallback: look for player by name
 		player = get_node_or_null("player")
 	
 	if not player:
+		# Last resort: search all nodes
+		for node in get_tree().get_nodes_in_group("player"):
+			if node is CharacterBody2D:
+				player = node
+				break
+	
+	if not player:
 		print("ERROR: Player not found!")
+		print("DEBUG: Available groups: ", get_tree().get_nodes_in_group("player"))
 		return
 	
-	print("✓ Player found at position: ", player.global_position)
+	print("✓ Player found: ", player.name)
 	
 	# Wait for player's _ready() to complete
 	await get_tree().process_frame
 	await get_tree().process_frame
 	
-	# Make sure player is in the player group
+	# Ensure player is in correct group
 	if not player.is_in_group("player"):
 		player.add_to_group("player")
-		print("✓ Added player to 'player' group")
-	else:
-		print("✓ Player already in 'player' group")
 	
-	# Setup farm exit interaction
+	# CRITICAL: For new games, ensure no weapons are equipped
+	if GameManager.pending_load_data.is_empty():
+		print("New game - clearing any default weapons")
+		var weapon_mgr = player.get_weapon_manager()
+		if weapon_mgr:
+			# Clear any WeaponItems in the slots (from scene exports)
+			weapon_mgr.primary_slot = null
+			weapon_mgr.secondary_slot = null
+			
+			# Remove any instantiated guns
+			if weapon_mgr.primary_gun:
+				weapon_mgr.primary_gun.queue_free()
+				weapon_mgr.primary_gun = null
+			if weapon_mgr.secondary_gun:
+				weapon_mgr.secondary_gun.queue_free()
+				weapon_mgr.secondary_gun = null
+			
+			print("✓ Cleared default weapons for new game")
+	
+	# Setup level select UI
 	var level_select = level_select_scene.instantiate()
 	add_child(level_select)
-
+	
+	# Setup farm exit interaction
 	if farm_exit:
-		print("✓ FarmExit found")
 		if not farm_exit.is_in_group("interaction_areas"):
 			farm_exit.add_to_group("interaction_areas")
 		farm_exit.interaction_type = "farm_exit"
-		print("  - Interaction type set to: ", farm_exit.interaction_type)
-	else:
-		print("ERROR: FarmExit not found!")
+		print("✓ Farm exit configured")
 	
-	# Check if nodes were found
-	if not weapon_storage_ui:
-		print("ERROR: WeaponStorageUI not found! Did you mark it as unique name?")
-		return
-	print("✓ WeaponStorageUI found")
-	
-	if not weapon_chest:
-		print("ERROR: WeaponChest not found! Did you mark it as unique name?")
-		return
-	print("✓ WeaponChest found")
-	
-	# Create weapon storage
+	# Setup weapon storage system
 	weapon_storage = WeaponStorageManager.new()
+	weapon_storage.name = "WeaponStoragManager"
 	add_child(weapon_storage)
-	print("✓ WeaponStorageManager created")
-	weapon_storage.storage_changed.connect(_on_weapon_storage_changed)
+	weapon_storage.add_to_group("weapon_storage")  # For SaveSystem to find it
+	print("✓ Weapon storage created")
 	
-	# Get player's weapon manager
+	# Setup weapon storage UI
 	var player_weapon_manager = player.get_weapon_manager()
-	
-	# Setup UI - this will auto-populate with weapons
-	if player_weapon_manager:
-		weapon_storage_ui.setup_storage(
-			weapon_storage,
-			player_weapon_manager,
-			player
-		)
-		print("✓ WeaponStorageUI setup complete (auto-populated with weapons)")
+	if weapon_storage_ui and player_weapon_manager:
+		# CRITICAL: Wait for weapon_storage to be fully ready
+		await get_tree().process_frame
+		weapon_storage_ui.setup_storage(weapon_storage, player_weapon_manager, player)
+		print("✓ Weapon storage UI configured")
 	else:
-		print("⚠ Warning: Player has no weapon manager, storage UI may not work correctly")
+		print("ERROR: Missing weapon_storage_ui or player_weapon_manager")
+		print("  weapon_storage_ui: ", weapon_storage_ui)
+		print("  player_weapon_manager: ", player_weapon_manager)
 	
-	# Connect chest
-	weapon_chest.set_storage_ui(weapon_storage_ui)
-	print("✓ WeaponChest connected")
+	# Connect weapon chest
+	if weapon_chest:
+		weapon_chest.set_storage_ui(weapon_storage_ui)
+		print("✓ Weapon chest connected")
 	
-	# Connect to weapon manager signals to auto-disable guns when equipped
-	if player_weapon_manager:
-		if player_weapon_manager.has_signal("weapon_equipped"):
-			player_weapon_manager.weapon_equipped.connect(_on_weapon_equipped_in_safehouse)
-			print("✓ Connected to weapon_equipped signal")
-		else:
-			print("⚠ Warning: weapon_manager doesn't have weapon_equipped signal")
-	else:
-		print("⚠ Warning: No weapon manager found")
+	# Connect to weapon equip events to disable guns in safehouse
+	if player_weapon_manager and player_weapon_manager.has_signal("weapon_equipped"):
+		player_weapon_manager.weapon_equipped.connect(_on_weapon_equipped)
 	
-	# Restore player state from save file (if loading from save)
-	await get_tree().process_frame
-	_restore_player_state()
-	
-	# Wait another frame for weapons to be restored and instantiated
-	await get_tree().process_frame
-	
-	# NOW disable the gun
-	_disable_gun_in_safehouse()
-	
-	# Restore weapon storage after creating it
-	if weapon_storage:
-		GameManager.restore_weapon_storage(weapon_storage)
-	
-	# Restore item storage chest from save file
-	var storage_chest = get_node_or_null("StorageChest")
-	if storage_chest and storage_chest.has_method("load_from_save_data"):
-		if GameManager.pending_storage_data.has("safehouse_chest"):
-			var chest_data = GameManager.pending_storage_data["safehouse_chest"]
-			storage_chest.load_from_save_data(chest_data)
-			GameManager.pending_storage_data.erase("safehouse_chest")
-			print("✓ Item storage chest restored from save file")
+	# If loading from save file, restore player data FIRST
+	if not GameManager.pending_load_data.is_empty():
+		print("Loading player from save file...")
+		SaveSystem.apply_player_data(player, GameManager.pending_load_data.get("player", {}))
 		
+		# Force refresh inventory UI
+		await get_tree().process_frame
+		var inv_mgr = player.get_inventory_manager()
+		if inv_mgr:
+			inv_mgr.inventory_changed.emit()
+			print("✓ Inventory restored and refreshed")
+		
+		player.refresh_hud()
+	
+	
+	# CRITICAL: Now restore chests AFTER apply_player_data (which populates the storage_chests data)
+	if GameManager.pending_load_data.has("storage_chests"):
+		_restore_storage_chests()
+	
+	# Restore weapon storage from save file if loading
+	if GameManager.pending_load_data.has("weapon_storage"):
+		_restore_weapon_storage_from_save(GameManager.pending_load_data.weapon_storage)
+		GameManager.pending_load_data.erase("weapon_storage")
+	
+	# Clear pending load data
+	GameManager.pending_load_data = {}
+	
+	# Wait a frame for weapons to instantiate
+	await get_tree().process_frame
+	await get_tree().process_frame  # Wait TWO frames to be sure
+	
+	# Set location state to disable guns
+	_set_safehouse_state()
+	
+	# CRITICAL: Force disable guns after state change
+	await get_tree().process_frame
+	_disable_all_guns()
+	print("Force-disabled guns after instantiation")
+	
+	# Add pause menu
 	var pause_menu = pause_menu_scene.instantiate()
 	add_child(pause_menu)
-	print("✓ Pause menu added")
+	
 	print("=== SAFEHOUSE SETUP COMPLETE ===\n")
 
-func _restore_player_state():
-	"""Restore player state when entering safehouse"""
-	print("Checking for saved player state...")
+func _restore_weapon_storage_from_save(weapon_data: Array):
+	"""Restore weapon chest contents from save data"""
+	print("Restoring weapon storage from save...")
 	
-	# Check if we're loading from a save file
-	if not GameManager.pending_load_data.is_empty():
-		print("Loading from save file...")
-		SaveSystem.apply_player_data(player, GameManager.pending_load_data.get("player", {}))
-		GameManager.pending_load_data = {}
-		player.refresh_hud()
+	for i in range(weapon_data.size()):
+		var data = weapon_data[i]
+		if data.is_empty():
+			continue
+		
+		var weapon: WeaponItem = null
+		match data.name:
+			"Pistol":
+				weapon = WeaponFactory.create_pistol()
+			"Shotgun":
+				weapon = WeaponFactory.create_shotgun()
+			"Assault Rifle":
+				weapon = WeaponFactory.create_rifle()
+			"Sniper Rifle":
+				weapon = WeaponFactory.create_sniper()
+			"Machine Gun":
+				weapon = WeaponFactory.create_machine_gun()
+			"Burst Rifle":
+				weapon = WeaponFactory.create_burst_rifle()
+		
+		if weapon and i < weapon_storage.weapons.size():
+			weapon_storage.weapons[i] = weapon
+	
+	weapon_storage.storage_changed.emit()
+	print("  ✓ Weapon storage restored")
+
+func _restore_storage_chests():
+	"""Restore item storage chests from save data"""
+	if not GameManager.pending_load_data.has("storage_chests"):
 		return
 	
-	# Otherwise this is just a scene transition - data already loaded via auto-save
-	print("Scene transition - player data already current")
-	player.refresh_hud()
+	var chests_data = GameManager.pending_load_data.storage_chests
+	
+	# Find StorageChest node and restore it
+	var storage_chest = get_node_or_null("StorageChest")
+	if storage_chest and storage_chest.has_method("load_from_save_data"):
+		if chests_data.has("safehouse_chest"):
+			storage_chest.load_from_save_data(chests_data.safehouse_chest)
+			print("  ✓ Item storage restored")
+	
+	GameManager.pending_load_data.erase("storage_chests")
 
-func _on_weapon_equipped_in_safehouse(slot: int, weapon_item: WeaponItem):
-	"""Called whenever a weapon is equipped - disable it immediately if in safehouse"""
-	print("Weapon equipped in safehouse - disabling it!")
+func _on_weapon_equipped(slot: int, weapon_item: WeaponItem):
+	"""Disable any weapon equipped in safehouse"""
 	await get_tree().process_frame
 	_disable_all_guns()
 
-func _disable_gun_in_safehouse():
-	print("Setting location state to Safehouse...")
-	
+func _set_safehouse_state():
+	"""Set player location state to safehouse (disables guns)"""
 	if player and player.has_node("LocationStateMachine"):
 		var loc_state = player.get_node("LocationStateMachine")
 		loc_state.change_state("SafehouseState")
-	else:
-		print("✗ No LocationStateMachine found on player")
+		print("✓ Location state: Safehouse")
 
 func _disable_all_guns():
-	"""Disable ALL guns (both primary and secondary)"""
+	"""Disable all equipped guns"""
+	print("\n=== DISABLING GUNS ===")
+	
 	if not player:
-		print("✗ No player reference")
+		print("ERROR: No player reference")
 		return
 	
 	var weapon_manager = player.get_weapon_manager()
 	if not weapon_manager:
-		print("✗ No weapon manager")
+		print("ERROR: No weapon manager found")
 		return
 	
-	# Disable primary gun
-	var primary_gun = weapon_manager.primary_gun
-	if primary_gun:
-		print("Disabling PRIMARY gun")
-		primary_gun.set_can_fire(false)
-		primary_gun.visible = false
-		primary_gun.process_mode = Node.PROCESS_MODE_DISABLED
+	print("Weapon manager found")
+	print("Primary gun: ", weapon_manager.primary_gun)
+	print("Secondary gun: ", weapon_manager.secondary_gun)
+	
+	# Disable primary
+	if weapon_manager.primary_gun:
+		weapon_manager.primary_gun.set_can_fire(false)
+		weapon_manager.primary_gun.visible = false
+		weapon_manager.primary_gun.process_mode = Node.PROCESS_MODE_DISABLED
 		print("✓ Primary gun disabled")
 	
-	# Disable secondary gun
-	var secondary_gun = weapon_manager.secondary_gun
-	if secondary_gun:
-		print("Disabling SECONDARY gun")
-		secondary_gun.set_can_fire(false)
-		secondary_gun.visible = false
-		secondary_gun.process_mode = Node.PROCESS_MODE_DISABLED
+	# Disable secondary
+	if weapon_manager.secondary_gun:
+		weapon_manager.secondary_gun.set_can_fire(false)
+		weapon_manager.secondary_gun.visible = false
+		weapon_manager.secondary_gun.process_mode = Node.PROCESS_MODE_DISABLED
 		print("✓ Secondary gun disabled")
 	
-	if not primary_gun and not secondary_gun:
-		print("✗ No guns found (this is OK if player has no weapons)")
-		
-func _on_weapon_storage_changed():
-	"""Update GameManager whenever weapon storage changes"""
-	if weapon_storage:
-		GameManager.save_weapon_storage(weapon_storage)
-		
-func _exit_tree():
-	pass
-	# Auto-save when leaving safehouse
+	print("=== GUNS DISABLED ===")

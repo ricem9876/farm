@@ -45,7 +45,18 @@ tile_set = ExtResource("3_6x1uo")
 
 [node name="EnemySpawner" type="Node2D" parent="."]
 script = ExtResource("8_pxeeg")
-spawn_enabled = null
-max_enemies = null
-spawn_interval = null
 spawn_boundary = Rect2(0, 0, 1150, 640)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="EnemyCountLabel" type="Label" parent="CanvasLayer"]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = -23.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "Enemies: 0"

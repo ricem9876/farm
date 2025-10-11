@@ -193,7 +193,7 @@ func _create_slots():
 		print("ERROR: inventory_manager is null!")
 		return
 	
-	var slot_count = 8
+	var slot_count = inventory_manager.max_slots
 	print("Creating ", slot_count, " inventory slots...")
 	
 	for i in range(slot_count):

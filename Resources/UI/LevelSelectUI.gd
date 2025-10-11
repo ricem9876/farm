@@ -1,4 +1,5 @@
 # LevelSelectUI.gd
+# Handles level selection and triggers auto-save BEFORE scene transition
 extends CanvasLayer
 
 @onready var panel = $Panel
@@ -6,7 +7,6 @@ extends CanvasLayer
 @onready var level_container = $Panel/VBoxContainer/LevelContainer
 @onready var back_button = $Panel/VBoxContainer/BackButton
 
-# Level definitions
 var levels = [
 	{
 		"name": "Farm - 1",
@@ -39,7 +39,7 @@ var levels = [
 		"max_enemies": 99999,
 		"spawn_interval": 1.0,
 		"description": "They don't stop!!!"
-		}
+	}
 ]
 
 func _ready():
@@ -74,15 +74,12 @@ func _create_level_buttons():
 		button.add_theme_font_override("font", pixel_font)
 		button.add_theme_font_size_override("font_size", 20)
 		
-		# Style based on difficulty
 		var color = Color(0.3, 0.7, 0.3)
 		match level_data.difficulty:
-			"1": color = Color(0.3, 0.7, 0.3)
-			"2": color = Color(0.7, 0.7, 0.3)
-			"3": color = Color(0.7, 0.3, 0.3)
+			"normal": color = Color(0.7, 0.7, 0.3)
+			"hard": color = Color(0.7, 0.3, 0.3)
 		
 		_style_button(button, color)
-		
 		button.pressed.connect(_on_level_selected.bind(level_data))
 		level_container.add_child(button)
 
@@ -113,17 +110,26 @@ func close():
 	get_tree().paused = false
 
 func _on_level_selected(level_data: Dictionary):
-	print("Selected level: ", level_data.name)
+	print("Level selected: ", level_data.name)
 	
+	# Store level settings
 	GameManager.current_level_settings = level_data
 	
-	# Auto-save FIRST, before any scene changes
+	# CRITICAL: Auto-save RIGHT HERE, before any scene changes
 	var player = get_tree().get_first_node_in_group("player")
 	if player and GameManager.current_save_slot >= 0:
 		print("Auto-saving before farm transition...")
 		var player_data = SaveSystem.collect_player_data(player)
 		SaveSystem.save_game(GameManager.current_save_slot, player_data)
+		print("Auto-save complete - all data captured")
+		
+		# CRITICAL FIX: Load the save back into pending_load_data
+		var save_data = SaveSystem.load_game(GameManager.current_save_slot)
+		if not save_data.is_empty():
+			GameManager.pending_load_data = save_data
+			print("Save data loaded into pending_load_data for farm")
 	
+	# Now it's safe to transition
 	close()
 	get_tree().change_scene_to_file(level_data.scene)
 

@@ -271,7 +271,7 @@ func _transfer_item_from_storage_to_player(storage_slot_index: int, player_slot_
 		return
 	
 	var quantity = storage_inventory.quantities[storage_slot_index]
-	
+
 	# Try to add to player inventory
 	if player_inventory.add_item(item, quantity):
 		# Successfully added to player, remove from storage
@@ -279,7 +279,8 @@ func _transfer_item_from_storage_to_player(storage_slot_index: int, player_slot_
 		#print("Transferred ", quantity, "x ", item.name, " from storage to player")
 	#else:
 		#print("Player inventory is full!")
-
+	_update_player_display()
+	_update_storage_display()
 func _on_close_button_pressed():
 	storage_closed.emit()
 

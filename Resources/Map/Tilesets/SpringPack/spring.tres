@@ -1,4 +1,4 @@
-[gd_resource type="TileSet" load_steps=25 format=3 uid="uid://ctssncl0yvlwb"]
+[gd_resource type="TileSet" load_steps=29 format=3 uid="uid://ctssncl0yvlwb"]
 
 [ext_resource type="Texture2D" uid="uid://claj51lvamn35" path="res://Resources/Map/Tilesets/SpringPack/Tileset Spring.png" id="1_ivwwe"]
 [ext_resource type="Texture2D" uid="uid://idkiwpk4l4ln" path="res://Resources/Map/Tilesets/SpringPack/Interior.png" id="2_q238t"]
@@ -7,6 +7,8 @@
 [ext_resource type="Texture2D" uid="uid://bbdt4a57thd7j" path="res://Resources/Map/Tilesets/Grass/overworld_tileset_grass.png" id="4_bjvx2"]
 [ext_resource type="Texture2D" uid="uid://blq3hxtog48rn" path="res://Resources/Map/Tilesets/SpringPack/Fence's copiar.png" id="4_prosy"]
 [ext_resource type="Texture2D" uid="uid://b8hipibixe2hm" path="res://Resources/Map/Tilesets/SpringPack/Road copiar.png" id="5_bjvx2"]
+[ext_resource type="Texture2D" uid="uid://b1ygpx8pnu1h8" path="res://Resources/Map/Tilesets/ForestDemo/forest_demo_terrain.png" id="5_lu5rk"]
+[ext_resource type="Texture2D" uid="uid://d4lyi207cbc40" path="res://Resources/Map/Tilesets/ForestDemo/forest_demo_objects.png" id="6_h4y3j"]
 [ext_resource type="Texture2D" uid="uid://bd75nh8csvs5b" path="res://Resources/Map/Tilesets/SpringPack/Spring Crops.png" id="6_lu5rk"]
 [ext_resource type="Texture2D" uid="uid://c2hp1wcwci102" path="res://Resources/Map/Tilesets/SpringPack/Maple Tree.png" id="7_h4y3j"]
 [ext_resource type="Texture2D" uid="uid://d0naftmkmt5kh" path="res://Resources/Map/Tilesets/TownPack/house_building_assets_yellow.png" id="8_wy65o"]
@@ -784,6 +786,154 @@ texture = ExtResource("4_bjvx2")
 0:20/0 = 0
 1:20/0 = 0
 2:20/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_c1rn8"]
+texture = ExtResource("5_lu5rk")
+0:0/0 = 0
+1:0/0 = 0
+2:0/0 = 0
+3:0/0 = 0
+4:0/0 = 0
+5:0/0 = 0
+6:0/0 = 0
+7:0/0 = 0
+8:0/0 = 0
+9:0/0 = 0
+10:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+2:1/0 = 0
+3:1/0 = 0
+4:1/0 = 0
+5:1/0 = 0
+6:1/0 = 0
+7:1/0 = 0
+8:1/0 = 0
+9:1/0 = 0
+0:2/0 = 0
+2:2/0 = 0
+3:2/0 = 0
+4:2/0 = 0
+5:2/0 = 0
+6:2/0 = 0
+7:2/0 = 0
+8:2/0 = 0
+9:2/0 = 0
+0:3/0 = 0
+1:3/0 = 0
+2:3/0 = 0
+5:3/0 = 0
+6:3/0 = 0
+7:3/0 = 0
+0:4/0 = 0
+1:4/0 = 0
+2:4/0 = 0
+3:4/0 = 0
+4:4/0 = 0
+5:4/0 = 0
+6:4/0 = 0
+7:4/0 = 0
+8:4/0 = 0
+9:4/0 = 0
+0:5/0 = 0
+1:5/0 = 0
+2:5/0 = 0
+3:5/0 = 0
+4:5/0 = 0
+5:5/0 = 0
+6:5/0 = 0
+7:5/0 = 0
+8:5/0 = 0
+9:5/0 = 0
+0:6/0 = 0
+1:6/0 = 0
+2:6/0 = 0
+5:6/0 = 0
+6:6/0 = 0
+7:6/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_d18hk"]
+texture = ExtResource("6_h4y3j")
+0:0/0 = 0
+1:0/0 = 0
+2:0/0 = 0
+3:0/0 = 0
+4:0/0 = 0
+5:0/0 = 0
+6:0/0 = 0
+7:0/0 = 0
+8:0/0 = 0
+9:0/0 = 0
+10:0/0 = 0
+11:0/0 = 0
+12:0/0 = 0
+13:0/0 = 0
+14:0/0 = 0
+15:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+2:1/0 = 0
+3:1/0 = 0
+4:1/0 = 0
+5:1/0 = 0
+6:1/0 = 0
+7:1/0 = 0
+8:1/0 = 0
+9:1/0 = 0
+10:1/0 = 0
+11:1/0 = 0
+12:1/0 = 0
+13:1/0 = 0
+14:1/0 = 0
+15:1/0 = 0
+0:2/0 = 0
+1:2/0 = 0
+2:2/0 = 0
+3:2/0 = 0
+4:2/0 = 0
+5:2/0 = 0
+6:2/0 = 0
+7:2/0 = 0
+8:2/0 = 0
+9:2/0 = 0
+10:2/0 = 0
+11:2/0 = 0
+12:2/0 = 0
+13:2/0 = 0
+14:2/0 = 0
+15:2/0 = 0
+0:3/0 = 0
+1:3/0 = 0
+2:3/0 = 0
+3:3/0 = 0
+4:3/0 = 0
+5:3/0 = 0
+6:3/0 = 0
+7:3/0 = 0
+8:3/0 = 0
+9:3/0 = 0
+10:3/0 = 0
+11:3/0 = 0
+12:3/0 = 0
+13:3/0 = 0
+14:3/0 = 0
+15:3/0 = 0
+0:4/0 = 0
+1:4/0 = 0
+2:4/0 = 0
+3:4/0 = 0
+4:4/0 = 0
+5:4/0 = 0
+6:4/0 = 0
+7:4/0 = 0
+8:4/0 = 0
+9:4/0 = 0
+10:4/0 = 0
+11:4/0 = 0
+4:5/0 = 0
+5:5/0 = 0
+6:5/0 = 0
+7:5/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_pq78d"]
 texture = ExtResource("3_kdfw8")
@@ -2650,3 +2800,5 @@ sources/8 = SubResource("TileSetAtlasSource_2wsye")
 sources/9 = SubResource("TileSetAtlasSource_uhj15")
 sources/10 = SubResource("TileSetAtlasSource_h4y3j")
 sources/11 = SubResource("TileSetAtlasSource_wy65o")
+sources/12 = SubResource("TileSetAtlasSource_c1rn8")
+sources/13 = SubResource("TileSetAtlasSource_d18hk")

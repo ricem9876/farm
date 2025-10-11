@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://d0hmkml0neyrq"]
+
+[ext_resource type="TileSet" uid="uid://ctssncl0yvlwb" path="res://Resources/Map/Tilesets/SpringPack/spring.tres" id="1_pyega"]
+
+[node name="Forest" type="Node2D"]
+
+[node name="TileMapLayer" type="TileMapLayer" parent="."]
+tile_set = ExtResource("1_pyega")

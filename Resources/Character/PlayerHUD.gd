@@ -24,6 +24,11 @@ var player: Node2D
 func _ready():
 	print("\n=== PlayerHUD _ready ===")
 	
+	# Get player reference from parent
+	if not player:
+		player = get_parent()
+		print("Got player from parent: ", player)
+	
 	var top_container = $TopCenterContainer
 	if top_container:
 		# Position at top center with proper anchoring
@@ -123,13 +128,10 @@ func _style_ui():
 	
 	# === WEAPON STYLING ===
 	
-	# === WEAPON STYLING ===
-
-# Primary weapon (left)
 	# Primary weapon (left)
 	if primary_container:
 		primary_container.custom_minimum_size = Vector2(150, 80)
-		primary_container.add_theme_constant_override("separation", 5)  # Space between icon and label
+		primary_container.add_theme_constant_override("separation", 5)
 
 	if primary_icon:
 		primary_icon.custom_minimum_size = Vector2(50, 50)
@@ -176,16 +178,21 @@ func setup(player_node: Node2D, player_level_system: PlayerLevelSystem, player_w
 	
 	# Connect level system signals
 	if level_system:
-		level_system.level_up.connect(_on_level_up)
-		level_system.experience_gained.connect(_on_experience_gained)
+		if not level_system.level_up.is_connected(_on_level_up):
+			level_system.level_up.connect(_on_level_up)
+		if not level_system.experience_gained.is_connected(_on_experience_gained):
+			level_system.experience_gained.connect(_on_experience_gained)
 		print("Connected to level system signals")
 	
 	# Connect weapon manager signals
 	if weapon_manager:
 		print("Weapon manager found, connecting signals...")
-		weapon_manager.weapon_equipped.connect(_on_weapon_equipped)
-		weapon_manager.weapon_unequipped.connect(_on_weapon_unequipped)
-		weapon_manager.weapon_switched.connect(_on_weapon_switched)
+		if not weapon_manager.weapon_equipped.is_connected(_on_weapon_equipped):
+			weapon_manager.weapon_equipped.connect(_on_weapon_equipped)
+		if not weapon_manager.weapon_unequipped.is_connected(_on_weapon_unequipped):
+			weapon_manager.weapon_unequipped.connect(_on_weapon_unequipped)
+		if not weapon_manager.weapon_switched.is_connected(_on_weapon_switched):
+			weapon_manager.weapon_switched.connect(_on_weapon_switched)
 		print("Connected to weapon manager signals")
 		
 		# Debug current weapons
@@ -196,11 +203,14 @@ func setup(player_node: Node2D, player_level_system: PlayerLevelSystem, player_w
 		print("WARNING: No weapon manager provided to HUD!")
 	
 	_update_display()
+	print("✓ Player HUD setup complete")
 
 func _process(_delta):
+	# Always try to update health
 	_update_health()
 
 func _update_display():
+	print("HUD _update_display called")
 	# Update stats
 	if level_system:
 		if level_label:
@@ -212,12 +222,18 @@ func _update_display():
 		
 		if xp_label:
 			xp_label.text = str(level_system.current_experience) + " / " + str(level_system.experience_to_next_level)
+	else:
+		print("No level system in _update_display")
 	
 	# Update weapons
 	_update_weapons()
 	_update_health()
 
 func _update_health():
+	# Try to get player if we don't have it
+	if not player:
+		player = get_parent()
+	
 	if not player:
 		return
 	
@@ -269,17 +285,17 @@ func _update_weapons():
 		secondary_container.modulate = Color(0.6, 0.6, 0.6)
 		
 # Signal handlers
-func _on_level_up(new_level: int, skill_points_gained: int):
+func _on_level_up(new_level: int, _skill_points_gained: int):
 	_update_display()
 
-func _on_experience_gained(amount: int, total: int):
+func _on_experience_gained(_amount: int, _total: int):
 	_update_display()
 
-func _on_weapon_equipped(slot: int, weapon: WeaponItem):
+func _on_weapon_equipped(_slot: int, _weapon: WeaponItem):
 	_update_weapons()
 
-func _on_weapon_unequipped(slot: int):
+func _on_weapon_unequipped(_slot: int):
 	_update_weapons()
 
-func _on_weapon_switched(new_slot: int):
+func _on_weapon_switched(_new_slot: int, _weapon: Gun):
 	_update_weapons()
