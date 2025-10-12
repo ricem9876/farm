@@ -68,6 +68,7 @@ func _setup_level_system():
 func _setup_weapon_manager():
 	# Create the weapon manager
 	weapon_manager = WeaponManager.new()
+	weapon_manager.name = "WeaponManager"  # CRITICAL: Set the name so SaveSystem can find it
 	add_child(weapon_manager)
 	print("✓ WeaponManager created")
 
@@ -354,7 +355,10 @@ func _input(event):
 				_switch_to_slot(1)
 			elif event.keycode == KEY_Q:
 				weapon_manager.switch_weapon()
-
+	if event.is_action_pressed("interact"):
+		# Interaction handled by Area2D nodes (WeaponChest, etc.)
+		pass
+		
 func _is_skill_tree_allowed() -> bool:
 	if not has_node("LocationStateMachine"):
 		return false
@@ -377,7 +381,6 @@ func _switch_to_slot(slot: int):
 		print("Switched to weapon slot ", slot)
 	elif not weapon_manager.has_weapon_in_slot(slot):
 		print("No weapon in slot ", slot)
-
 # === DEBUG METHODS ===
 
 func debug_add_xp(amount: int = 100):

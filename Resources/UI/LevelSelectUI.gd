@@ -37,7 +37,7 @@ var levels = [
 		"scene": "res://Resources/Scenes/farm.tscn",
 		"difficulty": "extremely hard",
 		"max_enemies": 99999,
-		"spawn_interval": 1.0,
+		"spawn_interval": 0.2,
 		"description": "They don't stop!!!"
 	}
 ]

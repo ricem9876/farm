@@ -84,28 +84,17 @@ func _ready():
 	weapon_storage.add_to_group("weapon_storage")  # For SaveSystem to find it
 	print("✓ Weapon storage created")
 	
-	# Setup weapon storage UI
-	var player_weapon_manager = player.get_weapon_manager()
-	if weapon_storage_ui and player_weapon_manager:
-		# CRITICAL: Wait for weapon_storage to be fully ready
-		await get_tree().process_frame
-		weapon_storage_ui.setup_storage(weapon_storage, player_weapon_manager, player)
-		print("✓ Weapon storage UI configured")
-	else:
-		print("ERROR: Missing weapon_storage_ui or player_weapon_manager")
-		print("  weapon_storage_ui: ", weapon_storage_ui)
-		print("  player_weapon_manager: ", player_weapon_manager)
-	
 	# Connect weapon chest
 	if weapon_chest:
 		weapon_chest.set_storage_ui(weapon_storage_ui)
 		print("✓ Weapon chest connected")
 	
 	# Connect to weapon equip events to disable guns in safehouse
+	var player_weapon_manager = player.get_weapon_manager()
 	if player_weapon_manager and player_weapon_manager.has_signal("weapon_equipped"):
 		player_weapon_manager.weapon_equipped.connect(_on_weapon_equipped)
 	
-	# If loading from save file, restore player data FIRST
+	# CRITICAL: Load player data FIRST (this populates pending_load_data with unlocked_weapons)
 	if not GameManager.pending_load_data.is_empty():
 		print("Loading player from save file...")
 		SaveSystem.apply_player_data(player, GameManager.pending_load_data.get("player", {}))
@@ -118,6 +107,26 @@ func _ready():
 			print("✓ Inventory restored and refreshed")
 		
 		player.refresh_hud()
+	
+	# NOW restore unlocked weapons (AFTER apply_player_data put them in pending_load_data)
+	# Note: SaveSystem.apply_player_data already set them in GlobalWeaponStorage
+	if GameManager.pending_load_data.has("unlocked_weapons"):
+		# Just for logging - they're already in GlobalWeaponStorage
+		var unlocked = GlobalWeaponStorage.get_unlocked_weapons() if GlobalWeaponStorage else []
+		print("  ✓ Unlocked weapons already in GlobalWeaponStorage: ", unlocked)
+		GameManager.pending_load_data.erase("unlocked_weapons")
+	
+	# Setup weapon storage UI (AFTER unlocked_weapons are restored)
+	if weapon_storage_ui and player_weapon_manager:
+		# CRITICAL: Wait for weapon_storage to be fully ready
+		await get_tree().process_frame
+		weapon_storage_ui.setup_storage(weapon_storage, player_weapon_manager, player)
+		weapon_storage_ui.add_to_group("weapon_ui")  # For save system
+		print("✓ Weapon storage UI configured")
+	else:
+		print("ERROR: Missing weapon_storage_ui or player_weapon_manager")
+		print("  weapon_storage_ui: ", weapon_storage_ui)
+		print("  player_weapon_manager: ", player_weapon_manager)
 	
 	
 	# CRITICAL: Now restore chests AFTER apply_player_data (which populates the storage_chests data)

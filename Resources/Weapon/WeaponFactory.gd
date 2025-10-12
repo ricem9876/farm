@@ -93,7 +93,7 @@ static func create_burst_rifle() -> WeaponItem:
 	var burst = _create_base_weapon()
 	burst.name = "Burst Rifle"
 	burst.description = "Fires 3-round bursts"
-	burst.weapon_type = "Rifle"
+	burst.weapon_type = "BurstRifle"  # FIXED: Use separate type to avoid sharing Rifle upgrades
 	burst.weapon_sprite = preload("res://Resources/Weapon/Sprites/rifle.png")
 	burst.icon = preload("res://Resources/Weapon/Sprites/rifle.png")
 	burst.base_damage = 14.0

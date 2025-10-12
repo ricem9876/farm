@@ -1,3 +1,4 @@
+# WeaponManager.gd - UPDATED WITH UPGRADE SUPPORT
 extends Node
 class_name WeaponManager
 
@@ -10,7 +11,7 @@ signal weapon_unequipped(slot: int)
 
 var primary_gun: Gun
 var secondary_gun: Gun
-var active_slot: int = 0  # 0 = primary, 1 = secondary
+var active_slot: int = 0
 var player: Node2D
 
 func _ready():
@@ -21,22 +22,18 @@ func equip_weapon(weapon_item: WeaponItem, slot: int = 0) -> bool:
 		print("Cannot equip non-weapon item")
 		return false
 	
-	# Remove old weapon from slot
 	unequip_weapon(slot)
 	
-	# Set the weapon item
 	if slot == 0:
 		primary_slot = weapon_item
 	else:
 		secondary_slot = weapon_item
 	
-	# Create the gun instance
 	var gun = weapon_item.weapon_scene.instantiate() as Gun
 	if not gun:
 		print("Failed to instantiate weapon")
 		return false
 	
-	# Add gun to player
 	player.add_child(gun)
 	gun.setup_with_player(player)
 	
@@ -47,20 +44,28 @@ func equip_weapon(weapon_item: WeaponItem, slot: int = 0) -> bool:
 	gun.base_accuracy = weapon_item.base_accuracy
 	gun.base_bullet_count = weapon_item.base_bullet_count
 	
-	
-	# IMPORTANT: Set the gun sprite from the weapon item!
+	# Set the gun sprite
 	if gun.gun_sprite and weapon_item.weapon_sprite:
 		gun.gun_sprite.texture = weapon_item.weapon_sprite
-		print("✓ Set gun sprite to: ", weapon_item.weapon_sprite.resource_path)
-	else:
-		print("✗ Warning: Could not set gun sprite!")
-		if not gun.gun_sprite:
-			print("  - gun_sprite is null")
-		if not weapon_item.weapon_sprite:
-			print("  - weapon_item.weapon_sprite is null")
 	
 	gun._initialize_stats()
 	gun._setup_gun_appearance()
+	
+	# ✨ APPLY WEAPON UPGRADES ✨
+	if WeaponUpgradeManager:
+		WeaponUpgradeManager.apply_upgrade_to_gun(gun, weapon_item.weapon_type)
+		print("✓ Applied upgrades for ", weapon_item.weapon_type)
+		
+		# Check if any upgrades were applied and make gun gold
+		var has_upgrades = false
+		for upgrade in WeaponUpgradeManager.get_upgrades_for_weapon(weapon_item.weapon_type):
+			if upgrade.is_purchased:
+				has_upgrades = true
+				break
+		
+		if has_upgrades and gun.gun_sprite:
+			gun.gun_sprite.modulate = Color(1.0, 0.84, 0.0)  # Gold color
+			print("✨ Weapon is upgraded - made GOLD")
 	
 	# Store reference
 	if slot == 0:
@@ -75,6 +80,14 @@ func equip_weapon(weapon_item: WeaponItem, slot: int = 0) -> bool:
 	
 	weapon_equipped.emit(slot, weapon_item)
 	print("Equipped weapon in slot ", slot, ": ", weapon_item.name)
+	
+	# CRITICAL: Force HUD update after equipping
+	if player and player.has_node("PlayerHUD"):
+		var hud = player.get_node("PlayerHUD")
+		if hud.has_method("_update_weapons"):
+			hud._update_weapons()
+			print("✓ HUD weapons display updated")
+	
 	return true
 
 func unequip_weapon(slot: int) -> WeaponItem:
@@ -92,7 +105,6 @@ func unequip_weapon(slot: int) -> WeaponItem:
 		secondary_slot = null
 		secondary_gun = null
 	
-	# Remove the gun node
 	if gun:
 		gun.queue_free()
 	
@@ -102,16 +114,13 @@ func unequip_weapon(slot: int) -> WeaponItem:
 	return weapon_item
 
 func switch_weapon():
-	# Toggle between primary (0) and secondary (1)
 	var new_slot = 1 - active_slot
 	
-	# Check if new slot has a weapon
 	var new_weapon = get_weapon_in_slot(new_slot)
 	if not new_weapon:
 		print("No weapon in slot ", new_slot)
 		return
 	
-	# Hide and disable current weapon
 	var current_gun = get_active_gun()
 	if current_gun:
 		current_gun.visible = false
@@ -119,31 +128,26 @@ func switch_weapon():
 		current_gun.stop_firing()
 		current_gun.set_can_fire(false)
 	
-	# Switch active slot
 	active_slot = new_slot
 	var new_gun = get_active_gun()
 	
 	if new_gun:
-		# Let the location state decide if the gun should be enabled
 		var location_state = player.get_node_or_null("LocationStateMachine")
 		
 		if location_state:
 			var current_state = location_state.get_current_state()
 			
-			# Check if we're in a state that allows weapons
 			if current_state and current_state.name == "FarmState":
 				new_gun.set_can_fire(true)
 				new_gun.visible = true
 				new_gun.process_mode = Node.PROCESS_MODE_INHERIT
 				print("Switched to ", "primary" if active_slot == 0 else "secondary", " weapon: ", new_weapon.name, " (ENABLED)")
 			else:
-				# In safehouse or other no-combat zone
 				new_gun.set_can_fire(false)
 				new_gun.visible = false
 				new_gun.process_mode = Node.PROCESS_MODE_DISABLED
 				print("Switched to ", "primary" if active_slot == 0 else "secondary", " weapon: ", new_weapon.name, " (DISABLED)")
 		else:
-			# No location state machine - default to enabled
 			new_gun.set_can_fire(true)
 			new_gun.visible = true
 			new_gun.process_mode = Node.PROCESS_MODE_INHERIT
@@ -163,34 +167,94 @@ func get_active_slot() -> int:
 	return active_slot
 
 func can_equip_weapon() -> bool:
-	# Check if either slot is empty
 	return primary_slot == null or secondary_slot == null
 
-# NEW: Restore weapons from save data
 func instantiate_weapons_from_save():
 	"""Recreate Gun nodes from saved WeaponItem data after loading from save"""
 	print("\n=== RESTORING WEAPONS FROM SAVE ===")
+	print("Primary slot: ", primary_slot)
+	print("Primary gun: ", primary_gun)
+	print("Secondary slot: ", secondary_slot)
+	print("Secondary gun: ", secondary_gun)
 	
-	# Instantiate primary weapon if we have one
-	if primary_slot and not primary_gun:
+	# CRITICAL: Clear any existing guns first (from scene defaults)
+	if primary_gun:
+		print("Removing existing primary gun from scene")
+		primary_gun.queue_free()
+		primary_gun = null
+	
+	if secondary_gun:
+		print("Removing existing secondary gun from scene")
+		secondary_gun.queue_free()
+		secondary_gun = null
+	
+	# Now create guns from the saved weapon slots
+	if primary_slot:
 		print("Restoring primary weapon: ", primary_slot.name)
 		primary_gun = _create_gun_from_weapon_item(primary_slot)
 		if primary_gun:
+			# CRITICAL: Add to tree FIRST so @onready variables get assigned
 			player.add_child(primary_gun)
 			primary_gun.setup_with_player(player)
+			
+			# NOW the gun_sprite should exist, so set the texture
+			if primary_gun.gun_sprite and primary_slot.weapon_sprite:
+				primary_gun.gun_sprite.texture = primary_slot.weapon_sprite
+				print("✓ Set primary weapon sprite texture")
+			
+			# Apply upgrades
+			if WeaponUpgradeManager:
+				WeaponUpgradeManager.apply_upgrade_to_gun(primary_gun, primary_slot.weapon_type)
+				
+				# Check if any upgrades were applied and make gun gold
+				var has_upgrades = false
+				for upgrade in WeaponUpgradeManager.get_upgrades_for_weapon(primary_slot.weapon_type):
+					if upgrade.is_purchased:
+						has_upgrades = true
+						break
+				
+				if has_upgrades and primary_gun.gun_sprite:
+					primary_gun.gun_sprite.modulate = Color(1.0, 0.84, 0.0)  # Gold color
+					print("✨ Primary weapon is upgraded - made GOLD")
+			
 			print("✓ Primary weapon instantiated")
+	else:
+		print("  No primary weapon to restore")
 	
-	# Instantiate secondary weapon if we have one
-	if secondary_slot and not secondary_gun:
+	if secondary_slot:
 		print("Restoring secondary weapon: ", secondary_slot.name)
 		secondary_gun = _create_gun_from_weapon_item(secondary_slot)
 		if secondary_gun:
+			# CRITICAL: Add to tree FIRST so @onready variables get assigned
 			player.add_child(secondary_gun)
 			secondary_gun.setup_with_player(player)
+			
+			# NOW the gun_sprite should exist, so set the texture
+			if secondary_gun.gun_sprite and secondary_slot.weapon_sprite:
+				secondary_gun.gun_sprite.texture = secondary_slot.weapon_sprite
+				print("✓ Set secondary weapon sprite texture")
+			
+			# Apply upgrades
+			if WeaponUpgradeManager:
+				WeaponUpgradeManager.apply_upgrade_to_gun(secondary_gun, secondary_slot.weapon_type)
+				
+				# Check if any upgrades were applied and make gun gold
+				var has_upgrades = false
+				for upgrade in WeaponUpgradeManager.get_upgrades_for_weapon(secondary_slot.weapon_type):
+					if upgrade.is_purchased:
+						has_upgrades = true
+						break
+				
+				if has_upgrades and secondary_gun.gun_sprite:
+					secondary_gun.gun_sprite.modulate = Color(1.0, 0.84, 0.0)  # Gold color
+					print("✨ Secondary weapon is upgraded - made GOLD")
+			
 			print("✓ Secondary weapon instantiated")
+	else:
+		print("  No secondary weapon to restore")
 	
-	# Update visibility based on active slot and location
-	_update_weapon_visibility_after_load()
+	# DON'T update visibility here - let the location state system handle it
+	# The farm state will be set right after this function returns
 	
 	print("=== WEAPON RESTORATION COMPLETE ===\n")
 
@@ -205,21 +269,12 @@ func _create_gun_from_weapon_item(weapon_item: WeaponItem) -> Gun:
 		print("ERROR: Failed to instantiate gun from weapon scene")
 		return null
 	
-	# Apply saved stats to the gun
+	# Set base stats from weapon item
 	gun.base_damage = weapon_item.base_damage
 	gun.base_fire_rate = weapon_item.base_fire_rate
 	gun.base_bullet_speed = weapon_item.base_bullet_speed
 	gun.base_accuracy = weapon_item.base_accuracy
 	gun.base_bullet_count = weapon_item.base_bullet_count
-	
-	# Set the gun sprite
-	if gun.gun_sprite and weapon_item.weapon_sprite:
-		gun.gun_sprite.texture = weapon_item.weapon_sprite
-		print("  ✓ Set gun sprite")
-	
-	# Initialize gun stats
-	gun._initialize_stats()
-	gun._setup_gun_appearance()
 	
 	return gun
 
@@ -232,7 +287,6 @@ func _update_weapon_visibility_after_load():
 		var current_state = location_state.get_current_state()
 		is_farm = current_state and current_state.name == "FarmState"
 	
-	# Handle primary weapon
 	if primary_gun:
 		if active_slot == 0 and is_farm:
 			primary_gun.set_can_fire(true)
@@ -245,7 +299,6 @@ func _update_weapon_visibility_after_load():
 			primary_gun.process_mode = Node.PROCESS_MODE_DISABLED
 			print("  ✓ Primary weapon disabled")
 	
-	# Handle secondary weapon
 	if secondary_gun:
 		if active_slot == 1 and is_farm:
 			secondary_gun.set_can_fire(true)

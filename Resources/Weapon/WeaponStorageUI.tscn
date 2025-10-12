@@ -9,44 +9,98 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
 script = ExtResource("1_j47dm")
 
-[node name="Background" type="Panel" parent="."]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
+[node name="Background" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -400.0
+offset_top = -300.0
+offset_right = 400.0
+offset_bottom = 300.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Background"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="LeftPanel" type="PanelContainer" parent="Background/HBoxContainer"]
+custom_minimum_size = Vector2(450, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Background/HBoxContainer/LeftPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TitleBar" type="HBoxContainer" parent="Background/HBoxContainer/LeftPanel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="TitleLabel" type="Label" parent="Background/HBoxContainer/LeftPanel/VBoxContainer/TitleBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "WEAPON ARMORY"
+
+[node name="ResourcesLabel" type="Label" parent="Background/HBoxContainer/LeftPanel/VBoxContainer/TitleBar"]
+layout_mode = 2
+text = "Resources: Loading..."
+horizontal_alignment = 2
+
+[node name="WeaponGrid" type="GridContainer" parent="Background/HBoxContainer/LeftPanel/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/h_separation = 15
+theme_override_constants/v_separation = 15
+columns = 3
+
+[node name="RightPanel" type="PanelContainer" parent="Background/HBoxContainer"]
+custom_minimum_size = Vector2(350, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Background/HBoxContainer/RightPanel"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="WeaponName" type="Label" parent="Background/HBoxContainer/RightPanel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+text = "Select a Weapon"
+horizontal_alignment = 1
+
+[node name="WeaponStats" type="Label" parent="Background/HBoxContainer/RightPanel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="UpgradesScroll" type="ScrollContainer" parent="Background/HBoxContainer/RightPanel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 300)
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="UpgradesContainer" type="VBoxContainer" parent="Background/HBoxContainer/RightPanel/VBoxContainer/UpgradesScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="ActionButtons" type="VBoxContainer" parent="Background/HBoxContainer/RightPanel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 150)
+layout_mode = 2
+theme_override_constants/separation = 10
 
 [node name="CloseButton" type="Button" parent="Background"]
-layout_mode = 0
-offset_right = 8.0
-offset_bottom = 8.0
-
-[node name="VBoxContainer" type="VBoxContainer" parent="Background"]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
-
-[node name="TitleBar" type="Panel" parent="Background/VBoxContainer"]
 layout_mode = 2
-
-[node name="TitleLabel" type="Label" parent="Background/VBoxContainer/TitleBar"]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 23.0
-
-[node name="WeaponGrid" type="GridContainer" parent="Background/VBoxContainer"]
-layout_mode = 2
-
-[node name="ButtonContainer" type="HBoxContainer" parent="Background/VBoxContainer"]
-layout_mode = 2
-
-[node name="EquipPrimaryButton" type="Button" parent="Background/VBoxContainer/ButtonContainer"]
-layout_mode = 2
-
-[node name="EquipSecondaryButton" type="Button" parent="Background/VBoxContainer/ButtonContainer"]
-layout_mode = 2
-
-[node name="StoreButton" type="Button" parent="Background/VBoxContainer/ButtonContainer"]
-layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+text = "X"

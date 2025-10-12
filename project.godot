@@ -23,6 +23,7 @@ SaveSystem="*res://Resources/Scripts/SaveSystem.gd"
 AudioManager="*res://Resources/Scripts/AudioManager.gd"
 StatsTracker="*res://Resources/Scripts/StatsTracker.gd"
 WeaponFactory="*res://Resources/Weapon/WeaponFactory.gd"
+WeaponUpgradeManager="*res://Resources/Weapon/WeaponUpgradeManager.gd"
 GameSettings="*res://Resources/Scripts/GameSettings.gd"
 
 [display]

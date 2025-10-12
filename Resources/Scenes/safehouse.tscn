@@ -58,16 +58,17 @@ unique_name_in_owner = true
 z_index = 1
 position = Vector2(411, 251)
 
-[node name="WeaponStorageUI" parent="." instance=ExtResource("8_3fhve")]
+[node name="Records" parent="." instance=ExtResource("9_7dn8k")]
+z_index = 1
+position = Vector2(575, 350)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="WeaponStorageUI" parent="CanvasLayer" instance=ExtResource("8_3fhve")]
 unique_name_in_owner = true
-visible = false
 top_level = true
 z_index = 5
 offset_left = 404.0
 offset_top = 282.0
 offset_right = 404.0
 offset_bottom = 282.0
-
-[node name="Records" parent="." instance=ExtResource("9_7dn8k")]
-z_index = 1
-position = Vector2(575, 350)
