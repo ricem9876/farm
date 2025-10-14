@@ -143,6 +143,9 @@ func _setup_ui():
 	_style_volume_control(music_volume_label, music_volume_slider, "MUSIC VOLUME", pixel_font)
 	_style_volume_control(sfx_volume_label, sfx_volume_slider, "SFX VOLUME", pixel_font)
 	
+	# NEW: Add screen shake toggle
+	_create_screen_shake_toggle(pixel_font)
+	
 	# Ensure close button is visible
 	if close_button:
 		close_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -238,6 +241,52 @@ func _style_slider(slider: HSlider, _font: Font):
 	bg_style.corner_radius_bottom_right = 5
 	slider.add_theme_stylebox_override("background", bg_style)
 
+func _create_screen_shake_toggle(font: Font):
+	"""Create a checkbox for screen shake toggle"""
+	if not settings_vbox:
+		return
+	
+	# Create container for checkbox and label
+	var hbox = HBoxContainer.new()
+	hbox.custom_minimum_size = Vector2(250, 40)
+	hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	
+	# Create label
+	var label = Label.new()
+	label.text = "SCREEN SHAKE"
+	label.add_theme_font_override("font", font)
+	label.add_theme_font_size_override("font_size", 20)
+	label.add_theme_color_override("font_color", Color(1, 0.9, 0.4))
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	
+	# Create checkbox
+	var checkbox = CheckBox.new()
+	checkbox.button_pressed = SettingsManager.screen_shake_enabled
+	checkbox.toggled.connect(_on_screen_shake_toggled)
+	checkbox.custom_minimum_size = Vector2(40, 40)
+	
+	# Style checkbox
+	var check_style = StyleBoxFlat.new()
+	check_style.bg_color = Color(0.3, 0.7, 0.3)
+	check_style.border_width_left = 2
+	check_style.border_width_right = 2
+	check_style.border_width_top = 2
+	check_style.border_width_bottom = 2
+	check_style.border_color = Color(0.2, 0.5, 0.2)
+	check_style.corner_radius_top_left = 5
+	check_style.corner_radius_top_right = 5
+	check_style.corner_radius_bottom_left = 5
+	check_style.corner_radius_bottom_right = 5
+	checkbox.add_theme_stylebox_override("normal", check_style)
+	
+	hbox.add_child(label)
+	hbox.add_child(checkbox)
+	
+	# Insert before close button
+	var close_idx = close_button.get_index()
+	settings_vbox.add_child(hbox)
+	settings_vbox.move_child(hbox, close_idx)
+
 func _input(event):
 	if event.is_action_pressed("menu"):
 		if settings_menu.visible:
@@ -287,6 +336,12 @@ func _on_music_volume_slider_value_changed(value: float):
 
 func _on_sfx_volume_slider_value_changed(value: float):
 	AudioManager.set_sfx_volume(value)
+
+func _on_screen_shake_toggled(enabled: bool):
+	"""Toggle screen shake on/off"""
+	SettingsManager.screen_shake_enabled = enabled
+	SettingsManager.save_settings()
+	print("Screen shake: ", "ENABLED" if enabled else "DISABLED")
 
 func _on_exit_pressed():
 	print("Exiting to title screen...")

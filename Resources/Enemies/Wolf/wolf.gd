@@ -24,6 +24,10 @@ var health_bar: EnemyHealthBar
 var health_bar_scene = preload("res://Resources/UI/EnemyHealthBar.tscn")
 var damage_number_scene = preload("res://Resources/UI/DamageNumber.tscn")
 
+# NEW: Knockback system
+var knockback_velocity: Vector2 = Vector2.ZERO
+var knockback_friction: float = 400.0  # Reduced from 800 so knockback is more visible
+
 @onready var animated_sprite = $AnimatedSprite2D
 @onready var collision_shape = $CollisionShape2D
 @onready var detection_area = $DetectionArea
@@ -80,9 +84,16 @@ func _physics_process(delta):
 		if attack_timer <= 0:
 			can_attack = true
 	
-	# Don't move during attack animation
+	# NEW: Apply knockback friction
+	if knockback_velocity.length() > 1:
+		knockback_velocity = knockback_velocity.move_toward(Vector2.ZERO, knockback_friction * delta)
+	
+	# Don't move during attack animation or if being knocked back
 	if is_attacking:
 		velocity = Vector2.ZERO
+	elif knockback_velocity.length() > 1:
+		# Apply knockback instead of normal movement
+		velocity = knockback_velocity
 	# Chase player if detected
 	elif is_chasing and player:
 		_chase_player(delta)
@@ -240,3 +251,10 @@ func _drop_loot():
 	# Spawn fur drops
 	for i in range(drop_count):
 		ItemSpawner.spawn_item("fur", global_position, get_parent())
+
+func apply_knockback(force: Vector2):
+	"""Apply knockback force to push enemy away"""
+	if is_dead:
+		return
+	
+	knockback_velocity = force

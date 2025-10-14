@@ -190,6 +190,11 @@ func collect_player_data(player: Node2D) -> Dictionary:
 		data.weapon_upgrades = WeaponUpgradeManager.get_save_data()
 		print("  ✓ Saved weapon upgrades")
 	
+	# Tutorial data
+	if TutorialManager:
+		data.tutorial = TutorialManager.get_save_data()
+		print("  ✓ Saved tutorial data")
+	
 	# Storage chests (item storage)
 	if player.is_inside_tree():
 		var storage_containers = player.get_tree().get_nodes_in_group("storage_containers")
@@ -325,6 +330,12 @@ func apply_player_data(player: Node2D, data: Dictionary):
 	# Storage chests
 	if data.has("storage_chests") and data.storage_chests != null:
 		GameManager.pending_load_data["storage_chests"] = data.storage_chests
+	
+	# Tutorial data
+	if data.has("tutorial") and data.tutorial != null:
+		if TutorialManager:
+			TutorialManager.load_save_data(data.tutorial)
+			print("  ✓ Tutorial data restored")
 	
 	# Stats tracking
 	if data.has("player_stats") and data.player_stats != null:

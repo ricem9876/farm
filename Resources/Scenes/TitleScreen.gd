@@ -203,6 +203,10 @@ func _create_settings_controls():
 	mouse_sensitivity_slider.value = 1.0
 	mouse_sensitivity_slider.value_changed.connect(_on_mouse_sensitivity_changed)
 	settings_vbox.add_child(mouse_sensitivity_slider)
+	_add_spacer(10)
+	
+	# NEW: Screen shake toggle
+	_create_screen_shake_toggle(pixel_font)
 
 func _add_section_header(text: String, font: Font):
 	var header = Label.new()
@@ -319,6 +323,37 @@ func _style_dropdown(dropdown: OptionButton):
 	hover_style.bg_color = Color(0.3, 0.3, 0.3)
 	dropdown.add_theme_stylebox_override("hover", hover_style)
 
+func _create_screen_shake_toggle(font: Font):
+	"""Create checkbox for screen shake toggle"""
+	var hbox = HBoxContainer.new()
+	hbox.custom_minimum_size = Vector2(500, 40)
+	
+	var label = _create_label("Screen Shake", font)
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	
+	var checkbox = CheckBox.new()
+	checkbox.button_pressed = SettingsManager.screen_shake_enabled
+	checkbox.toggled.connect(_on_screen_shake_toggled)
+	checkbox.custom_minimum_size = Vector2(40, 40)
+	
+	# Style checkbox
+	var check_style = StyleBoxFlat.new()
+	check_style.bg_color = Color(0.3, 0.7, 0.3)
+	check_style.border_width_left = 2
+	check_style.border_width_right = 2
+	check_style.border_width_top = 2
+	check_style.border_width_bottom = 2
+	check_style.border_color = Color(0.2, 0.5, 0.2)
+	check_style.corner_radius_top_left = 5
+	check_style.corner_radius_top_right = 5
+	check_style.corner_radius_bottom_left = 5
+	check_style.corner_radius_bottom_right = 5
+	checkbox.add_theme_stylebox_override("normal", check_style)
+	
+	hbox.add_child(label)
+	hbox.add_child(checkbox)
+	settings_vbox.add_child(hbox)
+
 # === SETTINGS CALLBACKS ===
 
 func _on_master_volume_changed(value: float):
@@ -368,6 +403,12 @@ func _on_mouse_sensitivity_changed(value: float):
 	# Store in GameSettings autoload
 	GameSettings.mouse_sensitivity = value
 	_save_settings()
+
+func _on_screen_shake_toggled(enabled: bool):
+	"""Toggle screen shake on/off"""
+	SettingsManager.screen_shake_enabled = enabled
+	SettingsManager.save_settings()
+	print("Screen shake: ", "ENABLED" if enabled else "DISABLED")
 
 # === SETTINGS SAVE/LOAD ===
 

@@ -11,6 +11,10 @@ signal stat_changed(stat_name: String, old_value: float, new_value: float)
 @export var base_accuracy: float = 1.0
 @export var base_bullet_count: int = 1
 
+# NEW: Screen shake and knockback per weapon type
+@export var screen_shake_intensity: float = 5.0
+@export var bullet_knockback_force: float = 50.0
+
 var current_damage: float
 var current_fire_rate: float
 var current_bullet_speed: float
@@ -277,6 +281,9 @@ func _fire_single_burst():
 	
 	AudioManager.play_bullet_shot()
 	StatsTracker.record_shot_fired()
+	
+	# NEW: Apply screen shake
+	_apply_screen_shake()
 
 	var damage_multiplier = 1.0
 	var crit_chance = 0.0
@@ -329,6 +336,9 @@ func _fire_single_burst():
 				bullet.set_meta("penetrating", true)
 				bullet.set_meta("grow_on_hit", true)
 				shot_counter = 0  # Reset counter
+		
+		# NEW: Pass knockback force to bullet
+		bullet.knockback_force = bullet_knockback_force
 		
 		bullet.setup(final_damage, current_bullet_speed, final_direction)
 		
@@ -386,3 +396,17 @@ func get_gun_info() -> Dictionary:
 		gun_info.crit_damage = 1.5
 	
 	return gun_info
+
+func _apply_screen_shake():
+	"""Apply screen shake based on weapon's shake intensity"""
+	if not player:
+		return
+	
+	# Find the camera
+	var camera = player.get_node_or_null("Camera2D")
+	if not camera:
+		return
+	
+	# Check if camera has the shake method
+	if camera.has_method("apply_shake"):
+		camera.apply_shake(screen_shake_intensity, 0.3)

@@ -5,6 +5,7 @@ var damage: float = 10.0
 var speed: float = 400.0
 var direction: Vector2 = Vector2.RIGHT
 var lifetime: float = 2.0
+var knockback_force: float = 50.0  # NEW: Knockback force to apply to enemies
 
 # Upgrade tracking
 var enemies_hit: int = 0  # Track how many enemies hit (for growing bullet)
@@ -30,6 +31,9 @@ func _physics_process(delta):
 func _on_body_entered(body):
 	if body.has_method("take_damage"):
 		body.take_damage(damage)
+		# NEW: Apply knockback
+		if body.has_method("apply_knockback"):
+			body.apply_knockback(direction * knockback_force)
 		_handle_hit()
 	
 	# Only destroy if not penetrating
@@ -40,6 +44,9 @@ func _on_area_entered(area):
 	var area_parent = area.get_parent()
 	if area_parent and area_parent.has_method("take_damage"):
 		area_parent.take_damage(damage)
+		# NEW: Apply knockback
+		if area_parent.has_method("apply_knockback"):
+			area_parent.apply_knockback(direction * knockback_force)
 		_handle_hit()
 	
 	# Only destroy if not penetrating

@@ -1,6 +1,9 @@
 # StatsBookUI.gd - Displays player statistics in a book-style UI
 extends Control
 
+signal book_opened
+signal book_closed
+
 @onready var background_panel = $BackgroundPanel
 @onready var title_label = $BackgroundPanel/VBoxContainer/TitleLabel
 @onready var stats_scroll = $BackgroundPanel/VBoxContainer/StatsScroll
@@ -87,13 +90,18 @@ func _style_button(button: Button, text: String, color: Color, font: Font):
 	button.add_theme_stylebox_override("pressed", pressed_style)
 
 func open():
+	print("[STATSBOOK] Opening records book...")
 	visible = true
 	get_tree().paused = true
 	_update_stats()
+	book_opened.emit()
+	print("[STATSBOOK] ✓ Book opened, signal emitted")
 
 func close():
+	print("[STATSBOOK] Closing records book...")
 	visible = false
 	get_tree().paused = false
+	book_closed.emit()
 
 func _on_close_pressed():
 	close()

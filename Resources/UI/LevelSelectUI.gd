@@ -13,7 +13,8 @@ var levels = [
 		"scene": "res://Resources/Scenes/farm.tscn",
 		"difficulty": "easy",
 		"max_enemies": 10,
-		"spawn_interval": 6.0,
+		"spawn_interval": 2.0,
+		"total_enemies": 5,
 		"description": "A peaceful farm with few enemies"
 	},
 	{
@@ -21,7 +22,8 @@ var levels = [
 		"scene": "res://Resources/Scenes/farm.tscn",
 		"difficulty": "normal",
 		"max_enemies": 15,
-		"spawn_interval": 5.0,
+		"spawn_interval": 2.0,
+		"total_enemies": 25,
 		"description": "Standard difficulty"
 	},
 	{
@@ -29,16 +31,18 @@ var levels = [
 		"scene": "res://Resources/Scenes/farm.tscn",
 		"difficulty": "hard",
 		"max_enemies": 25,
-		"spawn_interval": 3.0,
+		"spawn_interval": 1.0,
+		"total_enemies": 50,
 		"description": "Intense combat with many enemies"
 	},
 	{
 		"name": "Farm - 4",
 		"scene": "res://Resources/Scenes/farm.tscn",
 		"difficulty": "extremely hard",
-		"max_enemies": 99999,
-		"spawn_interval": 0.2,
-		"description": "They don't stop!!!"
+		"max_enemies": 40,
+		"spawn_interval": 1.0,
+		"total_enemies": 150,
+		"description": "Wave after wave of relentless enemies!"
 	}
 ]
 
@@ -114,6 +118,21 @@ func _on_level_selected(level_data: Dictionary):
 	
 	# Store level settings
 	GameManager.current_level_settings = level_data
+	
+	# Extract level number from name ("Farm - 1" -> 1)
+	var level_name = level_data.name
+	var parts = level_name.split(" - ")
+	if parts.size() >= 2:
+		GameManager.current_level = int(parts[1])
+	else:
+		GameManager.current_level = 1
+	
+	print("Starting level number: ", GameManager.current_level)
+	
+	# Notify tutorial if it exists
+	var intro_tutorial = get_tree().root.get_node_or_null("Safehouse/IntroTutorial")
+	if intro_tutorial and intro_tutorial.has_method("on_level_started"):
+		intro_tutorial.on_level_started(GameManager.current_level)
 	
 	# CRITICAL: Auto-save RIGHT HERE, before any scene changes
 	var player = get_tree().get_first_node_in_group("player")

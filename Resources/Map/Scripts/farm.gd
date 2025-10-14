@@ -11,6 +11,8 @@ extends Node2D
 
 var pause_menu_scene = preload("res://Resources/UI/PauseMenu.tscn")
 var current_enemy_count: int = 0
+var total_enemies_in_wave: int = 0
+var enemies_killed: int = 0
 
 func _ready():
 	print("\n=== FARM SCENE SETUP START ===")
@@ -170,8 +172,17 @@ func _ready():
 		elif "spawn_interval" in enemy_spawner:
 			enemy_spawner.spawn_interval = settings.spawn_interval
 		
+		# NEW: Set total enemies
+		if "total_enemies" in settings:
+			if "total_enemies" in enemy_spawner:
+				enemy_spawner.total_enemies = settings.total_enemies
+				total_enemies_in_wave = settings.total_enemies
+				enemies_killed = 0
+				_update_enemy_counter()  # Update display with wave total
+		
 		print("✓ Spawner configured: max_enemies=", settings.max_enemies, 
-			  " spawn_interval=", settings.spawn_interval)
+			  " spawn_interval=", settings.spawn_interval,
+			  " total_enemies=", settings.get("total_enemies", "N/A"))
 		# Add pause menu
 		var pause_menu = pause_menu_scene.instantiate()
 		add_child(pause_menu)
@@ -215,12 +226,16 @@ func _update_enemy_counter():
 		print("[FARM] ERROR: enemy_count_label is null!")
 		return
 		
-	enemy_count_label.text = "Enemies: " + str(current_enemy_count)
+	# NEW: Show "Killed / Total" format
+	if total_enemies_in_wave > 0:
+		enemy_count_label.text = "Killed: %d / %d" % [enemies_killed, total_enemies_in_wave]
+	else:
+		enemy_count_label.text = "Enemies: " + str(current_enemy_count)
 	print("[FARM] Updated counter display: ", enemy_count_label.text)
 	
-	# Change color based on enemy count
-	if current_enemy_count == 0:
-		enemy_count_label.add_theme_color_override("font_color", Color(0.2, 1.0, 0.2))  # Green when cleared
+	# Change color based on progress
+	if total_enemies_in_wave > 0 and enemies_killed >= total_enemies_in_wave:
+		enemy_count_label.add_theme_color_override("font_color", Color(0.2, 1.0, 0.2))  # Green when wave complete
 	elif current_enemy_count < 5:
 		enemy_count_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.2))  # Yellow when few left
 	else:
@@ -236,11 +251,14 @@ func _on_enemy_died():
 	"""Called when an enemy dies"""
 	current_enemy_count -= 1
 	current_enemy_count = max(0, current_enemy_count)  # Don't go below 0
-	print("[FARM] Enemy died! Count: ", current_enemy_count)
+	enemies_killed += 1  # NEW: Track total kills
+	print("[FARM] Enemy died! Alive: ", current_enemy_count, " | Killed: ", enemies_killed, "/", total_enemies_in_wave)
 	_update_enemy_counter()
 	
-	# Optional: Show victory message when all cleared
-	if current_enemy_count == 0:
+	# Check if wave is complete
+	if total_enemies_in_wave > 0 and enemies_killed >= total_enemies_in_wave:
+		print("🎉 WAVE COMPLETE! All ", total_enemies_in_wave, " enemies defeated!")
+	elif current_enemy_count == 0:
 		print("🎉 All enemies cleared!")
 		# You could show a victory popup here
 

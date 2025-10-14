@@ -1,24 +1,21 @@
-# Mushroom.gd - Fixed version
+# Mushroom.gd - Fixed version with knockback
 extends CharacterBody2D
 class_name Mushroom
 
-signal died(experience_points: int)  # FIXED: Match other enemies
+signal died(experience_points: int)
 
-# Enemy Stats
 @export var max_health: float = 20.0
 @export var move_speed: float = 50.0
 @export var attack_damage: float = 10.0
 @export var attack_range: float = 30.0
 @export var detection_range: float = 100.0
-@export var experience_value: int = 50  # FIXED: Renamed from experience_reward
+@export var experience_value: int = 50
 
-# References
 @onready var animated_sprite = $AnimatedSprite2D
 @onready var hit_area = $HitArea
 @onready var attack_area = $AttackArea
 @onready var detection_area = $DetectionArea
 
-# Internal variables
 var current_health: float
 var player: Node2D
 var is_stunned: bool = false
@@ -30,7 +27,10 @@ var health_bar: EnemyHealthBar
 var health_bar_scene = preload("res://Resources/UI/EnemyHealthBar.tscn")
 var damage_number_scene = preload("res://Resources/UI/DamageNumber.tscn")
 
-# State machine
+# NEW: Knockback system
+var knockback_velocity: Vector2 = Vector2.ZERO
+var knockback_friction: float = 400.0  # Reduced from 800 so knockback is more visible
+
 enum State {
 	IDLE,
 	RUNNING,
@@ -46,7 +46,6 @@ func _ready():
 	current_health = max_health
 	_setup_areas()
 	
-	# Connect area signals
 	if detection_area:
 		detection_area.body_entered.connect(_on_player_detected)
 		detection_area.body_exited.connect(_on_player_lost)
@@ -55,20 +54,17 @@ func _ready():
 		attack_area.body_entered.connect(_on_attack_range_entered)
 		attack_area.body_exited.connect(_on_attack_range_exited)
 		
-	# Create health bar
 	health_bar = health_bar_scene.instantiate()
 	add_child(health_bar)
-	health_bar.position = Vector2(0, -35)  # Centered above enemy
-	health_bar.z_index = 10  # Draw on top
+	health_bar.position = Vector2(0, -35)
+	health_bar.z_index = 10
 
 func _setup_areas():
-	# Setup detection area (circular)
 	if detection_area and detection_area.get_child(0):
 		var detection_shape = detection_area.get_child(0) as CollisionShape2D
 		if detection_shape and detection_shape.shape is CircleShape2D:
 			detection_shape.shape.radius = detection_range
 	
-	# Setup attack area (smaller circle)
 	if attack_area and attack_area.get_child(0):
 		var attack_shape = attack_area.get_child(0) as CollisionShape2D
 		if attack_shape and attack_shape.shape is CircleShape2D:
@@ -76,7 +72,14 @@ func _setup_areas():
 
 func _physics_process(delta):
 	_update_timers(delta)
-	_state_machine(delta)
+	
+	# NEW: Apply knockback friction
+	if knockback_velocity.length() > 1:
+		knockback_velocity = knockback_velocity.move_toward(Vector2.ZERO, knockback_friction * delta)
+		velocity = knockback_velocity
+	else:
+		_state_machine(delta)
+	
 	move_and_slide()
 
 func _update_timers(delta):
@@ -108,7 +111,6 @@ func _idle_state():
 	velocity = Vector2.ZERO
 	_play_animation("Idle")
 	
-	# Transition to running if player detected
 	if player and not is_stunned:
 		_change_state(State.RUNNING)
 
@@ -117,11 +119,9 @@ func _running_state():
 		_change_state(State.IDLE)
 		return
 	
-	# Move towards player
 	var direction = (player.global_position - global_position).normalized()
 	velocity = direction * move_speed
 	
-	# Flip sprite based on movement direction
 	if animated_sprite:
 		animated_sprite.flip_h = direction.x < 0
 	
@@ -145,7 +145,6 @@ func _hit_state():
 	velocity = Vector2.ZERO
 	_play_animation("Hit")
 	
-	# Short hit state, then go to stunned
 	await get_tree().create_timer(0.2).timeout
 	if not is_dead:
 		is_stunned = true
@@ -170,10 +169,8 @@ func take_damage(damage: float, is_crit: bool = false):
 	current_health = max(0, current_health)
 	if health_bar:
 		health_bar.update_health(current_health)
-		# Spawn damage number
 	_spawn_damage_number(damage, is_crit)
 	
-	# Enter hit state
 	_change_state(State.HIT)
 	
 	if current_health <= 0:
@@ -193,12 +190,10 @@ func _die():
 	current_state = State.DEAD
 	
 	print("Mushroom died!")
-	died.emit(experience_value)  # FIXED: Use standard signal
+	died.emit(experience_value)
 	
-	# Stop all movement
 	velocity = Vector2.ZERO
 	
-	# Disable collision
 	if hit_area:
 		hit_area.set_deferred("monitoring", false)
 	if attack_area:
@@ -206,26 +201,20 @@ func _die():
 	if detection_area:
 		detection_area.set_deferred("monitoring", false)
 	
-	# Play death animation or effect
 	_play_animation("Hit")
-	
-	# FIXED: Use ItemSpawner like other enemies
 	_drop_loot()
 	
-	# Remove after brief delay
 	await get_tree().create_timer(1.0).timeout
 	queue_free()
 
 func _drop_loot():
 	var drop_count = 1
 	
-	# Check for double drops from player luck
 	if player and player.level_system:
 		if randf() < player.level_system.luck:
 			drop_count = 2
 			print("DOUBLE DROPS! 2x mushroom!")
 	
-	# Spawn mushroom drops
 	for i in range(drop_count):
 		ItemSpawner.spawn_item("mushroom", global_position, get_parent())
 
@@ -235,12 +224,10 @@ func _perform_attack():
 	
 	attack_cooldown = 2.0
 	
-	# Deal damage to player if in range
 	if player and global_position.distance_to(player.global_position) <= attack_range:
 		if player.has_method("take_damage"):
 			player.take_damage(attack_damage)
 	
-	# Return to appropriate state after attack
 	await get_tree().create_timer(0.5).timeout
 	if not is_dead:
 		if player and global_position.distance_to(player.global_position) <= detection_range:
@@ -248,7 +235,6 @@ func _perform_attack():
 		else:
 			_change_state(State.IDLE)
 
-# Signal handlers
 func _on_player_detected(body):
 	if body.is_in_group("player"):
 		player = body
@@ -273,3 +259,10 @@ func _on_animation_finished():
 				_change_state(State.RUNNING)
 			else:
 				_change_state(State.IDLE)
+
+func apply_knockback(force: Vector2):
+	"""Apply knockback force to push enemy away"""
+	if is_dead:
+		return
+	
+	knockback_velocity = force

@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://dcmnp8k6fb2bj"]
 
-[ext_resource type="Texture2D" uid="uid://c1halsls6buik" path="res://Resources/Map/Tilesets/TownPack/house_interiors_assets.png" id="1_e8ywr"]
 [ext_resource type="Script" uid="uid://c5i8724333qwt" path="res://Resources/Weapon/WeaponChest.gd" id="1_fh8hy"]
+[ext_resource type="Texture2D" uid="uid://csb77vgonmerl" path="res://Resources/Map/Objects/WeaponChest.png" id="2_fh8hy"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_fh8hy"]
 
@@ -9,17 +9,17 @@
 script = ExtResource("1_fh8hy")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-texture = ExtResource("1_e8ywr")
-hframes = 41
-vframes = 17
-frame = 251
+position = Vector2(8.75, 5.25)
+scale = Vector2(0.921875, 0.640625)
+texture = ExtResource("2_fh8hy")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 visible = false
-position = Vector2(-1, 3)
+position = Vector2(0, 3)
 shape = SubResource("CircleShape2D_fh8hy")
 one_way_collision_margin = 29.8
 
 [node name="PromptLabel" type="Label" parent="."]
+visible = false
 offset_right = 40.0
 offset_bottom = 23.0

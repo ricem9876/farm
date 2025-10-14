@@ -6,6 +6,7 @@ extends Node
 # Current game state
 var current_level_settings: Dictionary = {}
 var current_save_slot: int = -1
+var current_level: int = 0  # Track which level number (1-4)
 
 # Temporary holders for loading from save file
 var pending_load_data: Dictionary = {}

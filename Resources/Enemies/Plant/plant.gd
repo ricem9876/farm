@@ -16,11 +16,14 @@ var player: Node2D
 var can_attack: bool = true
 var attack_timer: float = 0.0
 var current_direction: String = "down"
-var is_dead: bool = false  # NEW: Prevent damage after death
+var is_dead: bool = false
 var health_bar: EnemyHealthBar
 var health_bar_scene = preload("res://Resources/UI/EnemyHealthBar.tscn")
 var damage_number_scene = preload("res://Resources/UI/DamageNumber.tscn")
 
+# NEW: Knockback system
+var knockback_velocity: Vector2 = Vector2.ZERO
+var knockback_friction: float = 400.0  # Reduced from 800 so knockback is more visible
 
 @onready var animated_sprite = $AnimatedSprite2D
 @onready var collision_shape = $CollisionShape2D
@@ -39,27 +42,30 @@ func _ready():
 	if attack_area:
 		attack_area.body_entered.connect(_on_attack_area_entered)
 	
-	# Connect animation finished signal
 	if animated_sprite:
 		animated_sprite.animation_finished.connect(_on_animation_finished)
 		animated_sprite.play("idle_down")
 	
-	# Create health bar
 	health_bar = health_bar_scene.instantiate()
 	add_child(health_bar)
-	health_bar.position = Vector2(0, -35)  # Centered above enemy
-	health_bar.z_index = 10  # Draw on top
+	health_bar.position = Vector2(0, -35)
+	health_bar.z_index = 10
 	
 	print("Plant spawned with ", max_health, " HP")
+
 func _physics_process(delta):
-	if is_dead:  # NEW: Don't do anything if dead
+	if is_dead:
 		return
 		
-	# Update direction based on player position
+	# NEW: Apply knockback friction
+	if knockback_velocity.length() > 1:
+		knockback_velocity = knockback_velocity.move_toward(Vector2.ZERO, knockback_friction * delta)
+		velocity = knockback_velocity
+		move_and_slide()
+	
 	if player:
 		_update_direction_to_player()
 	
-	# Handle attack cooldown
 	if not can_attack:
 		attack_timer -= delta
 		if attack_timer <= 0:
@@ -71,14 +77,12 @@ func _update_direction_to_player():
 	
 	var direction_vector = (player.global_position - global_position).normalized()
 	
-	# Determine primary direction (4-way)
 	var new_direction: String
 	if abs(direction_vector.x) > abs(direction_vector.y):
 		new_direction = "right" if direction_vector.x > 0 else "left"
 	else:
 		new_direction = "down" if direction_vector.y > 0 else "up"
 	
-	# Only update if direction changed and we're in idle
 	if new_direction != current_direction and animated_sprite.animation.begins_with("idle"):
 		current_direction = new_direction
 		_play_animation("idle")
@@ -98,11 +102,11 @@ func _on_detection_area_exited(body):
 		player = null
 
 func _on_attack_area_entered(body):
-	if body.is_in_group("player") and can_attack and not is_dead:  # NEW: Check is_dead
+	if body.is_in_group("player") and can_attack and not is_dead:
 		_attack_player(body)
 
 func _attack_player(target):
-	if not can_attack or is_dead:  # NEW: Check is_dead
+	if not can_attack or is_dead:
 		return
 	
 	if target.has_method("take_damage"):
@@ -120,7 +124,6 @@ func take_damage(amount: float, is_crit: bool = false):
 	current_health -= amount
 	print("Enemy took ", amount, " damage. HP: ", current_health, "/", max_health)
 	
-	# Update health bar
 	if health_bar:
 		health_bar.update_health(current_health)
 		
@@ -138,27 +141,25 @@ func _spawn_damage_number(damage: float, is_crit: bool = false):
 	damage_num.setup(damage, is_crit)
 	
 func _on_animation_finished():
-	if is_dead:  # NEW: Only handle death animation when dead
+	if is_dead:
 		if animated_sprite.animation.begins_with("death"):
 			died.emit(experience_value)
 			_drop_loot()
 			queue_free()
 		return
 	
-	# Return to idle after non-looping animations
 	var current_anim = animated_sprite.animation
 	
 	if current_anim.begins_with("attack") or current_anim.begins_with("hurt"):
 		_play_animation("idle")
 
 func _die():
-	if is_dead:  # NEW: Prevent multiple death calls
+	if is_dead:
 		return
 		
 	print("Plant died!")
 	is_dead = true
 	
-	# Disable collision so player can't interact with corpse
 	if collision_shape:
 		collision_shape.set_deferred("disabled", true)
 	if detection_area:
@@ -178,3 +179,10 @@ func _drop_loot():
 	
 	for i in range(drop_count):
 		ItemSpawner.spawn_item("fiber", global_position, get_parent())
+
+func apply_knockback(force: Vector2):
+	"""Apply knockback force to push enemy away"""
+	if is_dead:
+		return
+	
+	knockback_velocity = force

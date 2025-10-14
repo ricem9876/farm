@@ -4,9 +4,11 @@ extends Node2D
 @export var spawn_enabled: bool = true
 @export var max_enemies: int = 15
 @export var spawn_interval: float = 5.0
+@export var total_enemies: int = 15  # NEW: Total enemies for this wave
 @export var spawn_boundary: Rect2 = Rect2(0, 0, 1000, 1000)
 signal enemy_spawned
 signal enemy_died
+signal wave_completed  # NEW: Emitted when all enemies are defeated
 
 var enemy_scenes = {
 	"plant": preload("res://Resources/Enemies/Plant/plant.tscn"),
@@ -23,6 +25,7 @@ var spawn_weights = {
 }
 
 var current_enemy_count: int = 0
+var total_spawned: int = 0  # NEW: Track how many enemies have been spawned
 var spawn_timer: float = 0.0
 var player: Node2D
 
@@ -33,6 +36,10 @@ func _ready():
 
 func _process(delta):
 	if not spawn_enabled:
+		return
+	
+	# Stop spawning if we've reached the total
+	if total_spawned >= total_enemies:
 		return
 	
 	spawn_timer -= delta
@@ -54,7 +61,8 @@ func _spawn_random_enemy():
 	enemy.died.connect(_on_enemy_died.bind(enemy_type))
 	
 	current_enemy_count += 1
-	print("Spawned ", enemy_type, " at ", spawn_pos, " (", current_enemy_count, "/", max_enemies, ")")
+	total_spawned += 1  # NEW: Increment total spawned
+	print("Spawned ", enemy_type, " at ", spawn_pos, " (", current_enemy_count, "/", max_enemies, ") [Total: ", total_spawned, "/", total_enemies, "]")
 
 func _weighted_random_choice() -> String:
 	var total_weight = 0
@@ -94,7 +102,8 @@ func _get_random_spawn_position() -> Vector2:
 # UPDATED: Now tracks kills by enemy type!
 func _on_enemy_died(experience_points: int, enemy_type: String):
 	current_enemy_count -= 1
-	print("Enemy died: ", enemy_type, " | XP: ", experience_points, " | Remaining: ", current_enemy_count)
+	var enemies_left = total_enemies - total_spawned + current_enemy_count
+	print("Enemy died: ", enemy_type, " | XP: ", experience_points, " | Alive: ", current_enemy_count, " | Left in wave: ", enemies_left)
 	
 	# Track the kill in StatsTracker
 	StatsTracker.record_kill(enemy_type)
@@ -107,6 +116,11 @@ func _on_enemy_died(experience_points: int, enemy_type: String):
 	else:
 		print("WARNING: Player not found or doesn't have gain_experience method!")
 	enemy_died.emit()
+	
+	# Check if wave is complete
+	if total_spawned >= total_enemies and current_enemy_count == 0:
+		print("🎉 WAVE COMPLETED! All ", total_enemies, " enemies defeated!")
+		wave_completed.emit()
 	
 func set_spawn_enabled(enabled: bool):
 	spawn_enabled = enabled

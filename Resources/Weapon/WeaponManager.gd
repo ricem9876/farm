@@ -44,6 +44,9 @@ func equip_weapon(weapon_item: WeaponItem, slot: int = 0) -> bool:
 	gun.base_accuracy = weapon_item.base_accuracy
 	gun.base_bullet_count = weapon_item.base_bullet_count
 	
+	# NEW: Set screen shake and knockback based on weapon type
+	_configure_weapon_effects(gun, weapon_item.weapon_type)
+	
 	# Set the gun sprite
 	if gun.gun_sprite and weapon_item.weapon_sprite:
 		gun.gun_sprite.texture = weapon_item.weapon_sprite
@@ -276,7 +279,38 @@ func _create_gun_from_weapon_item(weapon_item: WeaponItem) -> Gun:
 	gun.base_accuracy = weapon_item.base_accuracy
 	gun.base_bullet_count = weapon_item.base_bullet_count
 	
+	# NEW: Set screen shake and knockback based on weapon type
+	_configure_weapon_effects(gun, weapon_item.weapon_type)
+	
 	return gun
+
+func _configure_weapon_effects(gun: Gun, weapon_type: String):
+	"""Configure screen shake intensity and knockback force by weapon type"""
+	# UPDATED: Reduced screen shake - Sniper (heaviest) = old Pistol intensity
+	# Order: Pistol (lightest) -> Machine Gun -> Assault Rifle -> Burst Rifle -> Shotgun -> Sniper (heaviest)
+	match weapon_type:
+		"Pistol":
+			gun.screen_shake_intensity = 0.3  # Very light
+			gun.bullet_knockback_force = 80.0  # Increased for visibility
+		"MachineGun":
+			gun.screen_shake_intensity = 0.5  # Light
+			gun.bullet_knockback_force = 100.0
+		"Rifle":
+			gun.screen_shake_intensity = 0.8  # Medium-light
+			gun.bullet_knockback_force = 150.0
+		"BurstRifle":
+			gun.screen_shake_intensity = 1.0  # Medium
+			gun.bullet_knockback_force = 180.0
+		"Shotgun":
+			gun.screen_shake_intensity = 1.3  # Medium-heavy
+			gun.bullet_knockback_force = 250.0
+		"Sniper":
+			gun.screen_shake_intensity = 2.0  # Heavy (old pistol level)
+			gun.bullet_knockback_force = 400.0  # Massive knockback
+		_:
+			# Default fallback
+			gun.screen_shake_intensity = 0.8
+			gun.bullet_knockback_force = 150.0
 
 func _update_weapon_visibility_after_load():
 	"""Update weapon visibility based on active slot and location state"""

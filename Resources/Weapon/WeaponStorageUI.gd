@@ -2,6 +2,9 @@
 extends Control
 class_name WeaponStorageUI
 
+signal storage_opened
+signal storage_closed
+
 @onready var background_panel = $Background
 @onready var left_panel = $Background/HBoxContainer/LeftPanel
 @onready var right_panel = $Background/HBoxContainer/RightPanel
@@ -677,10 +680,12 @@ func toggle_visibility():
 	if visible:
 		_position_ui_on_player()
 		_update_resources_display()
+		storage_opened.emit()
 	
 	selected_slot = -1
 	
 	if not visible:
+		storage_closed.emit()
 		for i in range(slots.size()):
 			slots[i]._update_slot_appearance(weapon_storage.get_weapon(i) != null)
 
