@@ -392,8 +392,8 @@ animations = [{
 }]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_mhf5x"]
-radius = 14.0
-height = 34.0
+radius = 9.0
+height = 26.0
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_ar7cb"]
 radius = 11.0
@@ -403,7 +403,7 @@ height = 34.0
 radius = 31.9061
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_ifls1"]
-radius = 100.0
+radius = 301.81
 
 [node name="Mushroom" type="CharacterBody2D"]
 collision_layer = 4
@@ -411,12 +411,16 @@ collision_mask = 2
 script = ExtResource("1_735lc")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(6, -4.5)
+scale = Vector2(0.55, 0.578125)
 sprite_frames = SubResource("SpriteFrames_4c7a8")
 animation = &"Idle"
+frame = 3
+frame_progress = 0.228951
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 visible = false
-position = Vector2(1, 16)
+position = Vector2(6, 4)
 shape = SubResource("CapsuleShape2D_mhf5x")
 
 [node name="HitArea" type="Area2D" parent="."]
@@ -437,7 +441,6 @@ shape = SubResource("CircleShape2D_vjark")
 [node name="DetectionArea" type="Area2D" parent="."]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea"]
-visible = false
 position = Vector2(3, 15)
 shape = SubResource("CircleShape2D_ifls1")
 
