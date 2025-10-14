@@ -1,4 +1,4 @@
-# SaveSystem.gd - UPDATED WITH WEAPON UNLOCKS & UPGRADES
+# SaveSystem.gd - UPDATED WITH WEAPON UNLOCKS & UPGRADES & LEVEL UNLOCKS
 # The ONLY source of truth for all persistent player data
 extends Node
 
@@ -108,8 +108,9 @@ func collect_player_data(player: Node2D) -> Dictionary:
 		"inventory": [],
 		"weapons": {},
 		"weapon_storage": [],
-		"unlocked_weapons": ["Pistol"],  # NEW: Save unlocked weapons
-		"weapon_upgrades": {},  # NEW: Save weapon upgrades
+		"unlocked_weapons": ["Pistol"],  # Save unlocked weapons
+		"weapon_upgrades": {},  # Save weapon upgrades
+		"unlocked_levels": [true, false, false, false],  # NEW: Save level unlocks
 		"storage_chests": {},
 		"current_scene": "farm",
 		"player_stats": {},
@@ -180,12 +181,12 @@ func collect_player_data(player: Node2D) -> Dictionary:
 			else:
 				data.weapon_storage.append({})
 	
-	# NEW: Save unlocked weapons from GlobalWeaponStorage
+	# Save unlocked weapons from GlobalWeaponStorage
 	if GlobalWeaponStorage:
 		data.unlocked_weapons = GlobalWeaponStorage.get_unlocked_weapons()
 		print("  ✓ Saved ", data.unlocked_weapons.size(), " unlocked weapons")
 	
-	# NEW: Save weapon upgrades
+	# Save weapon upgrades
 	if WeaponUpgradeManager:
 		data.weapon_upgrades = WeaponUpgradeManager.get_save_data()
 		print("  ✓ Saved weapon upgrades")
@@ -212,6 +213,13 @@ func collect_player_data(player: Node2D) -> Dictionary:
 
 	# Stats tracking
 	data.player_stats = StatsTracker.get_stats_data()
+	
+	# NEW: Preserve unlocked_levels if they exist in the existing save
+	if GameManager.current_save_slot >= 0:
+		var existing_save = get_save_data(GameManager.current_save_slot)
+		if existing_save.has("player") and existing_save.player.has("unlocked_levels"):
+			data.unlocked_levels = existing_save.player.unlocked_levels
+			print("  ✓ Preserved unlocked_levels from existing save: ", data.unlocked_levels)
 	
 	return data
 
@@ -313,7 +321,7 @@ func apply_player_data(player: Node2D, data: Dictionary):
 	if data.has("weapon_storage") and data.weapon_storage != null:
 		GameManager.pending_load_data["weapon_storage"] = data.weapon_storage
 	
-	# NEW: Restore unlocked weapons to GlobalWeaponStorage
+	# Restore unlocked weapons to GlobalWeaponStorage
 	if data.has("unlocked_weapons") and data.unlocked_weapons != null:
 		if GlobalWeaponStorage:
 			GlobalWeaponStorage.set_unlocked_weapons(data.unlocked_weapons)
@@ -321,11 +329,16 @@ func apply_player_data(player: Node2D, data: Dictionary):
 		GameManager.pending_load_data["unlocked_weapons"] = data.unlocked_weapons
 		print("  ✓ Prepared ", data.unlocked_weapons.size(), " unlocked weapons for restoration")
 	
-	# NEW: Restore weapon upgrades
+	# Restore weapon upgrades
 	if data.has("weapon_upgrades") and data.weapon_upgrades != null:
 		if WeaponUpgradeManager:
 			WeaponUpgradeManager.load_save_data(data.weapon_upgrades)
 			print("  ✓ Weapon upgrades restored")
+	
+	# NEW: Restore unlocked levels - put into pending_load_data for LevelSelectUI
+	if data.has("unlocked_levels") and data.unlocked_levels != null:
+		GameManager.pending_load_data["unlocked_levels"] = data.unlocked_levels
+		print("  ✓ Restored unlocked levels: ", data.unlocked_levels)
 	
 	# Storage chests
 	if data.has("storage_chests") and data.storage_chests != null:

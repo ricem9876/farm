@@ -355,9 +355,14 @@ func _input(event):
 				_switch_to_slot(1)
 			elif event.keycode == KEY_Q:
 				weapon_manager.switch_weapon()
+	
 	if event.is_action_pressed("interact"):
 		# Interaction handled by Area2D nodes (WeaponChest, etc.)
 		pass
+	
+	# DEBUG CHEAT: Top-up resources with F7
+	if event.is_action_pressed("topup"):
+		_debug_topup_resources()
 		
 func _is_skill_tree_allowed() -> bool:
 	if not has_node("LocationStateMachine"):
@@ -381,6 +386,7 @@ func _switch_to_slot(slot: int):
 		print("Switched to weapon slot ", slot)
 	elif not weapon_manager.has_weapon_in_slot(slot):
 		print("No weapon in slot ", slot)
+		
 # === DEBUG METHODS ===
 
 func debug_add_xp(amount: int = 100):
@@ -391,3 +397,29 @@ func debug_level_up():
 	if level_system:
 		level_system.gain_experience(level_system.experience_to_next_level)
 	print("DEBUG: Forced level up")
+
+func _debug_topup_resources():
+	"""Debug cheat: Grant 25 of each resource material"""
+	if not inventory_manager:
+		print("DEBUG: Cannot add resources - no inventory manager")
+		return
+	
+	var resources = [
+		{"name": "Wood", "quantity": 25},
+		{"name": "Plant Fiber", "quantity": 25},
+		{"name": "Wolf Fur", "quantity": 25},
+		{"name": "Mushroom", "quantity": 25}
+	]
+	
+	print("\n=== DEBUG: TOPPING UP RESOURCES ===")
+	for resource in resources:
+		var item = _create_item_from_name(resource.name)
+		if item:
+			if inventory_manager.add_item(item, resource.quantity):
+				print("✓ Added ", resource.quantity, "x ", resource.name)
+			else:
+				print("✗ Failed to add ", resource.name, " (inventory full?)")
+		else:
+			print("✗ Failed to create item: ", resource.name)
+	
+	print("=== TOPUP COMPLETE ===")
