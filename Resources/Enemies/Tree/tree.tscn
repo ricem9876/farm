@@ -131,7 +131,7 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_8kggn"]
-size = Vector2(46, 52)
+size = Vector2(21.5, 31.5)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_nwj5s"]
 size = Vector2(54, 21)
@@ -145,12 +145,13 @@ collision_mask = 3
 script = ExtResource("1_v1w7q")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0.499999, 4.76837e-07)
+scale = Vector2(0.479167, 0.625)
 sprite_frames = SubResource("SpriteFrames_j8e23")
 animation = &"idle"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-visible = false
-position = Vector2(0, 4)
+position = Vector2(1.25, 3.25)
 shape = SubResource("RectangleShape2D_8kggn")
 
 [node name="DamageAreaLeft" type="Area2D" parent="."]
@@ -165,5 +166,6 @@ shape = SubResource("RectangleShape2D_nwj5s")
 monitoring = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DamageAreaRight"]
+visible = false
 position = Vector2(1, 2)
 shape = SubResource("RectangleShape2D_o2aq2")

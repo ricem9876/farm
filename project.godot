@@ -34,6 +34,14 @@ IntroTutorial="*res://Resources/Scripts/IntroTutorial.gd"
 window/size/viewport_width=1280
 window/size/viewport_height=1024
 
+[file_customization]
+
+folder_colors={
+"res://Resources/Enemies/": "red",
+"res://Resources/UI/": "green",
+"res://Resources/Weapon/": "blue"
+}
+
 [input]
 
 move_left={
