@@ -13,6 +13,9 @@ var max_health: float = 100.0
 var level_system: PlayerLevelSystem
 var skill_tree_ui  # Will be set if SkillTreeUI exists
 
+# Character Data
+var character_data: CharacterData
+
 # Managers
 var inventory_manager: InventoryManager
 var weapon_manager: WeaponManager
@@ -24,6 +27,9 @@ const SKILL_TREE_ALLOWED_STATES = ["SafehouseState"]  # Add more as needed
 
 func _ready():
 	add_to_group("player")  # IMPORTANT: Ensure player is in "player" group
+	
+	# Load character data if selected
+	_load_character_data()
 	
 	# Create and setup level system
 	_setup_level_system()
@@ -49,9 +55,88 @@ func _ready():
 	
 	
 	print("Player initialized - Level: ", level_system.current_level, " | Health: ", current_health, "/", max_health)
-	
-# In your player.gd for top-down aiming
 
+# === CHARACTER SYSTEM ===
+
+func _load_character_data():
+	"""Load and apply character data from GameManager"""
+	if "selected_character_id" in GameManager:
+		var char_id = GameManager.selected_character_id
+		character_data = CharacterRegistry.get_character(char_id)
+		
+		if character_data:
+			print("✓ Loaded character: ", character_data.character_name)
+			_apply_character_bonuses()
+		else:
+			print("⚠ Character not found, using default")
+			_load_default_character()
+	else:
+		print("ℹ No character selected, using default")
+		_load_default_character()
+
+func _load_default_character():
+	"""Create and load a default character"""
+	character_data = CharacterData.new()
+	character_data.character_id = "hero"
+	character_data.character_name = "Hero"
+	character_data.starting_health = 100.0
+	character_data.starting_speed = 100.0
+	character_data.starting_weapon = "Pistol"
+
+func _apply_character_bonuses():
+	"""Apply character-specific bonuses after level system is created"""
+	if not character_data:
+		return
+	
+	# This will be called after _setup_level_system() in a deferred manner
+	call_deferred("_apply_character_bonuses_deferred")
+
+func _apply_character_bonuses_deferred():
+	if not character_data or not level_system:
+		return
+	
+	# Apply character stat bonuses
+	if character_data.bonus_crit_chance > 0:
+		level_system.critical_chance += character_data.bonus_crit_chance
+	
+	if character_data.bonus_crit_damage > 0:
+		level_system.critical_damage += character_data.bonus_crit_damage
+	
+	if character_data.bonus_luck > 0:
+		level_system.luck += character_data.bonus_luck
+	
+	print("✓ Applied character bonuses")
+	
+	# Give starting items
+	if character_data.starting_items.size() > 0:
+		for item_data in character_data.starting_items:
+			if item_data.has("name") and item_data.has("quantity"):
+				var item = _create_item_from_name(item_data.name)
+				if item:
+					add_item_to_inventory(item, item_data.quantity)
+					print("✓ Gave starting item: ", item_data.name, " x", item_data.quantity)
+	
+	# Give starting weapon if different from default
+	if character_data.starting_weapon != "Pistol" and weapon_manager:
+		var starting_weapon = _create_weapon_item_from_name(character_data.starting_weapon)
+		if starting_weapon:
+			weapon_manager.equip_weapon(starting_weapon, 0)
+			print("✓ Equipped starting weapon: ", character_data.starting_weapon)
+
+func _create_weapon_item_from_name(weapon_name: String) -> WeaponItem:
+	"""Helper to create weapon items"""
+	match weapon_name:
+		"Pistol":
+			return WeaponFactory.create_pistol()
+		"Shotgun":
+			return WeaponFactory.create_shotgun()
+		"Assault Rifle":
+			return WeaponFactory.create_rifle()
+		"Sniper Rifle":
+			return WeaponFactory.create_sniper()
+		_:
+			print("Unknown weapon: ", weapon_name)
+			return null
 
 func _setup_level_system():
 	# Create the level system

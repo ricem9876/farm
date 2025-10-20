@@ -1,0 +1,432 @@
+# ===============================================
+# CHARACTER SELECT QUICK EDIT GUIDE
+# ===============================================
+# This guide shows you EXACTLY where to make changes
+# for the most common character customization tasks
+# ===============================================
+
+# ===============================================
+# TASK 1: ADD A NEW CHARACTER
+# ===============================================
+
+FILE TO EDIT: Resources/Scripts/CharacterRegistry.gd
+
+LOCATION: Inside _register_default_characters() function
+          After the existing characters, before the final print statement
+
+WHAT TO ADD:
+```gdscript
+# New Character - YOUR NAME HERE
+var my_character = CharacterData.new()
+my_character.character_id = "unique_id"         # Change this
+my_character.character_name = "Display Name"    # Change this
+my_character.description = "Description text"   # Change this
+my_character.starting_health = 100.0            # Change this
+my_character.starting_speed = 100.0             # Change this
+my_character.starting_damage_multiplier = 1.0   # Change this
+my_character.starting_fire_rate_multiplier = 1.0 # Change this
+my_character.starting_weapon = "Pistol"         # Change this
+register_character(my_character)                # Keep this line!
+```
+
+EXAMPLE - Adding a "Ninja" character:
+```gdscript
+# Ninja - Fast assassin
+var ninja = CharacterData.new()
+ninja.character_id = "ninja"
+ninja.character_name = "Ninja"
+ninja.description = "Fast, stealthy, and deadly"
+ninja.starting_health = 70.0
+ninja.starting_speed = 150.0
+ninja.starting_damage_multiplier = 1.3
+ninja.starting_fire_rate_multiplier = 1.2
+ninja.starting_weapon = "Pistol"
+ninja.bonus_crit_chance = 0.15
+ninja.bonus_crit_damage = 0.25
+register_character(ninja)
+```
+
+---
+
+# ===============================================
+# TASK 2: CHANGE EXISTING CHARACTER STATS
+# ===============================================
+
+FILE TO EDIT: Resources/Scripts/CharacterRegistry.gd
+
+FIND: The character you want to edit (e.g., "Hero", "Warrior")
+
+WHAT TO CHANGE:
+Look for lines like these and change the numbers:
+
+```gdscript
+hero.starting_health = 100.0          # Change to 150.0 for more HP
+hero.starting_speed = 100.0           # Change to 120.0 for faster
+hero.starting_damage_multiplier = 1.0 # Change to 1.5 for +50% damage
+hero.starting_fire_rate_multiplier = 1.0 # Change to 1.3 for faster shooting
+```
+
+EXAMPLE - Making Hero tankier:
+BEFORE:
+```gdscript
+hero.starting_health = 100.0
+hero.starting_speed = 100.0
+```
+
+AFTER:
+```gdscript
+hero.starting_health = 150.0  # Now has 50% more HP!
+hero.starting_speed = 90.0     # Slightly slower to balance
+```
+
+---
+
+# ===============================================
+# TASK 3: ADD CHARACTER PORTRAIT IMAGE
+# ===============================================
+
+STEP 1: Add your image to the project
+- Place image in: Resources/UI/ (or create a "portraits" folder)
+- Supported formats: PNG, JPG
+- Recommended size: 256x256 pixels or larger
+
+STEP 2: Edit CharacterRegistry.gd
+- Find your character
+- Add this line AFTER creating the character:
+
+```gdscript
+my_character.portrait = preload("res://Resources/UI/my_portrait.png")
+```
+
+EXAMPLE:
+```gdscript
+var ninja = CharacterData.new()
+ninja.character_id = "ninja"
+ninja.character_name = "Ninja"
+# ... other stats ...
+ninja.portrait = preload("res://Resources/UI/portraits/ninja.png")  # Add this!
+register_character(ninja)
+```
+
+---
+
+# ===============================================
+# TASK 4: GIVE CHARACTER STARTING ITEMS
+# ===============================================
+
+FILE TO EDIT: Resources/Scripts/CharacterRegistry.gd
+
+FIND: Your character definition
+
+ADD: After setting stats, before register_character():
+
+```gdscript
+var items: Array[Dictionary] = []
+items.append({"name": "Wood", "quantity": 10})
+items.append({"name": "Wolf Fur", "quantity": 5})
+my_character.starting_items = items
+```
+
+AVAILABLE ITEMS:
+- "Wood"
+- "Wolf Fur"
+- "Plant Fiber"
+- "Mushroom"
+
+EXAMPLE - Ninja starts with resources:
+```gdscript
+var ninja = CharacterData.new()
+# ... stats here ...
+var ninja_items: Array[Dictionary] = []
+ninja_items.append({"name": "Wolf Fur", "quantity": 15})
+ninja_items.append({"name": "Plant Fiber", "quantity": 10})
+ninja.starting_items = ninja_items
+register_character(ninja)
+```
+
+---
+
+# ===============================================
+# TASK 5: CHANGE CHARACTER STARTING WEAPON
+# ===============================================
+
+FILE TO EDIT: Resources/Scripts/CharacterRegistry.gd
+
+FIND: The line that says:
+```gdscript
+my_character.starting_weapon = "Pistol"
+```
+
+CHANGE TO ONE OF:
+- "Pistol" (balanced)
+- "Shotgun" (close range, high damage)
+- "Assault Rifle" (fast fire rate)
+- "Sniper Rifle" (long range, high damage)
+- "Machine Gun" (very fast fire rate)
+- "Burst Rifle" (fires in bursts)
+
+EXAMPLE:
+```gdscript
+ninja.starting_weapon = "Assault Rifle"  # Now starts with rifle!
+```
+
+---
+
+# ===============================================
+# TASK 6: ADD PASSIVE BONUSES
+# ===============================================
+
+FILE TO EDIT: Resources/Scripts/CharacterRegistry.gd
+
+FIND: Your character, after starting stats
+
+ADD THESE LINES:
+```gdscript
+my_character.bonus_crit_chance = 0.10   # +10% crit chance
+my_character.bonus_crit_damage = 0.25   # +25% crit damage
+my_character.bonus_luck = 0.05          # +5% luck
+my_character.bonus_xp_gain = 0.15       # +15% XP gain
+```
+
+VALUE GUIDE:
+- Crit Chance: 0.10 = +10%, 0.15 = +15%, 0.20 = +20%
+- Crit Damage: 0.20 = +20%, 0.50 = +50%, 1.0 = +100%
+- Luck: 0.05 = +5%, 0.10 = +10%
+- XP Gain: 0.10 = +10%, 0.25 = +25%, 0.50 = +50%
+
+EXAMPLE - Making a lucky character:
+```gdscript
+var lucky = CharacterData.new()
+# ... base stats ...
+lucky.bonus_luck = 0.15        # +15% luck!
+lucky.bonus_xp_gain = 0.25     # +25% XP!
+lucky.bonus_crit_chance = 0.05 # +5% crit
+register_character(lucky)
+```
+
+---
+
+# ===============================================
+# TASK 7: CHANGE CHARACTER SELECT UI COLORS
+# ===============================================
+
+FILE TO EDIT: Resources/UI/CharacterSelectUI.gd
+
+FIND: The _setup_ui() function
+
+CHANGE: Character name color
+```gdscript
+character_name_label.add_theme_color_override("font_color", Color(1, 0.9, 0.4))
+```
+
+COMMON COLORS:
+- Color(1, 0.9, 0.4) = gold (current)
+- Color(1, 0, 0) = red
+- Color(0, 1, 0) = green
+- Color(0, 0, 1) = blue
+- Color(1, 1, 1) = white
+- Color(1, 0.5, 0) = orange
+- Color(0.5, 0, 1) = purple
+
+EXAMPLE - Change to red:
+```gdscript
+character_name_label.add_theme_color_override("font_color", Color(1, 0, 0))
+```
+
+---
+
+# ===============================================
+# TASK 8: CHANGE FONT SIZE IN CHARACTER SELECT
+# ===============================================
+
+FILE TO EDIT: Resources/UI/CharacterSelectUI.gd
+
+FIND: The _setup_ui() function
+
+CHANGE THESE NUMBERS:
+```gdscript
+.add_theme_font_size_override("font_size", 48)  # Character name (bigger = larger)
+.add_theme_font_size_override("font_size", 20)  # Description (smaller)
+```
+
+EXAMPLE - Make name bigger:
+BEFORE:
+```gdscript
+character_name_label.add_theme_font_size_override("font_size", 48)
+```
+
+AFTER:
+```gdscript
+character_name_label.add_theme_font_size_override("font_size", 72)  # Much bigger!
+```
+
+---
+
+# ===============================================
+# TASK 9: ADD NEW STAT TO CHARACTER SELECT DISPLAY
+# ===============================================
+
+FILE TO EDIT: Resources/UI/CharacterSelectUI.gd
+
+FIND: The _update_stats_display() function
+
+FIND THIS SECTION:
+```gdscript
+var stats = [
+    ["Health", str(character.starting_health)],
+    ["Speed", str(character.starting_speed)],
+    ["Damage", "x" + str(character.starting_damage_multiplier)],
+    ["Fire Rate", "x" + str(character.starting_fire_rate_multiplier)],
+]
+```
+
+ADD A NEW LINE:
+```gdscript
+var stats = [
+    ["Health", str(character.starting_health)],
+    ["Speed", str(character.starting_speed)],
+    ["Damage", "x" + str(character.starting_damage_multiplier)],
+    ["Fire Rate", "x" + str(character.starting_fire_rate_multiplier)],
+    ["Weapon", character.starting_weapon],  # NEW LINE - shows starting weapon!
+]
+```
+
+---
+
+# ===============================================
+# TASK 10: REMOVE A CHARACTER FROM SELECTION
+# ===============================================
+
+FILE TO EDIT: Resources/Scripts/CharacterRegistry.gd
+
+FIND: The character you want to remove
+
+COMMENT OUT: Add # at the start of each line (or delete the entire block)
+
+BEFORE:
+```gdscript
+var scout = CharacterData.new()
+scout.character_id = "scout"
+scout.character_name = "Scout"
+# ... more lines ...
+register_character(scout)
+```
+
+AFTER:
+```gdscript
+# var scout = CharacterData.new()
+# scout.character_id = "scout"
+# scout.character_name = "Scout"
+# ... more lines ...
+# register_character(scout)
+```
+
+---
+
+# ===============================================
+# EXAMPLE CHARACTER BUILDS
+# ===============================================
+
+## TANK BUILD
+```gdscript
+var tank = CharacterData.new()
+tank.character_id = "tank"
+tank.character_name = "Tank"
+tank.description = "Massive health, slow movement"
+tank.starting_health = 200.0      # Double HP!
+tank.starting_speed = 70.0        # Very slow
+tank.starting_damage_multiplier = 1.2
+tank.starting_fire_rate_multiplier = 0.8
+tank.starting_weapon = "Shotgun"
+register_character(tank)
+```
+
+## GLASS CANNON
+```gdscript
+var cannon = CharacterData.new()
+cannon.character_id = "cannon"
+cannon.character_name = "Glass Cannon"
+cannon.description = "Extreme damage, very fragile"
+cannon.starting_health = 50.0     # Half HP
+cannon.starting_speed = 100.0
+cannon.starting_damage_multiplier = 2.0  # Double damage!
+cannon.starting_fire_rate_multiplier = 1.5
+cannon.starting_weapon = "Sniper Rifle"
+cannon.bonus_crit_damage = 0.5    # +50% crit damage
+register_character(cannon)
+```
+
+## SPEEDSTER
+```gdscript
+var speedster = CharacterData.new()
+speedster.character_id = "speedster"
+speedster.character_name = "Speedster"
+speedster.description = "Gotta go fast!"
+speedster.starting_health = 80.0
+speedster.starting_speed = 180.0   # Super fast!
+speedster.starting_damage_multiplier = 0.85
+speedster.starting_fire_rate_multiplier = 1.5
+speedster.starting_weapon = "Machine Gun"
+speedster.bonus_luck = 0.1
+register_character(speedster)
+```
+
+## SUPPORT/XP FARMER
+```gdscript
+var farmer = CharacterData.new()
+farmer.character_id = "farmer"
+farmer.character_name = "XP Farmer"
+farmer.description = "Levels up faster than anyone"
+farmer.starting_health = 100.0
+farmer.starting_speed = 110.0
+farmer.starting_damage_multiplier = 1.0
+farmer.starting_fire_rate_multiplier = 1.1
+farmer.starting_weapon = "Pistol"
+farmer.bonus_xp_gain = 0.5        # +50% XP!
+farmer.bonus_luck = 0.15          # +15% luck for better drops
+var farmer_items: Array[Dictionary] = []
+farmer_items.append({"name": "Wood", "quantity": 20})
+farmer.starting_items = farmer_items
+register_character(farmer)
+```
+
+## BALANCED CRIT BUILD
+```gdscript
+var critter = CharacterData.new()
+critter.character_id = "critter"
+critter.character_name = "Critical Master"
+critter.description = "Specializes in devastating critical hits"
+critter.starting_health = 95.0
+critter.starting_speed = 105.0
+critter.starting_damage_multiplier = 1.15
+critter.starting_fire_rate_multiplier = 1.0
+critter.starting_weapon = "Assault Rifle"
+critter.bonus_crit_chance = 0.20   # +20% crit chance
+critter.bonus_crit_damage = 0.40   # +40% crit damage
+register_character(critter)
+```
+
+---
+
+# ===============================================
+# TROUBLESHOOTING
+# ===============================================
+
+PROBLEM: Character doesn't appear in selection
+SOLUTION: Check that you called register_character() at the end
+
+PROBLEM: Error about "character_id"
+SOLUTION: Make sure character_id is unique and not empty
+
+PROBLEM: Portrait image doesn't show
+SOLUTION: Check the file path in preload() is correct
+
+PROBLEM: Starting items don't work
+SOLUTION: Check spelling of item names exactly: "Wood", "Wolf Fur", "Plant Fiber", "Mushroom"
+
+PROBLEM: Stats seem wrong in-game
+SOLUTION: Values are multipliers - 1.0 is normal, 1.5 is +50%, 0.8 is -20%
+
+---
+
+END OF QUICK EDIT GUIDE

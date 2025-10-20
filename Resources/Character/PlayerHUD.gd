@@ -66,9 +66,11 @@ func _style_ui():
 		level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		level_label.add_theme_font_override("font", pixel_font)
 		level_label.add_theme_font_size_override("font_size", 24)
-		level_label.add_theme_color_override("font_color", Color(1, 0.9, 0.4))
+		level_label.add_theme_color_override("font_color", Color(0.87058824, 0.72156864, 0.5294118))
 		level_label.add_theme_color_override("font_outline_color", Color.BLACK)
 		level_label.add_theme_constant_override("outline_size", 3)
+		
+		
 	
 	# Health Bar
 	if health_bar:
@@ -81,7 +83,7 @@ func _style_ui():
 		bg_style.border_width_right = 2
 		bg_style.border_width_top = 2
 		bg_style.border_width_bottom = 2
-		bg_style.border_color = Color(0.5, 0.5, 0.5)
+		bg_style.border_color = Color(0.0, 0.0, 0.0)
 		health_bar.add_theme_stylebox_override("background", bg_style)
 		
 		var fill_style = StyleBoxFlat.new()

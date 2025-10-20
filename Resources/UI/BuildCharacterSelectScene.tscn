@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://bc3mkevgvbhog"]
+
+[ext_resource type="Script" uid="uid://b5tlcs78eci1t" path="res://Resources/UI/CharacterSelectSceneBuilder.gd" id="1_builder"]
+
+[node name="SceneBuilder" type="Node"]
+script = ExtResource("1_builder")

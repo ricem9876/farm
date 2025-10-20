@@ -92,10 +92,6 @@ theme_override_constants/separation = 20
 
 [node name="MasterVolumeLabel" type="Label" parent="SettingsMenu/BackgroundPanel/SettingsVBox"]
 layout_mode = 2
-theme_override_colors/font_shadow_color = Color(0.545841, 0.449464, 0.228986, 1)
-theme_override_constants/shadow_offset_x = 1
-theme_override_constants/shadow_offset_y = 2
-theme_override_constants/shadow_outline_size = 4
 
 [node name="MasterVolumeSlider" type="HSlider" parent="SettingsMenu/BackgroundPanel/SettingsVBox"]
 layout_mode = 2
@@ -106,10 +102,6 @@ value = 1.0
 [node name="MusicVolumeLabel" type="Label" parent="SettingsMenu/BackgroundPanel/SettingsVBox"]
 layout_mode = 2
 mouse_filter = 1
-theme_override_colors/font_shadow_color = Color(0.545841, 0.449464, 0.228986, 1)
-theme_override_constants/shadow_offset_x = 1
-theme_override_constants/shadow_offset_y = 2
-theme_override_constants/shadow_outline_size = 4
 
 [node name="MusicVolumeSlider" type="HSlider" parent="SettingsMenu/BackgroundPanel/SettingsVBox"]
 layout_mode = 2
@@ -119,10 +111,6 @@ value = 1.0
 
 [node name="SFXVolumeLabel" type="Label" parent="SettingsMenu/BackgroundPanel/SettingsVBox"]
 layout_mode = 2
-theme_override_colors/font_shadow_color = Color(0.545841, 0.449464, 0.228986, 1)
-theme_override_constants/shadow_offset_x = 1
-theme_override_constants/shadow_offset_y = 2
-theme_override_constants/shadow_outline_size = 4
 
 [node name="SFXVolumeSlider" type="HSlider" parent="SettingsMenu/BackgroundPanel/SettingsVBox"]
 layout_mode = 2

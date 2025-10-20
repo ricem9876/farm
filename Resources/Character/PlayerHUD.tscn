@@ -23,12 +23,20 @@ layout_mode = 2
 
 [node name="PrimaryLabel" type="Label" parent="TopCenterContainer/HBoxContainer/LeftWeaponPanel/PrimaryContainer"]
 layout_mode = 2
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 2
+theme_override_constants/shadow_outline_size = 4
 
 [node name="CenterStatsPanel" type="VBoxContainer" parent="TopCenterContainer/HBoxContainer"]
 layout_mode = 2
 
 [node name="LevelLabel" type="Label" parent="TopCenterContainer/HBoxContainer/CenterStatsPanel"]
 layout_mode = 2
+theme_override_colors/font_shadow_color = Color(0.545841, 0.449464, 0.228986, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_constants/shadow_outline_size = 4
 
 [node name="HealthBarContainer" type="HBoxContainer" parent="TopCenterContainer/HBoxContainer/CenterStatsPanel"]
 layout_mode = 2
@@ -59,3 +67,7 @@ layout_mode = 2
 
 [node name="SecondaryLabel" type="Label" parent="TopCenterContainer/HBoxContainer/RightWeaponPanel/SecondaryContainer"]
 layout_mode = 2
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 2
+theme_override_constants/shadow_outline_size = 4

@@ -1,0 +1,82 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Resources/UI/CharacterSelectUI.gd" id="1_yo5fv"]
+
+[node name="CharacterSelectScene" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_yo5fv")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -350.0
+offset_right = 300.0
+offset_bottom = 350.0
+theme_override_constants/separation = 20
+
+[node name="TitleLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+theme_override_colors/font_color = Color(1, 0.9, 0.4, 1)
+text = "SELECT YOUR CHARACTER"
+horizontal_alignment = 1
+
+[node name="Portrait" type="TextureRect" parent="VBoxContainer"]
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 2
+expand_mode = 3
+stretch_mode = 5
+
+[node name="CharacterName" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "Character Name"
+horizontal_alignment = 1
+
+[node name="Description" type="Label" parent="VBoxContainer"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Character description goes here"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="StatsContainer" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="NavigationButtons" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 50
+alignment = 1
+
+[node name="PrevButton" type="Button" parent="VBoxContainer/NavigationButtons"]
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "< PREVIOUS"
+
+[node name="NextButton" type="Button" parent="VBoxContainer/NavigationButtons"]
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "NEXT >"
+
+[node name="ConfirmButton" type="Button" parent="VBoxContainer"]
+custom_minimum_size = Vector2(200, 60)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "START GAME"
+
+[node name="BackButton" type="Button" parent="VBoxContainer"]
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "BACK"

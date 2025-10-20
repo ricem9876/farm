@@ -7,6 +7,7 @@ extends Node
 var current_level_settings: Dictionary = {}
 var current_save_slot: int = -1
 var current_level: int = 0  # Track which level number (1-4)
+var selected_character_id: String = "hero"  # Selected character for new games
 
 # Temporary holders for loading from save file
 var pending_load_data: Dictionary = {}

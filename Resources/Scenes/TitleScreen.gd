@@ -75,7 +75,7 @@ func _setup_ui():
 		title_label.text = "FARM DEFENSE"
 		title_label.add_theme_font_override("font", pixel_font)
 		title_label.add_theme_font_size_override("font_size", 64)
-		title_label.add_theme_color_override("font_color", Color(1, 0.9, 0.4))
+		title_label.add_theme_color_override("font_color", Color(0.87058824, 0.72156864, 0.5294118))
 	
 	# Setup version label
 	if version_label:
@@ -185,25 +185,25 @@ func _create_settings_controls():
 	_add_section_header("GAMEPLAY", pixel_font)
 	
 	# Mouse sensitivity with value display
-	var sensitivity_hbox = HBoxContainer.new()
-	settings_vbox.add_child(sensitivity_hbox)
-	
-	mouse_sensitivity_label = _create_label("Mouse Sensitivity", pixel_font)
-	sensitivity_hbox.add_child(mouse_sensitivity_label)
-	
-	mouse_sensitivity_value_label = _create_label("1.0", pixel_font)
-	mouse_sensitivity_value_label.custom_minimum_size = Vector2(60, 0)
-	mouse_sensitivity_value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	sensitivity_hbox.add_child(mouse_sensitivity_value_label)
-	
-	mouse_sensitivity_slider = _create_slider()
-	mouse_sensitivity_slider.min_value = 0.1
-	mouse_sensitivity_slider.max_value = 3.0
-	mouse_sensitivity_slider.step = 0.1
-	mouse_sensitivity_slider.value = 1.0
-	mouse_sensitivity_slider.value_changed.connect(_on_mouse_sensitivity_changed)
-	settings_vbox.add_child(mouse_sensitivity_slider)
-	_add_spacer(10)
+	#var sensitivity_hbox = HBoxContainer.new()
+	#settings_vbox.add_child(sensitivity_hbox)
+	#
+	#mouse_sensitivity_label = _create_label("Mouse Sensitivity", pixel_font)
+	#sensitivity_hbox.add_child(mouse_sensitivity_label)
+	#
+	#mouse_sensitivity_value_label = _create_label("1.0", pixel_font)
+	#mouse_sensitivity_value_label.custom_minimum_size = Vector2(60, 0)
+	#mouse_sensitivity_value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	#sensitivity_hbox.add_child(mouse_sensitivity_value_label)
+	#
+	#mouse_sensitivity_slider = _create_slider()
+	#mouse_sensitivity_slider.min_value = 0.1
+	#mouse_sensitivity_slider.max_value = 3.0
+	#mouse_sensitivity_slider.step = 0.1
+	#mouse_sensitivity_slider.value = 1.0
+	#mouse_sensitivity_slider.value_changed.connect(_on_mouse_sensitivity_changed)
+	#settings_vbox.add_child(mouse_sensitivity_slider)
+	#_add_spacer(10)
 	
 	# NEW: Screen shake toggle
 	_create_screen_shake_toggle(pixel_font)
@@ -213,7 +213,7 @@ func _add_section_header(text: String, font: Font):
 	header.text = text
 	header.add_theme_font_override("font", font)
 	header.add_theme_font_size_override("font_size", 28)
-	header.add_theme_color_override("font_color", Color(1, 0.9, 0.4))
+	header.add_theme_color_override("font_color", Color(0.87058824, 0.72156864, 0.5294118))
 	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	settings_vbox.add_child(header)
 	_add_spacer(10)
@@ -420,7 +420,7 @@ func _save_settings():
 		"resolution_index": resolution_dropdown.selected,
 		"window_mode": window_mode_dropdown.selected,
 		"fps_cap_index": fps_cap_dropdown.selected,
-		"mouse_sensitivity": mouse_sensitivity_slider.value
+		#"mouse_sensitivity": mouse_sensitivity_slider.value
 	}
 	
 	var file = FileAccess.open("user://settings.json", FileAccess.WRITE)
@@ -455,13 +455,13 @@ func _load_settings():
 			resolution_dropdown.selected = settings.get("resolution_index", 0)
 			window_mode_dropdown.selected = settings.get("window_mode", 0)
 			fps_cap_dropdown.selected = settings.get("fps_cap_index", 1)
-			mouse_sensitivity_slider.value = settings.get("mouse_sensitivity", 1.0)
+			#mouse_sensitivity_slider.value = settings.get("mouse_sensitivity", 1.0)
 			
 			# Apply settings
 			_on_resolution_changed(resolution_dropdown.selected)
 			_on_window_mode_changed(window_mode_dropdown.selected)
 			_on_fps_cap_changed(fps_cap_dropdown.selected)
-			mouse_sensitivity_value_label.text = "%.1f" % mouse_sensitivity_slider.value
+			#mouse_sensitivity_value_label.text = "%.1f" % mouse_sensitivity_slider.value
 
 # === BUTTON CALLBACKS ===
 

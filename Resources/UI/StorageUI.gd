@@ -1,3 +1,24 @@
+# ============================================
+# STORAGE UI (StorageUI.gd)
+# ============================================
+# PURPOSE: Transfer interface between player inventory and storage chest
+#
+# FEATURES:
+# - Shows player's 8-slot inventory on the left
+# - Shows storage chest's larger inventory on the right  
+# - Click item to select it (highlights golden)
+# - Click destination to transfer the item
+# - Displays resources and instructions
+# - Follows camera position
+#
+# KEY FUNCTIONS:
+# - setup_storage(): Initialize with player and storage inventories
+# - _on_player_slot_clicked(): Handle clicking player inventory
+# - _on_storage_slot_clicked(): Handle clicking storage inventory
+# - _transfer_item_from_player_to_storage(): Move item from player to chest
+# - _transfer_item_from_storage_to_player(): Move item from chest to player
+# ============================================
+
 extends Control
 class_name StorageUI
 
@@ -11,24 +32,24 @@ class_name StorageUI
 @onready var close_button = $Background/CloseButton
 @onready var transfer_info = $Background/TransferInfo
 
-var player_inventory: InventoryManager
-var storage_inventory: InventoryManager
+var player_inventory: InventoryManager  # Player's inventory (8 slots)
+var storage_inventory: InventoryManager  # Storage chest inventory (larger)
 var slot_scene = preload("res://Resources/Inventory/InventorySlot.tscn")
 
-var player_slots: Array[InventorySlot] = []
-var storage_slots: Array[InventorySlot] = []
+var player_slots: Array[InventorySlot] = []  # UI slots for player inventory
+var storage_slots: Array[InventorySlot] = []  # UI slots for storage inventory
 
-var selected_slot: InventorySlot = null
-var selected_from_player: bool = false
+var selected_slot: InventorySlot = null  # Currently selected slot (if any)
+var selected_from_player: bool = false  # Was selection from player inventory?
 
 # Camera following variables
 var follow_camera: Camera2D
 var camera_zoom_factor: float = 1.0
 
-signal storage_closed
+signal storage_closed  # Emitted when storage UI is closed
 
 func _ready():
-	visible = false
+	visible = false  # Start hidden
 	_setup_styling()
 	
 	# Connect close button
@@ -40,9 +61,10 @@ func _ready():
 		transfer_info.visible = false
 
 func _setup_styling():
+	"""Set up the visual appearance of the storage UI"""
 	var pixel_font = preload("res://Resources/Fonts/yoster.ttf")
 	
-	# Set up the main background
+	# Main background panel with cream color
 	if background_panel:
 		var style_box = StyleBoxFlat.new()
 		style_box.bg_color = Color(0.98, 0.94, 0.86)
@@ -57,7 +79,7 @@ func _setup_styling():
 		style_box.corner_radius_bottom_right = 12
 		background_panel.add_theme_stylebox_override("panel", style_box)
 	
-	# Style inventory panels
+	# Style both inventory panels with dark brown background
 	for panel in [player_inventory_panel, storage_inventory_panel]:
 		if panel:
 			var panel_style = StyleBoxFlat.new()
@@ -86,7 +108,7 @@ func _setup_styling():
 		storage_title.add_theme_font_override("font", pixel_font)
 		storage_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	
-	# Style transfer info
+	# Style transfer instructions
 	if transfer_info:
 		transfer_info.text = "Click an item to select, then click destination to transfer"
 		transfer_info.add_theme_color_override("font_color", Color(1.0, 0.87, 0.42))
@@ -94,14 +116,22 @@ func _setup_styling():
 		transfer_info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 func setup_storage(player_inv: InventoryManager, storage_inv: InventoryManager, camera: Camera2D = null):
+	"""
+	Initialize the storage UI with player and storage inventories
+	Parameters:
+	- player_inv: The player's inventory manager
+	- storage_inv: The storage chest's inventory manager
+	- camera: Optional camera to follow
+	"""
 	player_inventory = player_inv
 	storage_inventory = storage_inv
 	follow_camera = camera
 	
-	# Calculate camera zoom factor (3.0 zoom means everything appears 3x smaller)
+	# Calculate camera zoom factor for positioning
 	if follow_camera:
 		camera_zoom_factor = follow_camera.zoom.x
 	
+	# Connect to inventory changed signals
 	player_inventory.inventory_changed.connect(_update_player_display)
 	storage_inventory.inventory_changed.connect(_update_storage_display)
 	
@@ -109,6 +139,7 @@ func setup_storage(player_inv: InventoryManager, storage_inv: InventoryManager, 
 	_update_displays()
 
 func _process(delta):
+	"""Update position to follow camera every frame"""
 	if visible and follow_camera:
 		# Get the camera's position in world coordinates
 		var camera_pos = follow_camera.global_position
@@ -117,17 +148,14 @@ func _process(delta):
 		var viewport = get_viewport()
 		var screen_size = viewport.get_visible_rect().size
 		
-		# Convert camera world position to screen coordinates
 		# Account for zoom - with 3.0 zoom, the effective screen size is smaller
 		var effective_screen_size = screen_size / camera_zoom_factor
 		
 		# Position UI at screen center
 		global_position = camera_pos - (size * 0.5)
-		
-		# Alternative: Position relative to screen edges
-		# global_position = camera_pos - (effective_screen_size * 0.5) + Vector2(50, 50)
 
 func _create_slots():
+	"""Create all slot UI elements for both inventories"""
 	# Clear existing slots
 	for child in player_grid.get_children():
 		child.queue_free()
@@ -137,34 +165,34 @@ func _create_slots():
 	storage_slots.clear()
 	
 	# Set up grids
-	player_grid.columns = 4
-	storage_grid.columns = 8
+	player_grid.columns = 4  # Player inventory: 4 columns
+	storage_grid.columns = 8  # Storage: 8 columns (more space)
 	
-	# Create player inventory slots
+	# Create player inventory slots (8 slots total)
 	for i in range(player_inventory.max_slots):
 		var slot = slot_scene.instantiate()
 		slot.slot_index = i
 		slot.custom_minimum_size = Vector2(32, 32)
-		# Connect the signal directly - it will pass slot_index
 		slot.item_clicked.connect(_on_player_slot_clicked)
 		player_grid.add_child(slot)
 		player_slots.append(slot)
 	
-	# Create storage inventory slots
+	# Create storage inventory slots (larger capacity)
 	for i in range(storage_inventory.max_slots):
 		var slot = slot_scene.instantiate()
 		slot.slot_index = i
 		slot.custom_minimum_size = Vector2(32, 32)
-		# Connect the signal directly - it will pass slot_index
 		slot.item_clicked.connect(_on_storage_slot_clicked)
 		storage_grid.add_child(slot)
 		storage_slots.append(slot)
 
 func _update_displays():
+	"""Update both inventory displays"""
 	_update_player_display()
 	_update_storage_display()
 
 func _update_player_display():
+	"""Update player inventory slots to match current state"""
 	for i in range(player_slots.size()):
 		if i < player_inventory.items.size():
 			player_slots[i].set_item(player_inventory.items[i], player_inventory.quantities[i])
@@ -173,6 +201,7 @@ func _update_player_display():
 	_clear_selection()
 
 func _update_storage_display():
+	"""Update storage inventory slots to match current state"""
 	for i in range(storage_slots.size()):
 		if i < storage_inventory.items.size():
 			storage_slots[i].set_item(storage_inventory.items[i], storage_inventory.quantities[i])
@@ -181,37 +210,49 @@ func _update_storage_display():
 	_clear_selection()
 
 func _on_player_slot_clicked(slot_index: int):
-	#print("Player slot clicked: ", slot_index)
-	#
+	"""
+	Handle clicking on player inventory slot
+	- If no selection: Select this slot (if it has an item)
+	- If selection from storage: Transfer from storage to this slot
+	"""
 	if selected_slot != null:
 		# Transfer from storage to player
 		if not selected_from_player:
 			_transfer_item_from_storage_to_player(selected_slot.slot_index, slot_index)
 		_clear_selection()
 	else:
-		# Select player slot
+		# Select player slot if it has an item
 		if slot_index < player_inventory.items.size() and player_inventory.items[slot_index] != null:
 			_select_slot(player_slots[slot_index], true)
 
 func _on_storage_slot_clicked(slot_index: int):
-	#print("Storage slot clicked: ", slot_index)
-	
+	"""
+	Handle clicking on storage inventory slot
+	- If no selection: Select this slot (if it has an item)
+	- If selection from player: Transfer from player to this slot
+	"""
 	if selected_slot != null:
 		# Transfer from player to storage
 		if selected_from_player:
 			_transfer_item_from_player_to_storage(selected_slot.slot_index, slot_index)
 		_clear_selection()
 	else:
-		# Select storage slot
+		# Select storage slot if it has an item
 		if slot_index < storage_inventory.items.size() and storage_inventory.items[slot_index] != null:
 			_select_slot(storage_slots[slot_index], false)
 
 func _select_slot(slot: InventorySlot, from_player: bool):
+	"""
+	Visually select a slot (highlight it golden)
+	Parameters:
+	- slot: The slot to select
+	- from_player: Whether this is from player inventory
+	"""
 	_clear_selection()
 	selected_slot = slot
 	selected_from_player = from_player
 	
-	# Highlight selected slot
+	# Highlight selected slot with golden color
 	if slot.slot_background:
 		var highlight_style = StyleBoxFlat.new()
 		highlight_style.bg_color = Color(1.0, 0.87, 0.42, 0.8)  # Golden highlight
@@ -226,7 +267,7 @@ func _select_slot(slot: InventorySlot, from_player: bool):
 		highlight_style.corner_radius_bottom_right = 6
 		slot.slot_background.add_theme_stylebox_override("panel", highlight_style)
 	
-	# Show transfer info
+	# Show transfer instructions
 	if transfer_info:
 		transfer_info.visible = true
 		var source = "player inventory" if from_player else "storage"
@@ -234,6 +275,7 @@ func _select_slot(slot: InventorySlot, from_player: bool):
 		transfer_info.text = "Selected item from " + source + ". Click " + destination + " to transfer."
 
 func _clear_selection():
+	"""Clear the current selection and hide transfer info"""
 	if selected_slot:
 		# Reset slot appearance
 		selected_slot._update_slot_appearance(selected_slot.current_item != null)
@@ -245,6 +287,12 @@ func _clear_selection():
 		transfer_info.visible = false
 
 func _transfer_item_from_player_to_storage(player_slot_index: int, storage_slot_index: int):
+	"""
+	Transfer an item from player inventory to storage
+	Parameters:
+	- player_slot_index: Which player slot to take from
+	- storage_slot_index: Which storage slot to place in (unused, auto-finds space)
+	"""
 	if player_slot_index >= player_inventory.items.size():
 		return
 		
@@ -258,11 +306,14 @@ func _transfer_item_from_player_to_storage(player_slot_index: int, storage_slot_
 	if storage_inventory.add_item(item, quantity):
 		# Successfully added to storage, remove from player
 		player_inventory.remove_item(item, quantity)
-		#print("Transferred ", quantity, "x ", item.name, " from player to storage")
-	#else:
-		##print("Storage is full!")
 
 func _transfer_item_from_storage_to_player(storage_slot_index: int, player_slot_index: int):
+	"""
+	Transfer an item from storage to player inventory
+	Parameters:
+	- storage_slot_index: Which storage slot to take from
+	- player_slot_index: Which player slot to place in (unused, auto-finds space)
+	"""
 	if storage_slot_index >= storage_inventory.items.size():
 		return
 		
@@ -276,14 +327,15 @@ func _transfer_item_from_storage_to_player(storage_slot_index: int, player_slot_
 	if player_inventory.add_item(item, quantity):
 		# Successfully added to player, remove from storage
 		storage_inventory.remove_item(item, quantity)
-		#print("Transferred ", quantity, "x ", item.name, " from storage to player")
-	#else:
-		#print("Player inventory is full!")
+	
 	_update_player_display()
 	_update_storage_display()
+
 func _on_close_button_pressed():
+	"""Called when close button is pressed"""
 	storage_closed.emit()
 
 func _input(event):
+	"""Handle ESC key to close storage UI"""
 	if visible and event.is_action_pressed("ui_cancel"):  # ESC key
 		storage_closed.emit()

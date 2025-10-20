@@ -60,16 +60,27 @@ func _on_slot_selected(slot: int):
 		# Load existing save
 		_load_game(slot)
 	else:
-		# Start new game
-		_start_new_game(slot)
+		# Start new game - go to character selection
+		_show_character_selection(slot)
 
-func _start_new_game(slot: int):
-	print("Starting new game in slot ", slot)
+func _show_character_selection(slot: int):
+	"""Show character selection screen for new game"""
+	print("Opening character selection for slot ", slot)
 	
-	# Store the current save slot in GameManager or autoload
+	# Store the slot for later
 	GameManager.current_save_slot = slot
 	
-	# Change to farm scene
+	# Load character selection scene
+	get_tree().change_scene_to_file("res://Resources/UI/CharacterSelectScene.tscn")
+
+func _start_new_game(slot: int, character_id: String = "hero"):
+	print("Starting new game in slot ", slot, " with character: ", character_id)
+	
+	# Store the current save slot and selected character
+	GameManager.current_save_slot = slot
+	GameManager.selected_character_id = character_id
+	
+	# Change to safehouse scene
 	get_tree().change_scene_to_file(SAFEHOUSE_SCENE)
 
 func _load_game(slot: int):

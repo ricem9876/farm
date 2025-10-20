@@ -114,6 +114,7 @@ func collect_player_data(player: Node2D) -> Dictionary:
 		"storage_chests": {},
 		"current_scene": "farm",
 		"player_stats": {},
+	"character_id": "hero",  # Selected character
 	}
 	
 	# Detect current scene
@@ -213,6 +214,12 @@ func collect_player_data(player: Node2D) -> Dictionary:
 
 	# Stats tracking
 	data.player_stats = StatsTracker.get_stats_data()
+	
+	# Character ID - save from GameManager
+	if "selected_character_id" in GameManager:
+		data.character_id = GameManager.selected_character_id
+	else:
+		data.character_id = "hero"  # Default fallback
 	
 	# NEW: Preserve unlocked_levels if they exist in the existing save
 	if GameManager.current_save_slot >= 0:
@@ -354,6 +361,11 @@ func apply_player_data(player: Node2D, data: Dictionary):
 	if data.has("player_stats") and data.player_stats != null:
 		StatsTracker.load_stats_data(data.player_stats)
 		print("  ✓ Statistics restored")
+	
+	# Character ID
+	if data.has("character_id") and data.character_id != null:
+		GameManager.selected_character_id = data.character_id
+		print("  ✓ Character ID restored: ", data.character_id)
 
 	print("Player data fully restored from save file")
 

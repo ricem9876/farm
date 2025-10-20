@@ -18,6 +18,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 GameManager="*res://Resources/Map/Scripts/GameManager.gd"
+CharacterRegistry="*res://Resources/Scripts/CharacterRegistry.gd"
 GlobalWeaponStorage="*res://Resources/Weapon/GlobalWeaponStorage.gd"
 SaveSystem="*res://Resources/Scripts/SaveSystem.gd"
 AudioManager="*res://Resources/Scripts/AudioManager.gd"

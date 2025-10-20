@@ -54,7 +54,7 @@ func _setup_ui():
 		title_label.text = "PAUSED"
 		title_label.add_theme_font_override("font", pixel_font)
 		title_label.add_theme_font_size_override("font_size", 48)
-		title_label.add_theme_color_override("font_color", Color(1, 0.9, 0.4))
+		title_label.add_theme_color_override("font_color", Color(0.87058824, 0.72156864, 0.5294118))
 	
 	# Panel styling
 	if menu_panel:
@@ -157,7 +157,7 @@ func _style_volume_control(label: Label, slider: HSlider, text: String, font: Fo
 		label.text = text
 		label.add_theme_font_override("font", font)
 		label.add_theme_font_size_override("font_size", 20)
-		label.add_theme_color_override("font_color", Color(1, 0.9, 0.4))
+		label.add_theme_color_override("font_color", Color(0.87058824, 0.72156864, 0.5294118))
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		label.custom_minimum_size = Vector2(250, 25)
 		label.visible = true
@@ -208,7 +208,7 @@ func _style_slider(slider: HSlider, _font: Font):
 	grabber_style.border_width_right = 2
 	grabber_style.border_width_top = 2
 	grabber_style.border_width_bottom = 2
-	grabber_style.border_color = Color(1, 0.9, 0.4).darkened(0.3)
+	grabber_style.border_color = Color(.65, 0.165, 0.165).darkened(0.3)
 	grabber_style.corner_radius_top_left = 5
 	grabber_style.corner_radius_top_right = 5
 	grabber_style.corner_radius_bottom_left = 5
@@ -256,7 +256,7 @@ func _create_screen_shake_toggle(font: Font):
 	label.text = "SCREEN SHAKE"
 	label.add_theme_font_override("font", font)
 	label.add_theme_font_size_override("font_size", 20)
-	label.add_theme_color_override("font_color", Color(1, 0.9, 0.4))
+	label.add_theme_color_override("font_color", Color(0.87058824, 0.72156864, 0.5294118, 1))
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	
 	# Create checkbox
