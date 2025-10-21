@@ -29,6 +29,7 @@ GameSettings="*res://Resources/Scripts/GameSettings.gd"
 SettingsManager="*res://Resources/Settings/SettingsManager.gd"
 TutorialManager="*res://Resources/Scripts/TutorialManager.gd"
 IntroTutorial="*res://Resources/Scripts/IntroTutorial.gd"
+EffectsManager="*res://Resources/Effects/EffectsManager.gd"
 
 [display]
 

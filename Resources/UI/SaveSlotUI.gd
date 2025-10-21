@@ -42,7 +42,7 @@ func _update_display():
 		select_button.text = "NEW GAME"
 		delete_button.visible = false
 		
-		# Gray out style
+		# Gray out style with shadow
 		var style = StyleBoxFlat.new()
 		style.bg_color = Color(0.3, 0.3, 0.3)
 		style.border_width_left = 2
@@ -50,6 +50,10 @@ func _update_display():
 		style.border_width_top = 2
 		style.border_width_bottom = 2
 		style.border_color = Color(0.5, 0.5, 0.5)
+		# Add shadow
+		style.shadow_color = Color(0, 0, 0, 0.5)
+		style.shadow_size = 4
+		style.shadow_offset = Vector2(2, 2)
 		add_theme_stylebox_override("panel", style)
 	else:
 		# Existing save
@@ -58,7 +62,7 @@ func _update_display():
 		var health = player_data.get("health", 100)
 		var max_health = player_data.get("max_health", 100)
 
-# Convert to proper types with validation
+		# Convert to proper types with validation
 		var health_int = int(float(health)) if health != null else 100
 		var max_health_int = int(float(max_health)) if max_health != null else 100
 
@@ -67,7 +71,7 @@ func _update_display():
 		select_button.text = "CONTINUE"
 		delete_button.visible = true
 		
-		# Active style
+		# Active style with shadow
 		var style = StyleBoxFlat.new()
 		style.bg_color = Color(0.2, 0.4, 0.3)
 		style.border_width_left = 2
@@ -75,6 +79,10 @@ func _update_display():
 		style.border_width_top = 2
 		style.border_width_bottom = 2
 		style.border_color = Color(0.3, 0.7, 0.4)
+		# Add shadow
+		style.shadow_color = Color(0, 0, 0, 0.5)
+		style.shadow_size = 4
+		style.shadow_offset = Vector2(2, 2)
 		add_theme_stylebox_override("panel", style)
 	
 	# Style labels

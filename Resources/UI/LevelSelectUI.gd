@@ -69,11 +69,25 @@ func _ready():
 func _setup_ui():
 	var pixel_font = preload("res://Resources/Fonts/yoster.ttf")
 	
+	# Style the title label
 	if title_label:
 		title_label.text = "SELECT MISSION"
 		title_label.add_theme_font_override("font", pixel_font)
 		title_label.add_theme_font_size_override("font_size", 36)
-		title_label.add_theme_color_override("font_color", Color(1, 0.9, 0.4))
+		# Tan/beige color
+		title_label.add_theme_color_override("font_color", Color(0.87058824, 0.72156864, 0.5294118))
+		# Add shadow with 0.5 opacity, offset (2,2), size 4
+		title_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.5))
+		title_label.add_theme_constant_override("shadow_offset_x", 2)
+		title_label.add_theme_constant_override("shadow_offset_y", 2)
+		title_label.add_theme_constant_override("shadow_outline_size", 4)
+		# Center the title
+		title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	
+	# Center the level container
+	if level_container:
+		level_container.alignment = BoxContainer.ALIGNMENT_CENTER
+		level_container.custom_minimum_size = Vector2(500, 0)  # Minimum width for proper spacing
 	
 	if back_button:
 		back_button.text = "BACK TO SAFEHOUSE"
@@ -210,11 +224,12 @@ func _create_level_buttons():
 		var can_afford = mushroom_count >= level_data.mushrooms_required
 		
 		# Create a container for the button and lock overlay
-		var button_container = Control.new()
+		var button_container = CenterContainer.new()
 		button_container.custom_minimum_size = Vector2(300, 60)
 		
 		# Create the button
 		var button = Button.new()
+		button.custom_minimum_size = Vector2(300, 60)  # Set minimum size for proper spacing
 		button.size = Vector2(300, 60)
 		button.position = Vector2(0, 0)
 		

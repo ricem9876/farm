@@ -20,12 +20,20 @@ func _ready():
 func _setup_ui():
 	var pixel_font = preload("res://Resources/Fonts/yoster.ttf")
 	
-	# Title
+	# Title - same styling as LevelSelectUI
 	if title_label:
 		title_label.text = "SELECT SAVE FILE"
 		title_label.add_theme_font_override("font", pixel_font)
 		title_label.add_theme_font_size_override("font_size", 48)
-		title_label.add_theme_color_override("font_color", Color(1, 0.9, 0.4))
+		# Tan/beige color
+		title_label.add_theme_color_override("font_color", Color(0.87058824, 0.72156864, 0.5294118))
+		# Add shadow with 0.5 opacity, offset (2,2), size 4
+		title_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.5))
+		title_label.add_theme_constant_override("shadow_offset_x", 2)
+		title_label.add_theme_constant_override("shadow_offset_y", 2)
+		title_label.add_theme_constant_override("shadow_outline_size", 4)
+		# Center the title
+		title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	
 	# Back button
 	if back_button:

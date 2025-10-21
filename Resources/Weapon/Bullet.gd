@@ -2,7 +2,7 @@ extends Area2D
 class_name Bullet
 
 var damage: float = 10.0
-var speed: float = 400.0
+var speed: float = 600.0
 var direction: Vector2 = Vector2.RIGHT
 var lifetime: float = 2.0
 var knockback_force: float = 50.0  # NEW: Knockback force to apply to enemies
@@ -29,6 +29,15 @@ func _physics_process(delta):
 	global_position += direction * speed * delta
 
 func _on_body_entered(body):
+	# PARTICLE EFFECT: Bullet Impact
+	if EffectsManager:
+		if body.has_method("take_damage"):
+			# Blood splatter for hitting enemies
+			EffectsManager.play_effect("enemy_death", global_position)
+		else:
+			# Regular impact for walls/obstacles
+			EffectsManager.play_effect("bullet_impact", global_position)
+	
 	if body.has_method("take_damage"):
 		body.take_damage(damage)
 		# NEW: Apply knockback
@@ -36,11 +45,22 @@ func _on_body_entered(body):
 			body.apply_knockback(direction * knockback_force)
 		_handle_hit()
 	
+	
 	# Only destroy if not penetrating
 	if not has_meta("penetrating"):
 		queue_free()
 
 func _on_area_entered(area):
+	# PARTICLE EFFECT: Bullet Impact
+	if EffectsManager:
+		var area_parent = area.get_parent()
+		if area_parent and area_parent.has_method("take_damage"):
+			# Small blood effect for hitting enemies
+			EffectsManager.create_blood_splatter(global_position)
+		else:
+			# Regular impact
+			EffectsManager.play_effect("bullet_impact", global_position)
+	
 	var area_parent = area.get_parent()
 	if area_parent and area_parent.has_method("take_damage"):
 		area_parent.take_damage(damage)

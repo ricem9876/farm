@@ -17,6 +17,10 @@ func _ready():
 	if prompt_label:
 		prompt_label.visible = false
 		prompt_label.text = interaction_prompt
+	
+	# PARTICLE EFFECT: Loot Sparkle
+	if EffectsManager:
+		EffectsManager.play_effect("loot_sparkle", global_position)
 
 func _input(event):
 	if player_nearby and event.is_action_pressed("interact"):

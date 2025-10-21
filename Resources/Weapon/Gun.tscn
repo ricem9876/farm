@@ -12,4 +12,4 @@ scale = Vector2(0.0414365, 0.0594828)
 texture = ExtResource("2_t54h1")
 
 [node name="MuzzlePoint" type="Node2D" parent="."]
-position = Vector2(17.5, 3.3125)
+position = Vector2(19, 3)

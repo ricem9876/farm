@@ -24,6 +24,7 @@ var current_bullet_count: int
 # References
 @onready var muzzle_point = $MuzzlePoint
 @onready var gun_sprite = $GunSprite
+@onready var muzzle_place = $MuzzlePoint.global_position
 var bullet_scene = preload("res://Resources/Weapon/Bullet.tscn")
 var player: Node2D
 
@@ -252,7 +253,6 @@ func start_firing():
 	if not can_fire:
 		return
 	is_firing = true
-
 func stop_firing():
 	is_firing = false
 
@@ -284,6 +284,10 @@ func _fire_single_burst():
 	
 	# NEW: Apply screen shake
 	_apply_screen_shake()
+	
+	# PARTICLE EFFECT: Muzzle Flash
+	if EffectsManager:
+		EffectsManager.play_effect("muzzle_flash", muzzle_point.global_position, rotation_degrees)
 
 	var damage_multiplier = 1.0
 	var crit_chance = 0.0

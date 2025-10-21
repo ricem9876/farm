@@ -83,7 +83,7 @@ func _animate_item():
 	tween.set_loops()
 	tween.tween_property(self, "position:y", position.y - 5, 1.0)
 	tween.tween_property(self, "position:y", position.y + 5, 1.0)
-
+	EffectsManager.play_effect("loot_sparkle", global_position)
 func _physics_process(delta):
 	if is_being_attracted and player:
 		# Move towards player when in magnet range

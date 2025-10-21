@@ -189,6 +189,10 @@ func _die():
 	is_dead = true
 	current_state = State.DEAD
 	
+	# PARTICLE EFFECT: Enemy Death
+	if EffectsManager:
+		EffectsManager.play_effect("enemy_death", global_position)
+	
 	print("Mushroom died!")
 	died.emit(experience_value)
 	

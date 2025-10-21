@@ -1,0 +1,90 @@
+=====================================================
+  PARTICLE EFFECTS SYSTEM - START HERE
+=====================================================
+
+Welcome! This folder contains everything you need to add 
+particle effects to your Farm game.
+
+📖 READ FIRST: README.md
+   - Complete overview of the system
+   - Quick start guide
+   - Learning path
+
+🎯 STEP-BY-STEP: QUICK_SETUP_CHECKLIST.md
+   - 5-step tutorial to get started
+   - Detailed Godot Editor instructions
+   - Your first effect in 10 minutes
+
+📋 REFERENCE: PARTICLE_PRESETS.md
+   - Copy-paste settings for common effects
+   - 15+ ready-to-use presets
+   - Muzzle flash, impacts, explosions, etc.
+
+📚 DEEP DIVE: PARTICLE_EFFECTS_GUIDE.md
+   - Complete particle system guide
+   - Performance tips
+   - Troubleshooting
+
+🎨 TEXTURES: PARTICLE_TEXTURES_GUIDE.md
+   - How to create particle textures
+   - Free resources
+   - Quick DIY methods
+
+🔧 CODE:
+   - EffectsManager.gd - Global effects system
+   - Example*.gd - Code examples for your scenes
+
+=====================================================
+  RECOMMENDED START
+=====================================================
+
+1. Read the Quick Start in README.md (5 min)
+2. Follow QUICK_SETUP_CHECKLIST.md (15 min)
+3. Add your first muzzle flash effect!
+4. Experiment and have fun!
+
+=====================================================
+  QUICK QUESTIONS
+=====================================================
+
+Q: Where do I start?
+A: QUICK_SETUP_CHECKLIST.md - Step by step!
+
+Q: I need settings for [effect]
+A: PARTICLE_PRESETS.md - Copy and paste!
+
+Q: How do I make particles [do X]?
+A: PARTICLE_EFFECTS_GUIDE.md - Full guide!
+
+Q: My particles don't work!
+A: README.md - See troubleshooting table
+
+Q: What about textures?
+A: PARTICLE_TEXTURES_GUIDE.md (but start without!)
+
+=====================================================
+  YOUR CHECKLIST
+=====================================================
+
+Setup (Do Once):
+[ ] Add EffectsManager as autoload
+[ ] Read QUICK_SETUP_CHECKLIST.md
+
+First Effects (Start Here):
+[ ] Add muzzle flash to gun
+[ ] Add bullet impact effect  
+[ ] Add enemy death particles
+
+Polish (When Ready):
+[ ] Add loot sparkles
+[ ] Add walking dust
+[ ] Add more environmental effects
+
+=====================================================
+  NEED HELP?
+=====================================================
+
+Check the troubleshooting section in README.md
+or search Godot docs for specific issues.
+
+Good luck! 🎮✨
