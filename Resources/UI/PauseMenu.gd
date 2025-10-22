@@ -256,7 +256,11 @@ func _create_screen_shake_toggle(font: Font):
 	label.text = "SCREEN SHAKE"
 	label.add_theme_font_override("font", font)
 	label.add_theme_font_size_override("font_size", 20)
-	label.add_theme_color_override("font_color", Color(0.87058824, 0.72156864, 0.5294118, 1))
+	label.add_theme_color_override("font_color", Color(0.87058824, 0.72156864, 0.5294118))
+	label.add_theme_color_override("font_shadow_color", Color(0.545841, 0.449464, 0.228986, 1))
+	label.add_theme_constant_override("shadow_offset_x", 1)
+	label.add_theme_constant_override("shadow_offset_y", 2)
+	label.add_theme_constant_override("shadow_outline_size", 4)
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	
 	# Create checkbox

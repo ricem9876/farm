@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3 uid="uid://c1xh0pvn7jtyb"]
+[gd_scene load_steps=4 format=3 uid="uid://db71u1kije41k"]
 
 [sub_resource type="Gradient" id="Gradient_sparkle"]
 offsets = PackedFloat32Array(0, 0.8, 1)
@@ -23,6 +23,6 @@ color_ramp = SubResource("GradientTexture1D_sparkle")
 [node name="LootSparkle" type="Node2D"]
 
 [node name="GPUParticles2D" type="GPUParticles2D" parent="."]
-emitting = false
-lifetime = 1.5
+amount = 16
+lifetime = 0.73
 process_material = SubResource("ParticleProcessMaterial_sparkle")

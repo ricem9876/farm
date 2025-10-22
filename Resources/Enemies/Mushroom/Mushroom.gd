@@ -11,6 +11,9 @@ signal died(experience_points: int)
 @export var detection_range: float = 100.0
 @export var experience_value: int = 50
 
+# Particle effects
+var experience_particle_scene = preload("res://Resources/Effects/experienceondeath.tscn")
+
 @onready var animated_sprite = $AnimatedSprite2D
 @onready var hit_area = $HitArea
 @onready var attack_area = $AttackArea
@@ -189,11 +192,11 @@ func _die():
 	is_dead = true
 	current_state = State.DEAD
 	
-	# PARTICLE EFFECT: Enemy Death
-	if EffectsManager:
-		EffectsManager.play_effect("enemy_death", global_position)
-	
 	print("Mushroom died!")
+	
+	# Spawn experience particle when granting XP
+	_spawn_experience_particle()
+	
 	died.emit(experience_value)
 	
 	velocity = Vector2.ZERO
@@ -270,3 +273,19 @@ func apply_knockback(force: Vector2):
 		return
 	
 	knockback_velocity = force
+
+func _spawn_experience_particle():
+	"""Spawn experience particle effect on death"""
+	var exp_particle = experience_particle_scene.instantiate()
+	get_tree().current_scene.add_child(exp_particle)
+	exp_particle.global_position = global_position
+	exp_particle.z_index = 10  # Above most objects
+	
+	var particles = exp_particle.get_node("GPUParticles2D")
+	if particles:
+		particles.emitting = true
+		particles.restart()
+		# Auto-cleanup after particles finish
+		await get_tree().create_timer(particles.lifetime).timeout
+		if is_instance_valid(exp_particle):
+			exp_particle.queue_free()

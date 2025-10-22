@@ -1,17 +1,22 @@
-[gd_scene load_steps=2 format=3 uid="uid://deb4kbg72xolt"]
+[gd_scene load_steps=2 format=3 uid="uid://dc1fchckkcc3w"]
 
-[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_de5ix"]
-particle_flag_disable_z = true
-spread = 30.0
-initial_velocity_min = 200.0
-initial_velocity_max = 350.0
-gravity = Vector3(0, 98, 0)
+[sub_resource type="Curve" id="Curve_de5ix"]
+_data = [Vector2(0.125, 1), 0.0, 0.0, 0, 0, Vector2(0.778409, 0.325843), 0.0, 0.0, 0, 0]
+point_count = 2
 
-[node name="MuzzleFlash" type="GPUParticles2D"]
+[node name="MuzzleFlash" type="Node2D"]
+
+[node name="CPUParticles2D" type="CPUParticles2D" parent="."]
 emitting = false
-amount = 1
-amount_ratio = 0.15
-lifetime = 0.1
+amount = 96
+lifetime = 0.28
 one_shot = true
-explosiveness = 1.0
-process_material = SubResource("ParticleProcessMaterial_de5ix")
+speed_scale = 6.17
+explosiveness = 0.24
+gravity = Vector2(15, 0)
+initial_velocity_min = 50.0
+initial_velocity_max = 50.0
+scale_amount_min = 0.5
+scale_amount_max = 2.0
+scale_amount_curve = SubResource("Curve_de5ix")
+color = Color(0.991497, 0.931213, 0.456717, 1)

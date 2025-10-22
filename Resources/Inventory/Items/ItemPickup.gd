@@ -6,6 +6,10 @@ class_name ItemPickup
 @export var magnet_range: float = 80.0
 @export var move_speed: float = 200.0
 
+# Particle effects
+var loot_sparkle_scene = preload("res://Resources/Effects/LootSparkle.tscn")
+var sparkle_effect: Node2D = null
+
 @onready var sprite = $Sprite2D
 @onready var collision_shape = $CollisionShape2D
 @onready var pickup_area = $PickupArea
@@ -47,6 +51,9 @@ func _ready():
 	# Add some bounce/float animation
 	_animate_item()
 	#print("!!! ITEMPICKUP _READY COMPLETE !!!\n")
+	
+	# Spawn loot sparkle effect
+	_spawn_loot_sparkle()
 
 func _setup_item_appearance():
 	if not sprite:
@@ -83,7 +90,7 @@ func _animate_item():
 	tween.set_loops()
 	tween.tween_property(self, "position:y", position.y - 5, 1.0)
 	tween.tween_property(self, "position:y", position.y + 5, 1.0)
-	EffectsManager.play_effect("loot_sparkle", global_position)
+	
 func _physics_process(delta):
 	if is_being_attracted and player:
 		# Move towards player when in magnet range
@@ -169,3 +176,14 @@ func _pickup_effect():
 	var tween = create_tween()
 	tween.parallel().tween_property(self, "scale", Vector2(1.5, 1.5), 0.2)
 	tween.parallel().tween_property(self, "modulate:a", 0.0, 0.2)
+
+func _spawn_loot_sparkle():
+	"""Spawn continuous loot sparkle effect on dropped item"""
+	sparkle_effect = loot_sparkle_scene.instantiate()
+	add_child(sparkle_effect)
+	sparkle_effect.position = Vector2(0, -10)  # Slightly above item
+	sparkle_effect.z_index = 5  # Above item
+	
+	var particles = sparkle_effect.get_node("GPUParticles2D")
+	if particles:
+		particles.emitting = true

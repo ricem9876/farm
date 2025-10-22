@@ -270,7 +270,7 @@ func apply_player_data(player: Node2D, data: Dictionary):
 			player.level_system.move_speed = player.level_system.base_move_speed + (player.level_system.points_in_speed * 5)
 			player.level_system.damage_multiplier = 1.0 + (player.level_system.points_in_damage * 0.05)
 			player.level_system.fire_rate_multiplier = 1.0 + (player.level_system.points_in_fire_rate * 0.04)
-			player.level_system.luck = 1.0 + (player.level_system.points_in_luck * 0.01)
+			player.level_system.luck = player.level_system.base_luck + (player.level_system.points_in_luck * 0.01)
 			player.level_system.critical_chance = player.level_system.points_in_crit_chance * 0.02
 			player.level_system.critical_damage = 1.5 + (player.level_system.points_in_crit_damage * 0.1)
 	

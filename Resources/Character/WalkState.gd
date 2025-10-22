@@ -1,7 +1,8 @@
 extends state
+class_name WalkState
 
-@export var move_speed: float = 100.0
-@export var speed: float = 200.0
+@export var move_speed: float = 50.0
+@export var speed: float = 50.0
 var player: CharacterBody2D
 
 func enter(msg := {}):
@@ -9,26 +10,16 @@ func enter(msg := {}):
 
 
 func physics_update(delta: float):
-	var direction = Vector2.ZERO
 	var player = get_parent().get_parent()  # Get the player node
 	
-	# Get input
-	var input_vector = Vector2.ZERO
-	input_vector.x = Input.get_axis("ui_left", "ui_right")
-	input_vector.y = Input.get_axis("ui_up", "ui_down")
+	# Get speed from player's level system if available
+	var current_speed = move_speed
+	if player.level_system:
+		current_speed = player.level_system.move_speed
 	
-	if input_vector != Vector2.ZERO:
-		input_vector = input_vector.normalized()
-		
-		# Get speed from player's level system if available
-		var current_speed = move_speed
-		if player.level_system:
-			var level_system = player.level_system
-			current_speed = level_system.move_speed
-		
-		player.velocity = input_vector * current_speed
-		
-
+	# Get input direction
+	var direction = Vector2.ZERO
+	
 	if Input.is_action_pressed("move_right"):
 		direction.x += 1
 		%AnimationPlayer.play("runright")
@@ -42,8 +33,9 @@ func physics_update(delta: float):
 		direction.y -= 1
 		%AnimationPlayer.play("runup")
 
+	# Apply movement with upgraded speed
 	direction = direction.normalized()
-	player.velocity = direction * speed
+	player.velocity = direction * current_speed
 	player.move_and_slide()
 
 	# Transition to Idle if no input

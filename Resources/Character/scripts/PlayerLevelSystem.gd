@@ -47,9 +47,11 @@ func _initialize_stats():
 	move_speed = base_move_speed + (points_in_speed * 5)
 	damage_multiplier = 1.0 + (points_in_damage * 0.05)
 	fire_rate_multiplier = 1.0 + (points_in_fire_rate * 0.04)
-	luck = base_luck + (points_in_luck * 0.01)  # Fixed: add points invested
+	luck = base_luck + (points_in_luck * 0.01)  # 0.0 + (0 * 0.01) = 0.0 at start
 	critical_chance = base_critical_chance + (points_in_crit_chance * 0.02)
 	critical_damage = base_critical_damage + (points_in_crit_damage * 0.1)
+	
+	print("DEBUG: Stats initialized - luck: ", luck, " (base: ", base_luck, ", points: ", points_in_luck, ")")
 	
 func gain_experience(amount: int):
 	current_experience += amount
@@ -103,7 +105,8 @@ func upgrade_stat(stat_name: String) -> bool:
 			if points_in_luck >= 50:
 				return false
 			points_in_luck += 1
-			luck = base_luck + (points_in_luck * 0.01)  # Add base_luck to the calculation
+			luck = base_luck + (points_in_luck * 0.01)
+			print("DEBUG: Upgraded luck - now: ", luck, " (points: ", points_in_luck, ")")
 			
 		"crit_chance":
 			if points_in_crit_chance >= 25:  # Lower cap for crit

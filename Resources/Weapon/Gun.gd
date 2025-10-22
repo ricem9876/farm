@@ -22,6 +22,7 @@ var current_accuracy: float
 var current_bullet_count: int
 
 # References
+var muzzle_flash_scene = preload("res://Resources/Effects/muzzle_flash.tscn")
 @onready var muzzle_point = $MuzzlePoint
 @onready var gun_sprite = $GunSprite
 @onready var muzzle_place = $MuzzlePoint.global_position
@@ -285,9 +286,8 @@ func _fire_single_burst():
 	# NEW: Apply screen shake
 	_apply_screen_shake()
 	
-	# PARTICLE EFFECT: Muzzle Flash
-	if EffectsManager:
-		EffectsManager.play_effect("muzzle_flash", muzzle_point.global_position, rotation_degrees)
+	# Spawn muzzle flash particle
+	_spawn_muzzle_flash()
 
 	var damage_multiplier = 1.0
 	var crit_chance = 0.0
@@ -414,3 +414,24 @@ func _apply_screen_shake():
 	# Check if camera has the shake method
 	if camera.has_method("apply_shake"):
 		camera.apply_shake(screen_shake_intensity, 0.3)
+
+func _spawn_muzzle_flash():
+	"""Spawn muzzle flash effect (doesn't block)"""
+	var muzzle_flash = muzzle_flash_scene.instantiate()
+	get_tree().current_scene.add_child(muzzle_flash)
+	muzzle_flash.global_position = muzzle_point.global_position
+	muzzle_flash.rotation = rotation
+	muzzle_flash.z_index = 10  # Above bullets and most other objects
+	
+	var particles = muzzle_flash.get_node("CPUParticles2D")
+	if particles:
+		particles.emitting = true
+		particles.restart()
+		# Cleanup in background (doesn't block)
+		_cleanup_particle_node(muzzle_flash, particles.lifetime)
+
+func _cleanup_particle_node(node: Node, lifetime: float):
+	"""Remove particle node after lifetime (runs in background)"""
+	await get_tree().create_timer(lifetime).timeout
+	if is_instance_valid(node):
+		node.queue_free()

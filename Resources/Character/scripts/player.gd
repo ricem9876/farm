@@ -3,7 +3,7 @@ extends CharacterBody2D
 signal inventory_toggle_requested
 
 # Movement and Physics
-@export var base_speed: float = 100.0
+@export var base_speed: float = 50.0
 
 # Health System
 var current_health: float = 100.0
@@ -105,7 +105,7 @@ func _apply_character_bonuses_deferred():
 	if character_data.bonus_luck > 0:
 		level_system.luck += character_data.bonus_luck
 	
-	print("✓ Applied character bonuses")
+	print("✓ Applied character bonuses - Luck is now: ", level_system.luck)
 	
 	# Give starting items
 	if character_data.starting_items.size() > 0:
@@ -240,11 +240,15 @@ func get_movement_speed() -> float:
 func take_damage(damage: float):
 	if level_system:
 		var dodge_chance = level_system.luck
-		if randf() < dodge_chance:
+		var roll = randf()
+		print("🎲 Dodge Check: rolled %.3f vs %.3f chance (luck: %.3f)" % [roll, dodge_chance, level_system.luck])
+		
+		if roll < dodge_chance:
 			print("⚡ DODGED! No damage taken")
 			# TODO: Add visual effect for dodge
 			return
-	StatsTracker.record_damage_taken(damage)  # ADD THIS LINE
+	
+	StatsTracker.record_damage_taken(damage)
 	
 	current_health -= damage
 	current_health = max(0, current_health)

@@ -29,7 +29,6 @@ GameSettings="*res://Resources/Scripts/GameSettings.gd"
 SettingsManager="*res://Resources/Settings/SettingsManager.gd"
 TutorialManager="*res://Resources/Scripts/TutorialManager.gd"
 IntroTutorial="*res://Resources/Scripts/IntroTutorial.gd"
-EffectsManager="*res://Resources/Effects/EffectsManager.gd"
 
 [display]
 
@@ -40,6 +39,8 @@ window/size/viewport_height=1024
 
 folder_colors={
 "res://Resources/Enemies/": "red",
+"res://Resources/Inventory/": "yellow",
+"res://Resources/Map/": "gray",
 "res://Resources/UI/": "green",
 "res://Resources/Weapon/": "blue"
 }
