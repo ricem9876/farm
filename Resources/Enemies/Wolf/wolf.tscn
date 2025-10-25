@@ -46,8 +46,7 @@
 [ext_resource type="Texture2D" uid="uid://dujdsigdshtl5" path="res://Resources/Enemies/Wolf/Animations/Wolf/Run/__Wolf_Run_006.png" id="44_6waoj"]
 [ext_resource type="Texture2D" uid="uid://btm4b2cp55bee" path="res://Resources/Enemies/Wolf/Animations/Wolf/Run/__Wolf_Run_007.png" id="45_je7di"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_8rgm2"]
-size = Vector2(22, 15.5)
+[sub_resource type="CircleShape2D" id="CircleShape2D_7t45l"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_6trwa"]
 radius = 342.072
@@ -226,7 +225,7 @@ script = ExtResource("1_fv4gx")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(2, 2.75)
-shape = SubResource("RectangleShape2D_8rgm2")
+shape = SubResource("CircleShape2D_7t45l")
 
 [node name="DetectionArea" type="Area2D" parent="."]
 

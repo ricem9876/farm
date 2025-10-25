@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dy1dq8rxso6ms"
-path="res://.godot/imported/mushroom.png-a00a88be1c83a3d9afb1ee15f2a84d81.ctex"
+uid="uid://btcf2c7316fsv"
+path="res://.godot/imported/KeyForge.png-b68551b28e6e60b781a0af7c28a468db.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Resources/Inventory/Sprites/mushroom.png"
-dest_files=["res://.godot/imported/mushroom.png-a00a88be1c83a3d9afb1ee15f2a84d81.ctex"]
+source_file="res://Resources/Map/Objects/KeyForge.png"
+dest_files=["res://.godot/imported/KeyForge.png-b68551b28e6e60b781a0af7c28a468db.ctex"]
 
 [params]
 

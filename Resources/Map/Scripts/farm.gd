@@ -180,9 +180,22 @@ func _ready():
 				enemies_killed = 0
 				_update_enemy_counter()  # Update display with wave total
 		
+		# NEW: Set spawn mode (gradual or all_at_once)
+		if "spawn_mode" in settings:
+			if "spawn_mode" in enemy_spawner:
+				enemy_spawner.spawn_mode = settings.spawn_mode
+				print("✓ Spawn mode set to: ", settings.spawn_mode)
+		
 		print("✓ Spawner configured: max_enemies=", settings.max_enemies, 
 			  " spawn_interval=", settings.spawn_interval,
-			  " total_enemies=", settings.get("total_enemies", "N/A"))
+			  " total_enemies=", settings.get("total_enemies", "N/A"),
+			  " spawn_mode=", settings.get("spawn_mode", "gradual"))
+		
+		# CRITICAL: Start spawning AFTER all configuration is done
+		if enemy_spawner.has_method("start_spawning"):
+			enemy_spawner.start_spawning()
+			print("✓ Spawner started!")
+		
 		# Add pause menu
 		var pause_menu = pause_menu_scene.instantiate()
 		add_child(pause_menu)

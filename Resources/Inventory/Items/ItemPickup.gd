@@ -75,10 +75,14 @@ func _setup_item_appearance():
 		"wood":
 			sprite.texture = preload("res://Resources/Inventory/Sprites/wood.png")
 			sprite.scale = Vector2(.5,.5)
+		"coin":
+			sprite.texture = preload("res://Resources/Map/Objects/Coin.png")
+			sprite.scale = Vector2(.5,.5)
+		"techpoint", "tech_point":
+			sprite.texture = preload("res://Resources/Map/Objects/TechPoints.png")
+			sprite.scale = Vector2(.5,.5)
 		"health_potion":
 			sprite.modulate = Color.RED
-		"coin":
-			sprite.modulate = Color.YELLOW
 		_:
 			sprite.modulate = Color.WHITE
 	
@@ -151,22 +155,29 @@ func _create_item_resource() -> Item:
 		"wood":
 			item.name = "Wood"
 			item.description = "A log"
-			item.stack_size=  99
+			item.stack_size = 99
 			item.item_type = "material"
 			item.icon = preload("res://Resources/Inventory/Sprites/wood.png")
+		
+		"coin":
+			item.name = "Coin"
+			item.description = "Currency used to purchase new weapons"
+			item.stack_size = 9999
+			item.item_type = "currency"
+			item.icon = preload("res://Resources/Map/Objects/Coin.png")
+		
+		"techpoint", "tech_point":
+			item.name = "Tech Point"
+			item.description = "Technology points used to upgrade weapons"
+			item.stack_size = 9999
+			item.item_type = "currency"
+			item.icon = preload("res://Resources/Map/Objects/TechPoints.png")
 			
 		"health_potion":
 			item.name = "Health Potion"
 			item.description = "Restores health when consumed"
 			item.stack_size = 10
 			item.item_type = "consumable"
-			item.icon = preload("res://icon.svg")
-		
-		"coin":
-			item.name = "Coin"
-			item.description = "Currency used for purchases"
-			item.stack_size = 999
-			item.item_type = "currency"
 			item.icon = preload("res://icon.svg")
 	
 	return item

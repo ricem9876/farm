@@ -419,7 +419,6 @@ frame = 3
 frame_progress = 0.228951
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-visible = false
 position = Vector2(6, 4)
 shape = SubResource("CapsuleShape2D_mhf5x")
 

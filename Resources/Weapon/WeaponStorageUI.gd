@@ -32,12 +32,12 @@ const UI_SCALE = 0.5  # 250% of original 0.2 scale (50% larger than 0.3)
 
 # Weapon unlock costs
 const UNLOCK_COSTS = {
-	"Pistol": {"fur": 0, "fiber": 0},  # Free
-	"Shotgun": {"fur": 5, "fiber": 5},
-	"Assault Rifle": {"fur": 5, "fiber": 5},
-	"Sniper Rifle": {"fur": 5, "fiber": 5},
-	"Machine Gun": {"fur": 5, "fiber": 5},
-	"Burst Rifle": {"fur": 5, "fiber": 5}
+	"Pistol": {"coins": 0, "tech": 0},  # Free
+	"Shotgun": {"coins": 100, "tech": 25},
+	"Assault Rifle": {"coins": 150, "tech": 50},
+	"Sniper Rifle": {"coins": 200, "tech": 75},
+	"Machine Gun": {"coins": 250, "tech": 100},
+	"Burst Rifle": {"coins": 300, "tech": 125}
 }
 
 func _ready():
@@ -356,10 +356,10 @@ func _get_weapon_stats_text(weapon: WeaponItem) -> String:
 
 func _create_unlock_button(weapon: WeaponItem):
 	var pixel_font = preload("res://Resources/Fonts/yoster.ttf")
-	var costs = UNLOCK_COSTS.get(weapon.name, {"fur": 5, "fiber": 5})
+	var costs = UNLOCK_COSTS.get(weapon.name, {"coins": 100, "tech": 25})
 	
 	var unlock_btn = Button.new()
-	unlock_btn.text = "UNLOCK\n%d Fur + %d Fiber" % [costs.fur, costs.fiber]
+	unlock_btn.text = "UNLOCK\n%d Coins + %d Tech Points" % [costs.coins, costs.tech]
 	unlock_btn.custom_minimum_size = Vector2(400, 100)
 	unlock_btn.add_theme_font_override("font", pixel_font)
 	unlock_btn.add_theme_font_size_override("font_size", 32)
@@ -532,13 +532,18 @@ func _on_unlock_weapon(weapon: WeaponItem, costs: Dictionary):
 	# Deduct resources
 	var inv = player.get_inventory_manager()
 	
-	var fur_item = Item.new()
-	fur_item.name = "Wolf Fur"
-	inv.remove_item(fur_item, costs.fur)
+	# Remove coins
+	if not inv.remove_item_by_name("Coin", costs.coins):
+		print("Failed to remove coins!")
+		return
 	
-	var fiber_item = Item.new()
-	fiber_item.name = "Plant Fiber"
-	inv.remove_item(fiber_item, costs.fiber)
+	# Remove tech points
+	if not inv.remove_item_by_name("Tech Point", costs.tech):
+		print("Failed to remove tech points!")
+		# Refund coins if tech removal failed
+		var coin_item = player._create_item_from_name("coin")
+		inv.add_item(coin_item, costs.coins)
+		return
 	
 	# Unlock weapon in GlobalWeaponStorage
 	if GlobalWeaponStorage:
@@ -650,10 +655,10 @@ func _on_purchase_upgrade(upgrade: WeaponUpgrade):
 func _can_afford_unlock(costs: Dictionary) -> bool:
 	var inv = player.get_inventory_manager()
 	
-	var fur_count = inv.get_item_quantity_by_name("Wolf Fur")
-	var fiber_count = inv.get_item_quantity_by_name("Plant Fiber")
+	var coin_count = inv.get_item_quantity_by_name("Coin")
+	var tech_count = inv.get_item_quantity_by_name("Tech Point")
 	
-	return fur_count >= costs.fur and fiber_count >= costs.fiber
+	return coin_count >= costs.coins and tech_count >= costs.tech
 
 func _is_weapon_unlocked(weapon_name: String) -> bool:
 	var current_unlocked = GlobalWeaponStorage.get_unlocked_weapons() if GlobalWeaponStorage else ["Pistol"]
@@ -665,11 +670,11 @@ func _update_resources_display():
 	
 	var inv = player.get_inventory_manager()
 	
-	var fur = inv.get_item_quantity_by_name("Wolf Fur")
-	var fiber = inv.get_item_quantity_by_name("Plant Fiber")
+	var coins = inv.get_item_quantity_by_name("Coin")
+	var tech = inv.get_item_quantity_by_name("Tech Point")
 	var wood = inv.get_item_quantity_by_name("Wood")
 	
-	resources_label.text = "Resources: 🐺 %d Fur | 🌿 %d Fiber | 🪵 %d Wood" % [fur, fiber, wood]
+	resources_label.text = "Resources: 💰 %d Coins | 🔧 %d Tech | 🪵 %d Wood" % [coins, tech, wood]
 
 func _on_close_button_pressed():
 	toggle_visibility()

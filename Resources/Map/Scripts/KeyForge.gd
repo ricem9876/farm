@@ -6,22 +6,15 @@ class_name KeyForge
 
 @export var forge_name: String = "Key Forge"
 
-@onready var sprite = $Sprite2D
-@onready var collision_shape = $CollisionShape2D
-@onready var interaction_prompt = $InteractionPrompt
+@onready var sprite = $Sprite2D if has_node("Sprite2D") else null
+@onready var collision_shape = $CollisionShape2D if has_node("CollisionShape2D") else null
+@onready var interaction_prompt = $InteractionPrompt if has_node("InteractionPrompt") else null
 
 var player_in_area: bool = false
 var player_ref: Node2D
+var forge_ui  # KeyForgeUI - using untyped to avoid dependency
 
-# Crafting recipes: material_name -> number_required
-var recipes: Dictionary = {
-	"wood": 1,
-	"mushroom": 1,
-	"fiber": 1,  # For plant key
-	"fur": 1     # For wool key
-}
-
-signal key_crafted(key: KeyItem)
+signal key_crafted(key: Item)
 
 func _ready():
 	add_to_group("key_forges")
@@ -55,80 +48,36 @@ func _on_body_exited(body):
 			interaction_prompt.visible = false
 
 func open_crafting_menu():
-	"""Opens a menu showing available keys to craft"""
-	if not player_ref or not player_ref.has_method("get_inventory_manager"):
+	"""Opens the Key Forge UI"""
+	if not player_ref:
 		return
 	
-	var inventory = player_ref.get_inventory_manager()
+	if not forge_ui:
+		# Create UI if it doesn't exist
+		var ui_scene = preload("res://Resources/UI/KeyForgeUI.tscn")
+		forge_ui = ui_scene.instantiate()
+		
+		# Add to root so it appears over everything
+		get_tree().root.add_child(forge_ui)
+		print("✓ Created KeyForgeUI")
 	
-	# Check what materials the player has
-	var available_materials = get_available_materials(inventory)
-	
-	if available_materials.is_empty():
-		show_message("You don't have any materials to craft keys!")
-		return
-	
-	# For now, let's create a simple auto-craft system
-	# Later you can create a proper UI
-	print("\n=== KEY FORGE ===")
-	print("Available materials to convert into keys:")
-	for material in available_materials:
-		print("  - ", material.capitalize())
-	
-	# Craft first available key automatically
-	# In a real implementation, you'd show a menu to choose
-	craft_key(available_materials[0], inventory)
+	# Setup and open the UI
+	if forge_ui:
+		forge_ui.setup(self, player_ref)
+		forge_ui.open()
+		print("Key Forge UI opened")
 
 func get_available_materials(inventory: InventoryManager) -> Array:
 	"""Returns list of craftable materials player has"""
 	var available = []
+	var required_amount = 25
 	
-	for material_name in recipes.keys():
-		if has_material(inventory, material_name):
+	var materials = ["Mushroom", "Wood", "Plant Fiber", "Wolf Fur"]
+	for material_name in materials:
+		if inventory.count_item_by_name(material_name) >= required_amount:
 			available.append(material_name)
 	
 	return available
-
-func has_material(inventory: InventoryManager, material_name: String) -> bool:
-	"""Check if player has the required material"""
-	for i in range(inventory.max_slots):
-		var item = inventory.items[i]
-		if item and item.name.to_lower() == material_name.to_lower():
-			var quantity = inventory.quantities[i]
-			if quantity >= recipes[material_name]:
-				return true
-	return false
-
-func craft_key(material_name: String, inventory: InventoryManager):
-	"""Craft a key from the given material"""
-	
-	# Find and remove the material
-	var material_removed = false
-	for i in range(inventory.max_slots):
-		var item = inventory.items[i]
-		if item and item.name.to_lower() == material_name.to_lower():
-			var removed = inventory.remove_item(item, recipes[material_name])
-			if removed > 0:
-				material_removed = true
-				break
-	
-	if not material_removed:
-		show_message("Failed to remove material!")
-		return
-	
-	# Create the key
-	var key = LootChest.create_key_from_material(material_name)
-	if not key:
-		show_message("Failed to create key!")
-		return
-	
-	# Add key to inventory
-	if inventory.add_item(key, 1):
-		show_message("Crafted: " + key.name + "!")
-		key_crafted.emit(key)
-		print("Successfully crafted ", key.name)
-	else:
-		show_message("Inventory full! Key was lost.")
 
 func show_message(text: String):
 	"""Display a message to the player"""

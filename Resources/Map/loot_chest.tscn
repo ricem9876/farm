@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://45wufpq3j0kx"]
+
+[ext_resource type="Script" uid="uid://cstrfisti3x" path="res://Resources/Map/Scripts/LootChest.gd" id="1_edctm"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_edctm"]
+size = Vector2(25, 26)
+
+[node name="LootChest" type="Area2D"]
+script = ExtResource("1_edctm")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(2.5, 3)
+shape = SubResource("RectangleShape2D_edctm")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]

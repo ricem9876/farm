@@ -168,11 +168,18 @@ func _create_slots():
 	player_grid.columns = 4  # Player inventory: 4 columns
 	storage_grid.columns = 8  # Storage: 8 columns (more space)
 	
+	# Add spacing between slots for better visibility
+	player_grid.add_theme_constant_override("h_separation", 4)  # Horizontal spacing
+	player_grid.add_theme_constant_override("v_separation", 4)  # Vertical spacing
+	storage_grid.add_theme_constant_override("h_separation", 4)
+	storage_grid.add_theme_constant_override("v_separation", 4)
+	
 	# Create player inventory slots (8 slots total)
 	for i in range(player_inventory.max_slots):
 		var slot = slot_scene.instantiate()
 		slot.slot_index = i
-		slot.custom_minimum_size = Vector2(32, 32)
+		slot.custom_minimum_size = Vector2(48, 48)  # Increased from 32x32 to match inventory UI
+		slot.size = Vector2(48, 48)
 		slot.item_clicked.connect(_on_player_slot_clicked)
 		player_grid.add_child(slot)
 		player_slots.append(slot)
@@ -181,7 +188,8 @@ func _create_slots():
 	for i in range(storage_inventory.max_slots):
 		var slot = slot_scene.instantiate()
 		slot.slot_index = i
-		slot.custom_minimum_size = Vector2(32, 32)
+		slot.custom_minimum_size = Vector2(48, 48)  # Increased from 32x32 for better visibility
+		slot.size = Vector2(48, 48)
 		slot.item_clicked.connect(_on_storage_slot_clicked)
 		storage_grid.add_child(slot)
 		storage_slots.append(slot)

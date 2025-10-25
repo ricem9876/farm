@@ -6,8 +6,8 @@ signal inventory_toggle_requested
 @export var base_speed: float = 50.0
 
 # Health System
-var current_health: float = 100.0
-var max_health: float = 100.0
+var current_health: float = 10.0
+var max_health: float = 10.0
 
 # Level System
 var level_system: PlayerLevelSystem
@@ -53,6 +53,10 @@ func _ready():
 	max_health = level_system.max_health
 	current_health = max_health
 	
+	# Check if we need to restore from a save (e.g., after retry from death screen)
+	if not GameManager.pending_load_data.is_empty():
+		print("\n=== RESTORING PLAYER FROM PENDING SAVE DATA ===")
+		call_deferred("_restore_from_pending_data")
 	
 	print("Player initialized - Level: ", level_system.current_level, " | Health: ", current_health, "/", max_health)
 
@@ -265,10 +269,22 @@ func heal(amount: float):
 
 func _die():
 	print("Player died!")
-	# TODO: Add death logic (game over screen, respawn, etc.)
-	StatsTracker.record_death()  # ADD THIS LINE
-	# For now, just go to title screen
-	get_tree().change_scene_to_file("res://Resources/Scenes/TitleScreen.tscn")
+	StatsTracker.record_death()
+	
+	# Auto-save current state before death (for retry functionality)
+	if GameManager.current_save_slot >= 0:
+		print("\n=== AUTO-SAVING BEFORE DEATH ===")
+		var player_data = SaveSystem.collect_player_data(self)
+		SaveSystem.save_game(GameManager.current_save_slot, player_data)
+		print("=== AUTO-SAVE COMPLETE ===\n")
+	else:
+		print("⚠ No active save slot - retry will start fresh")
+	
+	# Save the current scene path before switching
+	GameManager.last_scene = get_tree().current_scene.scene_file_path
+	
+	# Switch to death screen
+	get_tree().change_scene_to_file("res://Resources/Scenes/DeathScreen.tscn")
 
 # === ITEM COLLECTION METHODS ===
 
@@ -299,10 +315,15 @@ func collect_item(item_name: String):
 
 # UPDATED: Now handles both display names AND internal keys
 func _create_item_from_name(item_name: String) -> Item:
-	var item = Item.new()
-	
 	# Convert to lowercase for matching
 	var name_lower = item_name.to_lower()
+	
+	# Check if this is a key item first (special handling for KeyItem class)
+	if name_lower.ends_with(" key") or name_lower.ends_with("key"):
+		return _create_key_item_from_name(item_name)
+	
+	# Regular items use base Item class
+	var item = Item.new()
 	
 	# Match against both internal names and display names
 	match name_lower:
@@ -334,11 +355,68 @@ func _create_item_from_name(item_name: String) -> Item:
 			item.item_type = "material"
 			item.icon = preload("res://Resources/Inventory/Sprites/wood.png")
 		
+		"coin", "coins":
+			item.name = "Coin"
+			item.description = "Currency used to purchase new weapons"
+			item.stack_size = 9999
+			item.item_type = "currency"
+			item.icon = preload("res://Resources/Map/Objects/Coin.png")
+		
+		"techpoint", "techpoints", "tech point", "tech points":
+			item.name = "Tech Point"
+			item.description = "Technology points used to upgrade weapons"
+			item.stack_size = 9999
+			item.item_type = "currency"
+			item.icon = preload("res://Resources/Map/Objects/TechPoints.png")
+		
 		_:
 			print("Unknown item: ", item_name)
 			return null
 	
 	return item
+
+func _create_key_item_from_name(item_name: String) -> KeyItem:
+	"""Create a KeyItem based on the item name (e.g., 'Wood Key', 'Mushroom Key')"""
+	var key = KeyItem.new()
+	var name_lower = item_name.to_lower()
+	
+	# Determine chest type from name
+	if "wood" in name_lower:
+		key.name = "Wood Key"
+		key.description = "A key crafted from wood. Opens Wood Chests."
+		key.chest_type = "wood"
+		key.key_color = Color(0.6, 0.4, 0.2)  # Brown
+		key.icon = preload("res://Resources/Map/Objects/WoodKey.png")
+	
+	elif "mushroom" in name_lower:
+		key.name = "Mushroom Key"
+		key.description = "A key crafted from mushrooms. Opens Mushroom Chests."
+		key.chest_type = "mushroom"
+		key.key_color = Color(0.8, 0.3, 0.3)  # Red
+		key.icon = preload("res://Resources/Map/Objects/MushroomKey.png")
+	
+	elif "plant" in name_lower or "fiber" in name_lower:
+		key.name = "Plant Key"
+		key.description = "A key crafted from plant fiber. Opens Plant Chests."
+		key.chest_type = "plant"
+		key.key_color = Color(0.3, 0.8, 0.3)  # Green
+		key.icon = preload("res://Resources/Map/Objects/PlantKey.png")
+	
+	elif "wool" in name_lower or "fur" in name_lower:
+		key.name = "Wool Key"
+		key.description = "A key crafted from wool. Opens Wool Chests."
+		key.chest_type = "wool"
+		key.key_color = Color(0.9, 0.9, 0.9)  # White
+		key.icon = preload("res://Resources/Map/Objects/WoolKey.png")
+	
+	else:
+		print("Unknown key type: ", item_name)
+		return null
+	
+	key.item_type = "key"
+	key.stack_size = 1  # Keys don't stack
+	
+	return key
 
 # === MANAGER GETTERS ===
 
@@ -497,7 +575,9 @@ func _debug_topup_resources():
 		{"name": "Wood", "quantity": 25},
 		{"name": "Plant Fiber", "quantity": 25},
 		{"name": "Wolf Fur", "quantity": 25},
-		{"name": "Mushroom", "quantity": 25}
+		{"name": "Mushroom", "quantity": 25},
+		{"name": "Coin", "quantity": 100},
+		{"name": "Tech Point", "quantity": 50}
 	]
 	
 	print("\n=== DEBUG: TOPPING UP RESOURCES ===")

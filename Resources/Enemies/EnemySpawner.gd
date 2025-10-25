@@ -4,11 +4,12 @@ extends Node2D
 @export var spawn_enabled: bool = true
 @export var max_enemies: int = 15
 @export var spawn_interval: float = 5.0
-@export var total_enemies: int = 15  # NEW: Total enemies for this wave
+@export var total_enemies: int = 15  # Total enemies for this wave
+@export var spawn_mode: String = "gradual"  # NEW: "gradual" or "all_at_once"
 @export var spawn_boundary: Rect2 = Rect2(0, 0, 1000, 1000)
 signal enemy_spawned
 signal enemy_died
-signal wave_completed  # NEW: Emitted when all enemies are defeated
+signal wave_completed  # Emitted when all enemies are defeated
 
 var enemy_scenes = {
 	"plant": preload("res://Resources/Enemies/Plant/plant.tscn"),
@@ -25,7 +26,7 @@ var spawn_weights = {
 }
 
 var current_enemy_count: int = 0
-var total_spawned: int = 0  # NEW: Track how many enemies have been spawned
+var total_spawned: int = 0  # Track how many enemies have been spawned
 var spawn_timer: float = 0.0
 var player: Node2D
 
@@ -33,9 +34,16 @@ func _ready():
 	player = get_tree().get_first_node_in_group("player")
 	print("EnemySpawner initialized")
 	print("Spawn boundary: ", spawn_boundary)
+	print("Spawn mode: ", spawn_mode)
+	print("Total enemies: ", total_enemies)
+	# Don't spawn here - wait for farm.gd to call start_spawning()
 
 func _process(delta):
 	if not spawn_enabled:
+		return
+	
+	# Only use timer spawning for gradual mode
+	if spawn_mode != "gradual":
 		return
 	
 	# Stop spawning if we've reached the total
@@ -47,6 +55,14 @@ func _process(delta):
 	if spawn_timer <= 0 and current_enemy_count < max_enemies:
 		_spawn_random_enemy()
 		spawn_timer = spawn_interval
+
+# NEW: Spawn all enemies at once
+func _spawn_all_enemies_immediately():
+	print("🚀 Spawning all ", total_enemies, " enemies at once!")
+	for i in range(total_enemies):
+		_spawn_random_enemy()
+		await get_tree().create_timer(0.05).timeout  # Tiny delay to prevent overlap
+	print("✓ All ", total_enemies, " enemies spawned!")
 
 func _spawn_random_enemy():
 	var enemy_type = _weighted_random_choice()
@@ -61,7 +77,7 @@ func _spawn_random_enemy():
 	enemy.died.connect(_on_enemy_died.bind(enemy_type))
 	
 	current_enemy_count += 1
-	total_spawned += 1  # NEW: Increment total spawned
+	total_spawned += 1
 	print("Spawned ", enemy_type, " at ", spawn_pos, " (", current_enemy_count, "/", max_enemies, ") [Total: ", total_spawned, "/", total_enemies, "]")
 
 func _weighted_random_choice() -> String:
@@ -99,7 +115,7 @@ func _get_random_spawn_position() -> Vector2:
 	
 	return spawn_pos
 
-# UPDATED: Now tracks kills by enemy type!
+# Tracks kills by enemy type
 func _on_enemy_died(experience_points: int, enemy_type: String):
 	current_enemy_count -= 1
 	var enemies_left = total_enemies - total_spawned + current_enemy_count
@@ -125,6 +141,13 @@ func _on_enemy_died(experience_points: int, enemy_type: String):
 func set_spawn_enabled(enabled: bool):
 	spawn_enabled = enabled
 	print("Enemy spawning: ", "ENABLED" if enabled else "DISABLED")
+
+func start_spawning():
+	"""Called by farm.gd after configuration is complete"""
+	print("start_spawning() called - mode: ", spawn_mode, " | total: ", total_enemies)
+	if spawn_mode == "all_at_once":
+		_spawn_all_enemies_immediately()
+	# Gradual spawning will happen automatically in _process()
 
 func clear_all_enemies():
 	var enemies = get_tree().get_nodes_in_group("enemies")

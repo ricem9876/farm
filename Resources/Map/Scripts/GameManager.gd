@@ -8,6 +8,7 @@ var current_level_settings: Dictionary = {}
 var current_save_slot: int = -1
 var current_level: int = 0  # Track which level number (1-4)
 var selected_character_id: String = "hero"  # Selected character for new games
+var last_scene: String = ""  # Track last played scene for death screen retry
 
 # Temporary holders for loading from save file
 var pending_load_data: Dictionary = {}
@@ -19,9 +20,27 @@ const SAFEHOUSE_SCENE = "res://Resources/Scenes/safehouse.tscn"
 func _ready():
 	print("GameManager initialized")
 
-# Simple scene transitions - no saving/loading logic
+# Simple scene transitions - WITH auto-save
 func change_to_safehouse():
+	_auto_save_before_transition()
 	get_tree().change_scene_to_file(SAFEHOUSE_SCENE)
 
 func change_to_farm():
+	_auto_save_before_transition()
 	get_tree().change_scene_to_file(FARM_SCENE)
+
+func _auto_save_before_transition():
+	"""Auto-save the game before changing scenes to preserve inventory/progress"""
+	if current_save_slot < 0:
+		print("No active save slot - skipping auto-save")
+		return
+	
+	var player = get_tree().get_first_node_in_group("player")
+	if not player:
+		print("No player found - skipping auto-save")
+		return
+	
+	print("\n=== AUTO-SAVING BEFORE SCENE TRANSITION ===")
+	var player_data = SaveSystem.collect_player_data(player)
+	SaveSystem.save_game(current_save_slot, player_data)
+	print("=== AUTO-SAVE COMPLETE ===\n")

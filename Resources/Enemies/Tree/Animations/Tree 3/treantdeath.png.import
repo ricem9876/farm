@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dy1dq8rxso6ms"
-path="res://.godot/imported/mushroom.png-a00a88be1c83a3d9afb1ee15f2a84d81.ctex"
+uid="uid://bf52di1pc1uar"
+path="res://.godot/imported/treantdeath.png-1026a73a16c8565d558eb73911dd861d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Resources/Inventory/Sprites/mushroom.png"
-dest_files=["res://.godot/imported/mushroom.png-a00a88be1c83a3d9afb1ee15f2a84d81.ctex"]
+source_file="res://Resources/Enemies/Tree/Animations/Tree 3/treantdeath.png"
+dest_files=["res://.godot/imported/treantdeath.png-1026a73a16c8565d558eb73911dd861d.ctex"]
 
 [params]
 

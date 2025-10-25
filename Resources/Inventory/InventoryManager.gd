@@ -93,3 +93,33 @@ func is_inventory_full() -> bool:
 		if items[i] == null:
 			return false
 	return true
+
+# Helper method to remove items by name (useful for currency spending)
+func remove_item_by_name(item_name: String, quantity: int = 1) -> bool:
+	"""Remove items by name. Returns true if successfully removed requested quantity."""
+	var removed = 0
+	for i in range(max_slots):
+		if items[i] != null and items[i].name == item_name:
+			var to_remove = min(quantity - removed, quantities[i])
+			quantities[i] -= to_remove
+			removed += to_remove
+			if quantities[i] <= 0:
+				items[i] = null
+				quantities[i] = 0
+			if removed >= quantity:
+				break
+	
+	if removed > 0:
+		inventory_changed.emit()
+	
+	return removed >= quantity
+
+# Helper method for counting items by name (alias for clarity)
+func count_item_by_name(item_name: String) -> int:
+	"""Count total quantity of items with matching name."""
+	return get_item_quantity_by_name(item_name)
+
+# Helper method to check if player has enough of an item
+func has_enough_items(item_name: String, required_quantity: int) -> bool:
+	"""Check if inventory contains at least the required quantity of an item."""
+	return get_item_quantity_by_name(item_name) >= required_quantity

@@ -20,9 +20,9 @@ class_name LootChest
 @export var locked_texture: Texture2D
 @export var unlocked_texture: Texture2D
 
-@onready var sprite = $Sprite2D
-@onready var collision_shape = $CollisionShape2D
-@onready var interaction_prompt = $InteractionPrompt
+@onready var sprite = $Sprite2D if has_node("Sprite2D") else null
+@onready var collision_shape = $CollisionShape2D if has_node("CollisionShape2D") else null
+@onready var interaction_prompt = $InteractionPrompt if has_node("InteractionPrompt") else null
 
 var player_in_area: bool = false
 var player_ref: Node2D
@@ -148,31 +148,59 @@ func generate_loot():
 	print("Generated loot for ", chest_name, ": ", chest_contents)
 
 func award_loot_to_player():
-	"""Give the generated loot to the player"""
+	"""Give the generated loot to the player through inventory system"""
 	if not player_ref:
 		return
 	
 	var message = "Chest Contents:\n"
 	
-	# Award tech points
+	# Award tech points - add to inventory as items
 	if chest_contents.has("tech_points"):
 		var points = chest_contents["tech_points"]
-		if player_ref.has_method("add_tech_points"):
-			player_ref.add_tech_points(points)
-			message += "+ " + str(points) + " Technology Points\n"
+		if player_ref.has_method("add_item_to_inventory"):
+			var tech_item = _create_tech_point_item()
+			if tech_item and player_ref.add_item_to_inventory(tech_item, points):
+				message += "+ " + str(points) + " Technology Points\n"
+				print("✓ Awarded ", points, " Tech Points")
+			else:
+				print("✗ Failed to add Tech Points to inventory")
 		else:
-			print("Player doesn't have add_tech_points method")
+			print("Player doesn't have add_item_to_inventory method")
 	
-	# Award coins
+	# Award coins - add to inventory as items
 	if chest_contents.has("coins"):
 		var coins = chest_contents["coins"]
-		if player_ref.has_method("add_coins"):
-			player_ref.add_coins(coins)
-			message += "+ " + str(coins) + " Coins\n"
+		if player_ref.has_method("add_item_to_inventory"):
+			var coin_item = _create_coin_item()
+			if coin_item and player_ref.add_item_to_inventory(coin_item, coins):
+				message += "+ " + str(coins) + " Coins\n"
+				print("✓ Awarded ", coins, " Coins")
+			else:
+				print("✗ Failed to add Coins to inventory")
 		else:
-			print("Player doesn't have add_coins method")
+			print("Player doesn't have add_item_to_inventory method")
 	
 	show_message(message)
+
+func _create_tech_point_item() -> Item:
+	"""Create a Tech Point item for inventory"""
+	var item = Item.new()
+	item.name = "Tech Point"
+	item.description = "Technology points used to upgrade weapons"
+	item.stack_size = 9999
+	item.item_type = "currency"
+	item.icon = load("res://Resources/Map/Objects/TechPoints.png")
+	return item
+
+func _create_coin_item() -> Item:
+	"""Create a Coin item for inventory"""
+	var item = Item.new()
+	item.name = "Coin"
+	item.description = "Currency used to purchase new weapons"
+	item.stack_size = 9999
+	item.item_type = "currency"
+	item.icon = load("res://Resources/Map/Objects/Coin.png")
+	return item
 
 func show_message(text: String):
 	"""Display a message to the player - customize based on your UI system"""

@@ -1,143 +1,86 @@
-[gd_scene load_steps=31 format=3 uid="uid://bhf74dwctln6d"]
+[gd_scene load_steps=16 format=3 uid="uid://bhf74dwctln6d"]
 
 [ext_resource type="Script" uid="uid://cbd2b8s8uaqj2" path="res://Resources/Enemies/Tree/tree.gd" id="1_v1w7q"]
-[ext_resource type="Texture2D" uid="uid://cwqsci5okmcns" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_cut_left1_s.png" id="2_36bvn"]
-[ext_resource type="Texture2D" uid="uid://b317tpf4wglne" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_cut_left2_s.png" id="3_g3p8f"]
-[ext_resource type="Texture2D" uid="uid://e25kgvj3i0ea" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_cut_left3_s.png" id="4_nx2ed"]
-[ext_resource type="Texture2D" uid="uid://bufsep1l1n861" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_cut_left4_s.png" id="5_gbvq0"]
-[ext_resource type="Texture2D" uid="uid://clfxvpyhvbqcg" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_cut_left5_s.png" id="6_evhxc"]
-[ext_resource type="Texture2D" uid="uid://hue54dyl5kip" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_cut_left6_s.png" id="7_qtk18"]
-[ext_resource type="Texture2D" uid="uid://b7y22wmfxwrkh" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_cut_left7_s.png" id="8_h0lpk"]
-[ext_resource type="Texture2D" uid="uid://mwnqpse10l4e" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_cut_right1_s.png" id="9_o0yc1"]
-[ext_resource type="Texture2D" uid="uid://dvdkmg4e337lb" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_cut_right2_s.png" id="10_xdk2y"]
-[ext_resource type="Texture2D" uid="uid://dwbr5h5ivvs7i" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_cut_right3_s.png" id="11_mwxiw"]
-[ext_resource type="Texture2D" uid="uid://e3bb7ay60csn" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_cut_right4_s.png" id="12_velyx"]
-[ext_resource type="Texture2D" uid="uid://d3t8rtng15vdc" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_cut_right5_s.png" id="13_gvlec"]
-[ext_resource type="Texture2D" uid="uid://cd4f35egmwllb" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_cut_right6_s.png" id="14_lht4x"]
-[ext_resource type="Texture2D" uid="uid://88lrr6fmiju3" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_cut_right7_s.png" id="15_0jam6"]
-[ext_resource type="Texture2D" uid="uid://b2pr8yv867v8e" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_hit_left1_s.png" id="16_nq8ay"]
-[ext_resource type="Texture2D" uid="uid://bldn7xt2fnerd" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_hit_left2_s.png" id="17_tygw5"]
-[ext_resource type="Texture2D" uid="uid://cvmt1v6rbvfbw" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_hit_left3_s.png" id="18_r4fjp"]
-[ext_resource type="Texture2D" uid="uid://16pybxu8qf5k" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_hit_left4_s.png" id="19_ol7ph"]
-[ext_resource type="Texture2D" uid="uid://d130k6skx16ga" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_hit_left5_s.png" id="20_secq3"]
-[ext_resource type="Texture2D" uid="uid://dm17b07drdt7c" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_hit_right1_s.png" id="21_2v3fm"]
-[ext_resource type="Texture2D" uid="uid://3p7qvfnmwdve" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_hit_right2_s.png" id="22_xmqk1"]
-[ext_resource type="Texture2D" uid="uid://bl7208sp134k" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_hit_right3_s.png" id="23_w73tg"]
-[ext_resource type="Texture2D" uid="uid://dtpcqyqdd3ohg" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_hit_right4_s.png" id="24_0yyiu"]
-[ext_resource type="Texture2D" uid="uid://dls3hx4c15ltt" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_hit_right5_s.png" id="25_uxm14"]
-[ext_resource type="Texture2D" uid="uid://hqnwpt3slfi6" path="res://Resources/Enemies/Tree/Animations/Tree 3/Tree3_idle_s.png" id="26_ejm2b"]
+[ext_resource type="Texture2D" uid="uid://bf52di1pc1uar" path="res://Resources/Enemies/Tree/Animations/Tree 3/treantdeath.png" id="2_bsvpn"]
+[ext_resource type="Texture2D" uid="uid://dfn08er0fa4uk" path="res://Resources/Enemies/Tree/Animations/Tree 3/treantwalksouth.png" id="3_h70w2"]
 
-[sub_resource type="SpriteFrames" id="SpriteFrames_j8e23"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_g7j2h"]
+atlas = ExtResource("2_bsvpn")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sm3j6"]
+atlas = ExtResource("2_bsvpn")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7m822"]
+atlas = ExtResource("2_bsvpn")
+region = Rect2(32, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_753iy"]
+atlas = ExtResource("2_bsvpn")
+region = Rect2(48, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_clvaa"]
+atlas = ExtResource("3_h70w2")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_11aur"]
+atlas = ExtResource("3_h70w2")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_upjtn"]
+atlas = ExtResource("3_h70w2")
+region = Rect2(32, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gkv3m"]
+atlas = ExtResource("3_h70w2")
+region = Rect2(48, 0, 16, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_l5b3s"]
 animations = [{
 "frames": [{
-"duration": 1.0,
-"texture": ExtResource("2_36bvn")
+"duration": 1.3,
+"texture": SubResource("AtlasTexture_g7j2h")
 }, {
-"duration": 1.0,
-"texture": ExtResource("3_g3p8f")
+"duration": 1.3,
+"texture": SubResource("AtlasTexture_sm3j6")
 }, {
-"duration": 1.0,
-"texture": ExtResource("4_nx2ed")
+"duration": 1.3,
+"texture": SubResource("AtlasTexture_7m822")
 }, {
-"duration": 1.0,
-"texture": ExtResource("5_gbvq0")
-}, {
-"duration": 1.0,
-"texture": ExtResource("6_evhxc")
-}, {
-"duration": 1.0,
-"texture": ExtResource("7_qtk18")
-}, {
-"duration": 1.0,
-"texture": ExtResource("8_h0lpk")
+"duration": 1.3,
+"texture": SubResource("AtlasTexture_753iy")
 }],
 "loop": false,
-"name": &"die_left",
+"name": &"death",
 "speed": 5.0
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("9_o0yc1")
+"texture": SubResource("AtlasTexture_clvaa")
 }, {
 "duration": 1.0,
-"texture": ExtResource("10_xdk2y")
+"texture": SubResource("AtlasTexture_11aur")
 }, {
 "duration": 1.0,
-"texture": ExtResource("11_mwxiw")
+"texture": SubResource("AtlasTexture_upjtn")
 }, {
 "duration": 1.0,
-"texture": ExtResource("12_velyx")
-}, {
-"duration": 1.0,
-"texture": ExtResource("13_gvlec")
-}, {
-"duration": 1.0,
-"texture": ExtResource("14_lht4x")
-}, {
-"duration": 1.0,
-"texture": ExtResource("15_0jam6")
-}],
-"loop": false,
-"name": &"die_right",
-"speed": 5.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("16_nq8ay")
-}, {
-"duration": 1.0,
-"texture": ExtResource("17_tygw5")
-}, {
-"duration": 1.0,
-"texture": ExtResource("18_r4fjp")
-}, {
-"duration": 1.0,
-"texture": ExtResource("19_ol7ph")
-}, {
-"duration": 1.0,
-"texture": ExtResource("20_secq3")
-}],
-"loop": false,
-"name": &"hit_left",
-"speed": 5.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("21_2v3fm")
-}, {
-"duration": 1.0,
-"texture": ExtResource("22_xmqk1")
-}, {
-"duration": 1.0,
-"texture": ExtResource("23_w73tg")
-}, {
-"duration": 1.0,
-"texture": ExtResource("24_0yyiu")
-}, {
-"duration": 1.0,
-"texture": ExtResource("25_uxm14")
-}],
-"loop": false,
-"name": &"hit_right",
-"speed": 5.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("26_ejm2b")
+"texture": SubResource("AtlasTexture_gkv3m")
 }],
 "loop": true,
-"name": &"idle",
+"name": &"walk",
 "speed": 5.0
 }]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_8kggn"]
-size = Vector2(21.5, 31.5)
+[sub_resource type="CircleShape2D" id="CircleShape2D_bsvpn"]
+radius = 12.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_nwj5s"]
-size = Vector2(54, 21)
+size = Vector2(26, 18.5)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_o2aq2"]
-size = Vector2(50, 24)
+[sub_resource type="CircleShape2D" id="CircleShape2D_gcvbt"]
+radius = 114.158
 
 [node name="Tree" type="CharacterBody2D"]
 collision_layer = 5
@@ -145,27 +88,24 @@ collision_mask = 3
 script = ExtResource("1_v1w7q")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-position = Vector2(0.499999, 4.76837e-07)
-scale = Vector2(0.479167, 0.625)
-sprite_frames = SubResource("SpriteFrames_j8e23")
-animation = &"idle"
+position = Vector2(4.83333, 5.5)
+scale = Vector2(1.02083, 1.3125)
+sprite_frames = SubResource("SpriteFrames_l5b3s")
+animation = &"death"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(1.25, 3.25)
-shape = SubResource("RectangleShape2D_8kggn")
+position = Vector2(5, 6)
+shape = SubResource("CircleShape2D_bsvpn")
 
-[node name="DamageAreaLeft" type="Area2D" parent="."]
+[node name="AttackArea" type="Area2D" parent="."]
+visible = false
 monitoring = false
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="DamageAreaLeft"]
-visible = false
-position = Vector2(9, 3.5)
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackArea"]
 shape = SubResource("RectangleShape2D_nwj5s")
 
-[node name="DamageAreaRight" type="Area2D" parent="."]
-monitoring = false
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="DamageAreaRight"]
+[node name="DetectionArea" type="Area2D" parent="."]
 visible = false
-position = Vector2(1, 2)
-shape = SubResource("RectangleShape2D_o2aq2")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea"]
+shape = SubResource("CircleShape2D_gcvbt")

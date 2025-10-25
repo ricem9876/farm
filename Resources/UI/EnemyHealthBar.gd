@@ -1,10 +1,10 @@
 extends Node2D
 class_name EnemyHealthBar
 
-@onready var shadow = $Shadow
-@onready var background = $Background
-@onready var fill = $Fill
-@onready var border = $Border
+@onready var shadow = $Shadow if has_node("Shadow") else null
+@onready var background = $Background if has_node("Background") else null
+@onready var fill = $Fill if has_node("Fill") else null
+@onready var border = $Border if has_node("Border") else null
 
 var max_hp: float = 100
 var current_hp: float = 100

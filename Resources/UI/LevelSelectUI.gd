@@ -16,7 +16,8 @@ var levels = [
 		"spawn_interval": 2.0,
 		"total_enemies": 5,
 		"description": "A peaceful farm with few enemies",
-		"mushrooms_required": 0  # Always unlocked
+		"mushrooms_required": 0,  # Always unlocked
+		"spawn_mode": "gradual"
 	},
 	{
 		"name": "Farm - 2", 
@@ -26,7 +27,8 @@ var levels = [
 		"spawn_interval": 2.0,
 		"total_enemies": 25,
 		"description": "Standard difficulty",
-		"mushrooms_required": 10
+		"mushrooms_required": 10,
+		"spawn_mode": "gradual"
 	},
 	{
 		"name": "Farm - 3",
@@ -36,7 +38,8 @@ var levels = [
 		"spawn_interval": 1.0,
 		"total_enemies": 50,
 		"description": "Intense combat with many enemies",
-		"mushrooms_required": 15
+		"mushrooms_required": 15,
+		"spawn_mode": "all_at_once"
 	},
 	{
 		"name": "Farm - 4",
@@ -46,7 +49,8 @@ var levels = [
 		"spawn_interval": 1.0,
 		"total_enemies": 150,
 		"description": "Wave after wave of relentless enemies!",
-		"mushrooms_required": 25
+		"mushrooms_required": 25,
+		"spawn_mode": "all_at_once"
 	}
 ]
 

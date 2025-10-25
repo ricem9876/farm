@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dy1dq8rxso6ms"
-path="res://.godot/imported/mushroom.png-a00a88be1c83a3d9afb1ee15f2a84d81.ctex"
+uid="uid://dfn08er0fa4uk"
+path="res://.godot/imported/treantwalksouth.png-84bf212dfed484b2fec0ac55ce373c6f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Resources/Inventory/Sprites/mushroom.png"
-dest_files=["res://.godot/imported/mushroom.png-a00a88be1c83a3d9afb1ee15f2a84d81.ctex"]
+source_file="res://Resources/Enemies/Tree/Animations/Tree 3/treantwalksouth.png"
+dest_files=["res://.godot/imported/treantwalksouth.png-84bf212dfed484b2fec0ac55ce373c6f.ctex"]
 
 [params]
 

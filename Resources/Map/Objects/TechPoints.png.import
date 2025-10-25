@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dy1dq8rxso6ms"
-path="res://.godot/imported/mushroom.png-a00a88be1c83a3d9afb1ee15f2a84d81.ctex"
+uid="uid://b5akm1qynbiuo"
+path="res://.godot/imported/TechPoints.png-038ad5c906af462091f783e018e40a36.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Resources/Inventory/Sprites/mushroom.png"
-dest_files=["res://.godot/imported/mushroom.png-a00a88be1c83a3d9afb1ee15f2a84d81.ctex"]
+source_file="res://Resources/Map/Objects/TechPoints.png"
+dest_files=["res://.godot/imported/TechPoints.png-038ad5c906af462091f783e018e40a36.ctex"]
 
 [params]
 

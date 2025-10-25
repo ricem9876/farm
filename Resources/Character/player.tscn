@@ -15,8 +15,7 @@
 [ext_resource type="Script" uid="uid://bt3u4ciyln77x" path="res://Resources/Character/FarmState.gd" id="13_paeun"]
 [ext_resource type="PackedScene" uid="uid://chmbncpfja5tx" path="res://Resources/Character/PlayerHUD.tscn" id="14_paeun"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_qawys"]
-size = Vector2(13.5, 21.5)
+[sub_resource type="CircleShape2D" id="CircleShape2D_paeun"]
 
 [sub_resource type="Animation" id="Animation_dp20h"]
 length = 0.001
@@ -141,9 +140,10 @@ zoom = Vector2(3, 3)
 script = ExtResource("2_csx37")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("RectangleShape2D_qawys")
+shape = SubResource("CircleShape2D_paeun")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
+y_sort_enabled = true
 texture = ExtResource("3_paeun")
 hframes = 4
 vframes = 4

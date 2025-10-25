@@ -54,19 +54,31 @@ func _setup_button_size():
 		button.ignore_texture_size = true
 
 func _setup_quantity_label():
-	"""Position quantity badge in bottom-right corner"""
+	"""Position and style quantity label with soft glow effect"""
 	if quantity_label:
+		# Position in bottom-right corner
 		quantity_label.anchor_left = 1.0
 		quantity_label.anchor_right = 1.0
 		quantity_label.anchor_top = 1.0
 		quantity_label.anchor_bottom = 1.0
-		quantity_label.offset_left = -28  # Width of badge
-		quantity_label.offset_right = -4
-		quantity_label.offset_top = -24   # Height of badge
-		quantity_label.offset_bottom = -4
-		quantity_label.size_flags_horizontal = Control.SIZE_SHRINK_END
-		quantity_label.size_flags_vertical = Control.SIZE_SHRINK_END
-
+		quantity_label.offset_left = -30
+		quantity_label.offset_right = -3
+		quantity_label.offset_top = -25
+		quantity_label.offset_bottom = -3
+		
+		# Slightly off-black with soft white glow
+		quantity_label.add_theme_color_override("font_color", Color(0.2, 0.2, 0.2, 1.0))  # Soft black
+		quantity_label.add_theme_color_override("font_shadow_color", Color(1.0, 1.0, 0.95, 0.8))  # Warm white glow
+		quantity_label.add_theme_constant_override("shadow_offset_x", 0)  # No offset for centered glow
+		quantity_label.add_theme_constant_override("shadow_offset_y", 0)
+		quantity_label.add_theme_constant_override("shadow_outline_size", 4)  # Larger for soft glow effect
+		
+		# No background
+		var qty_style = StyleBoxEmpty.new()
+		quantity_label.add_theme_stylebox_override("normal", qty_style)
+		
+		quantity_label.add_theme_font_size_override("font_size", 17)
+		quantity_label.z_index = 10
 func _setup_slot_styling():
 	"""Setup the visual appearance of the slot background"""
 	# Make slot background fill the entire control
