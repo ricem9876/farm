@@ -18,6 +18,9 @@ func _ready():
 	print("\n=== FARM SCENE SETUP START ===")
 	AudioManager.play_music(AudioManager.farm_music)
 	
+	# Set custom crosshair cursor for farm
+	_set_custom_cursor()
+	
 	# CRITICAL FIX: Wait for scene tree to be ready
 	await get_tree().process_frame
 	
@@ -289,3 +292,23 @@ func _on_inventory_toggle_requested():
 func _input(event):
 	if event.is_action_pressed("toggle_inventory"):
 		_on_inventory_toggle_requested()
+
+func _set_custom_cursor():
+	"""Set custom crosshair cursor for the farm"""
+	var crosshair_texture = load("res://Resources/Weapon/Sprites/crosshair111.png")
+	if crosshair_texture:
+		# Set the custom cursor with a centered hotspot
+		var hotspot = Vector2(crosshair_texture.get_width() / 2, crosshair_texture.get_height() / 2)
+		Input.set_custom_mouse_cursor(crosshair_texture, Input.CURSOR_ARROW, hotspot)
+		print("✓ Custom crosshair cursor set")
+	else:
+		print("⚠ Warning: Crosshair texture not found")
+
+func _restore_default_cursor():
+	"""Restore the default cursor"""
+	Input.set_custom_mouse_cursor(null)
+	print("✓ Default cursor restored")
+
+func _exit_tree():
+	"""Restore default cursor when leaving the farm"""
+	_restore_default_cursor()

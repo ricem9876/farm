@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cjhf08my67r8k"
-path="res://.godot/imported/assaultrifle.png-dbfca58e63dc4b4041a95c45af69e6d6.ctex"
+uid="uid://831w8dwt2bft"
+path="res://.godot/imported/rifle.png-9362fd6b2006f80aab2bd46fb9a1f5a7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Resources/Weapon/assaultrifle.png"
-dest_files=["res://.godot/imported/assaultrifle.png-dbfca58e63dc4b4041a95c45af69e6d6.ctex"]
+source_file="res://Resources/Weapon/rifle.png"
+dest_files=["res://.godot/imported/rifle.png-9362fd6b2006f80aab2bd46fb9a1f5a7.ctex"]
 
 [params]
 

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dcm06ifvu6eey"
-path="res://.godot/imported/pistol.png-70ed3f9839517fadd454e2f73c2b733f.ctex"
+uid="uid://vv0ax5nlnygb"
+path="res://.godot/imported/crosshair111.png-41334f6f007b251df1581ee657d95887.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Resources/Weapon/Sprites/pistol.png"
-dest_files=["res://.godot/imported/pistol.png-70ed3f9839517fadd454e2f73c2b733f.ctex"]
+source_file="res://Resources/Weapon/Sprites/crosshair111.png"
+dest_files=["res://.godot/imported/crosshair111.png-41334f6f007b251df1581ee657d95887.ctex"]
 
 [params]
 

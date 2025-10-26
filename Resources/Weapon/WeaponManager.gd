@@ -286,6 +286,9 @@ func _create_gun_from_weapon_item(weapon_item: WeaponItem) -> Gun:
 
 func _configure_weapon_effects(gun: Gun, weapon_type: String):
 	"""Configure screen shake intensity and knockback force by weapon type"""
+	# Set the weapon type on the gun for size scaling
+	gun.weapon_type = weapon_type
+	
 	# UPDATED: Reduced screen shake - Sniper (heaviest) = old Pistol intensity
 	# Order: Pistol (lightest) -> Machine Gun -> Assault Rifle -> Burst Rifle -> Shotgun -> Sniper (heaviest)
 	match weapon_type:

@@ -15,6 +15,8 @@ signal stat_changed(stat_name: String, old_value: float, new_value: float)
 @export var screen_shake_intensity: float = 5.0
 @export var bullet_knockback_force: float = 50.0
 
+var weapon_type: String = ""  # Track weapon type for size scaling
+
 var current_damage: float
 var current_fire_rate: float
 var current_bullet_speed: float
@@ -38,6 +40,10 @@ var can_fire: bool = true
 # Upgrade tracking
 var shot_counter: int = 0  # For penetrating shots (sniper)
 var special_attack_timer: float = 0.0  # For timed special attacks
+
+# Dual wield
+var second_gun: Gun = null  # Reference to the mirrored second gun
+var is_second_gun: bool = false  # True if this IS the second gun
 
 # Mouse sensitivity
 var target_rotation: float = 0.0
@@ -79,12 +85,16 @@ func _setup_gun_appearance():
 	
 	gun_sprite.scale = Vector2(1.0, 1.0)
 	var texture_size = gun_sprite.texture.get_size()
-	var desired_width = 20.0
+	
+	# Pistols are 1.5x (30 pixels), all others are 2x (40 pixels)
+	var desired_width = 30.0 if weapon_type == "Pistol" else 40.0
+	
 	var scale_factor = desired_width / texture_size.x
 	gun_sprite.scale = Vector2(scale_factor, scale_factor)
 
 func setup_with_player(player_node: Node2D):
 	player = player_node
+	print("Gun.setup_with_player called. Player set to: ", player)
 	
 	if player.has_node("LocationStateMachine"):
 		var loc_state = player.get_node("LocationStateMachine")
@@ -97,6 +107,20 @@ func setup_with_player(player_node: Node2D):
 
 func _on_location_state_changed(new_state: LocationState):
 	if not new_state or not player:
+		return
+	
+	# If this is a second gun (dual wield), always follow the primary gun's state
+	if is_second_gun:
+		match new_state.name:
+			"SafehouseState":
+				set_can_fire(false)
+				visible = false
+				process_mode = Node.PROCESS_MODE_DISABLED
+			"FarmState":
+				set_can_fire(true)
+				visible = true
+				process_mode = Node.PROCESS_MODE_INHERIT
+				print("Second gun enabled: Dual wield active")
 		return
 	
 	# Check if this gun is the active one
@@ -129,12 +153,21 @@ func set_can_fire(enabled: bool):
 	if not can_fire:
 		stop_firing()
 	
+	# Sync with second gun if it exists
+	if second_gun and is_instance_valid(second_gun):
+		second_gun.can_fire = enabled
+		if not enabled:
+			second_gun.stop_firing()
+	
 func _process(delta):
 	if player:
 		_aim_at_mouse(delta)
 	
 	_handle_firing(delta)
 	_handle_special_attacks(delta)
+	
+	# Sync second gun firing state (dual wield)
+	sync_second_gun_firing()
 
 func _handle_special_attacks(delta):
 	"""Handle timed special attacks (Machine Gun burst, Shotgun 360)"""
@@ -213,7 +246,11 @@ func _aim_at_mouse(delta):
 	var mouse_pos = get_global_mouse_position()
 	var direction_to_mouse = (mouse_pos - global_position).normalized()
 	
-	target_rotation = direction_to_mouse.angle()
+	# If this is the second gun (dual wield), point opposite direction
+	if is_second_gun:
+		target_rotation = direction_to_mouse.angle() + PI  # Add 180 degrees
+	else:
+		target_rotation = direction_to_mouse.angle()
 	
 	var sensitivity = GameSettings.mouse_sensitivity if GameSettings else 1.0
 	var rotation_speed = base_rotation_speed * sensitivity
@@ -223,10 +260,17 @@ func _aim_at_mouse(delta):
 	if gun_sprite:
 		var scale_magnitude = abs(gun_sprite.scale.x)
 		
-		if direction_to_mouse.x < 0:
+		# For second gun, flip the sprite logic
+		var should_flip = direction_to_mouse.x < 0
+		if is_second_gun:
+			should_flip = not should_flip  # Invert for second gun
+		
+		if should_flip:
 			gun_sprite.scale = Vector2(scale_magnitude, -scale_magnitude)
+			position.y = 20.0  # Move the entire gun node down when flipped
 		else:
 			gun_sprite.scale = Vector2(scale_magnitude, scale_magnitude)
+			position.y = 0.0  # Reset position when not flipped
 		
 func _handle_firing(delta):
 	if fire_timer > 0:
@@ -435,3 +479,97 @@ func _cleanup_particle_node(node: Node, lifetime: float):
 	await get_tree().create_timer(lifetime).timeout
 	if is_instance_valid(node):
 		node.queue_free()
+
+# === DUAL WIELD FUNCTIONALITY ===
+
+func create_second_gun():
+	"""Create a mirrored second gun for dual wield upgrade"""
+	print("=== CREATE SECOND GUN CALLED ===")
+	print("  is_second_gun: ", is_second_gun)
+	print("  existing second_gun: ", second_gun)
+	
+	if is_second_gun:
+		print("  ABORT: This IS the second gun, won't create another")
+		return  # Don't create a second gun for the second gun!
+	
+	if second_gun:
+		print("  ABORT: Second gun already exists")
+		return  # Already have a second gun
+	
+	# Create a new gun instance
+	print("  Loading Gun.tscn...")
+	var gun_scene = load("res://Resources/Weapon/Gun.tscn")
+	print("  Gun scene loaded: ", gun_scene)
+	second_gun = gun_scene.instantiate() as Gun
+	
+	if not second_gun:
+		print("ERROR: Failed to create second gun")
+		return
+	
+	print("  Second gun instantiated: ", second_gun)
+	
+	# Mark it as the second gun
+	second_gun.is_second_gun = true
+	print("  Marked as second gun")
+	
+	# Copy weapon type
+	second_gun.weapon_type = weapon_type
+	
+	# Copy all stats from this gun
+	second_gun.base_damage = base_damage
+	second_gun.base_fire_rate = base_fire_rate
+	second_gun.base_bullet_speed = base_bullet_speed
+	second_gun.base_accuracy = base_accuracy
+	second_gun.base_bullet_count = base_bullet_count
+	second_gun.screen_shake_intensity = screen_shake_intensity
+	second_gun.bullet_knockback_force = bullet_knockback_force
+	print("  Stats copied")
+	
+	# Add to the same parent (player)
+	if player:
+		print("  Adding to player: ", player)
+		player.add_child(second_gun)
+		second_gun.setup_with_player(player)
+		print("  Added to player and setup complete")
+		
+		# Copy the sprite texture
+		if gun_sprite and gun_sprite.texture and second_gun.gun_sprite:
+			second_gun.gun_sprite.texture = gun_sprite.texture
+			second_gun.gun_sprite.modulate = gun_sprite.modulate  # Copy gold color if upgraded
+			print("  Sprite texture copied")
+		
+		second_gun._initialize_stats()
+		second_gun._setup_gun_appearance()
+		print("  Stats initialized and appearance setup")
+		
+		# Match visibility and firing state
+		second_gun.set_can_fire(can_fire)
+		second_gun.visible = visible
+		second_gun.process_mode = process_mode
+		print("  Visibility and firing state synced")
+		print("    can_fire: ", can_fire)
+		print("    visible: ", visible)
+		print("    process_mode: ", process_mode)
+		
+		print("✓ Created second gun for dual wield - SUCCESS!")
+	else:
+		print("ERROR: No player reference!")
+
+func remove_second_gun():
+	"""Remove the second gun when dual wield is disabled"""
+	if second_gun and is_instance_valid(second_gun):
+		second_gun.queue_free()
+		second_gun = null
+		print("✓ Removed second gun")
+
+func sync_second_gun_firing():
+	"""Make the second gun fire when this gun fires (for dual wield)"""
+	if not second_gun or is_second_gun:
+		return
+	
+	# The second gun will fire in its own _handle_firing based on is_firing state
+	# We just need to sync the firing state
+	if is_firing and can_fire:
+		second_gun.is_firing = true
+	else:
+		second_gun.is_firing = false

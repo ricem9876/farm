@@ -1,8 +1,8 @@
 # WeaponFactory.gd
 extends Node
 
-const DEFAULT_SPRITE = preload("res://Resources/Weapon/assaultrifle.png")
-const DEFAULT_ICON = preload("res://Resources/Weapon/assaultrifle.png")
+const DEFAULT_SPRITE = preload("res://Resources/Weapon/rifle.png")
+const DEFAULT_ICON = preload("res://Resources/Weapon/rifle.png")
 
 # Helper to create a unique WeaponItem instance
 static func _create_base_weapon() -> WeaponItem:

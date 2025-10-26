@@ -178,7 +178,13 @@ func _apply_single_upgrade(gun: Gun, upgrade: WeaponUpgrade):
 	
 	# Store special upgrade flags on the gun for runtime behavior
 	if upgrade.dual_wield:
+		print("🔫 DUAL WIELD UPGRADE DETECTED!")
 		gun.set_meta("dual_wield", true)
+		print("  Gun player reference: ", gun.player)
+		print("  Calling create_second_gun() immediately...")
+		# Create the second gun for dual wield
+		gun.create_second_gun()
+		print("  create_second_gun() call complete")
 	
 	if upgrade.burst_mode:
 		gun.set_meta("burst_mode", true)
