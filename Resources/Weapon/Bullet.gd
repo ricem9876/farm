@@ -7,6 +7,11 @@ var direction: Vector2 = Vector2.RIGHT
 var lifetime: float = 2.0
 var knockback_force: float = 50.0  # NEW: Knockback force to apply to enemies
 
+# Distance tracking
+var max_distance: float = 640.0  # 1/5 of map diagonal (2590x1870)
+var start_position: Vector2 = Vector2.ZERO
+var distance_traveled: float = 0.0
+
 # Upgrade tracking
 var enemies_hit: int = 0  # Track how many enemies hit (for growing bullet)
 
@@ -17,6 +22,7 @@ var blood_splatter_scene = preload("res://Resources/Effects/bloodsplatter.tscn")
 @onready var collision_shape = $CollisionShape2D
 
 func _ready():
+	start_position = global_position  # Store starting position
 	body_entered.connect(_on_body_entered)
 	area_entered.connect(_on_area_entered)
 	
@@ -30,6 +36,13 @@ func setup(bullet_damage: float, bullet_speed: float, bullet_direction: Vector2)
 
 func _physics_process(delta):
 	global_position += direction * speed * delta
+	
+	# Track distance traveled
+	distance_traveled = global_position.distance_to(start_position)
+	
+	# Destroy bullet if it exceeds max distance
+	if distance_traveled >= max_distance:
+		queue_free()
 
 func _on_body_entered(body):
 	if body.has_method("take_damage"):
