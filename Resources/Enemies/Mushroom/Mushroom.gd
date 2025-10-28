@@ -1,4 +1,4 @@
-# Mushroom.gd - Fixed version with knockback
+# Mushroom.gd - Collision-based damage version with patrol
 extends CharacterBody2D
 class_name Mushroom
 
@@ -6,9 +6,11 @@ signal died(experience_points: int)
 
 @export var max_health: float = 20.0
 @export var move_speed: float = 50.0
-@export var attack_damage: float = 10.0
-@export var attack_range: float = 30.0
+@export var contact_damage: float = 10.0
+@export var damage_cooldown: float = 1.0  # Time between damage ticks
 @export var detection_range: float = 100.0
+@export var patrol_radius: float = 50.0  # How far from spawn point to wander
+@export var damage_pause_duration: float = 0.25  # Pause after dealing damage
 @export var experience_value: int = 50
 
 # Particle effects
@@ -16,30 +18,33 @@ var experience_particle_scene = preload("res://Resources/Effects/experienceondea
 
 @onready var animated_sprite = $AnimatedSprite2D
 @onready var hit_area = $HitArea
-@onready var attack_area = $AttackArea
+@onready var collision_shape = $CollisionShape2D
 @onready var detection_area = $DetectionArea
 
 var current_health: float
 var player: Node2D
 var is_stunned: bool = false
-var is_attacking: bool = false
 var is_dead: bool = false
 var stun_timer: float = 0.0
-var attack_cooldown: float = 0.0
+var damage_timer: float = 0.0  # Timer for collision damage cooldown
+var damage_pause_timer: float = 0.0  # Timer for pause after dealing damage
+var spawn_position: Vector2  # Remember where we spawned
+var patrol_target: Vector2  # Current patrol destination
 var health_bar: EnemyHealthBar
 var health_bar_scene = preload("res://Resources/UI/EnemyHealthBar.tscn")
 var damage_number_scene = preload("res://Resources/UI/DamageNumber.tscn")
 
-# NEW: Knockback system
+# Knockback system
 var knockback_velocity: Vector2 = Vector2.ZERO
-var knockback_friction: float = 400.0  # Reduced from 800 so knockback is more visible
+var knockback_friction: float = 400.0
 
 enum State {
 	IDLE,
 	RUNNING,
-	ATTACKING,
+	PATROLLING,
 	STUNNED,
 	HIT,
+	PAUSED,
 	DEAD
 }
 var current_state: State = State.IDLE
@@ -47,15 +52,13 @@ var current_state: State = State.IDLE
 func _ready():
 	add_to_group("enemies")
 	current_health = max_health
+	spawn_position = global_position  # Remember spawn point
+	_set_new_patrol_target()  # Set initial patrol destination
 	_setup_areas()
 	
 	if detection_area:
 		detection_area.body_entered.connect(_on_player_detected)
 		detection_area.body_exited.connect(_on_player_lost)
-	
-	if attack_area:
-		attack_area.body_entered.connect(_on_attack_range_entered)
-		attack_area.body_exited.connect(_on_attack_range_exited)
 		
 	health_bar = health_bar_scene.instantiate()
 	add_child(health_bar)
@@ -67,21 +70,19 @@ func _setup_areas():
 		var detection_shape = detection_area.get_child(0) as CollisionShape2D
 		if detection_shape and detection_shape.shape is CircleShape2D:
 			detection_shape.shape.radius = detection_range
-	
-	if attack_area and attack_area.get_child(0):
-		var attack_shape = attack_area.get_child(0) as CollisionShape2D
-		if attack_shape and attack_shape.shape is CircleShape2D:
-			attack_shape.shape.radius = attack_range
 
 func _physics_process(delta):
 	_update_timers(delta)
 	
-	# NEW: Apply knockback friction
+	# Apply knockback friction
 	if knockback_velocity.length() > 1:
 		knockback_velocity = knockback_velocity.move_toward(Vector2.ZERO, knockback_friction * delta)
 		velocity = knockback_velocity
 	else:
 		_state_machine(delta)
+	
+	# Check for collision damage with player
+	_check_player_collision()
 	
 	move_and_slide()
 
@@ -91,8 +92,30 @@ func _update_timers(delta):
 		if stun_timer <= 0:
 			is_stunned = false
 	
-	if attack_cooldown > 0:
-		attack_cooldown -= delta
+	if damage_timer > 0:
+		damage_timer -= delta
+	
+	if damage_pause_timer > 0:
+		damage_pause_timer -= delta
+
+func _check_player_collision():
+	"""Deal damage to player on collision if cooldown is ready"""
+	if is_dead or damage_timer > 0 or damage_pause_timer > 0:
+		return
+	
+	# Check if we're touching the player
+	for i in range(get_slide_collision_count()):
+		var collision = get_slide_collision(i)
+		var collider = collision.get_collider()
+		
+		if collider and collider.is_in_group("player"):
+			if collider.has_method("take_damage"):
+				collider.take_damage(contact_damage)
+				damage_timer = damage_cooldown
+				damage_pause_timer = damage_pause_duration
+				_change_state(State.PAUSED)
+				print("Mushroom dealt ", contact_damage, " contact damage to player (pausing)")
+				break
 
 func _state_machine(delta):
 	if is_dead:
@@ -103,12 +126,14 @@ func _state_machine(delta):
 			_idle_state()
 		State.RUNNING:
 			_running_state()
-		State.ATTACKING:
-			_attacking_state()
+		State.PATROLLING:
+			_patrolling_state()
 		State.STUNNED:
 			_stunned_state()
 		State.HIT:
 			_hit_state()
+		State.PAUSED:
+			_paused_state()
 
 func _idle_state():
 	velocity = Vector2.ZERO
@@ -116,10 +141,13 @@ func _idle_state():
 	
 	if player and not is_stunned:
 		_change_state(State.RUNNING)
+	else:
+		# Start patrolling after brief idle
+		_change_state(State.PATROLLING)
 
 func _running_state():
 	if not player or is_stunned:
-		_change_state(State.IDLE)
+		_change_state(State.PATROLLING)
 		return
 	
 	var direction = (player.global_position - global_position).normalized()
@@ -130,9 +158,44 @@ func _running_state():
 	
 	_play_animation("Run")
 
-func _attacking_state():
+func _patrolling_state():
+	# If player detected, chase them
+	if player and not is_stunned:
+		_change_state(State.RUNNING)
+		return
+	
+	# Move toward patrol target
+	var direction = (patrol_target - global_position).normalized()
+	var distance_to_target = global_position.distance_to(patrol_target)
+	
+	# If close to target, pick new target
+	if distance_to_target < 10:
+		_set_new_patrol_target()
+	
+	# Check if we're too far from spawn - return to spawn area
+	var distance_from_spawn = global_position.distance_to(spawn_position)
+	if distance_from_spawn > patrol_radius:
+		patrol_target = spawn_position
+		direction = (patrol_target - global_position).normalized()
+	
+	velocity = direction * (move_speed * 0.5)  # Patrol at half speed
+	
+	if animated_sprite:
+		animated_sprite.flip_h = direction.x < 0
+	
+	_play_animation("Run")
+
+func _paused_state():
+	"""Pause briefly after dealing damage"""
 	velocity = Vector2.ZERO
-	_play_animation("Attack")
+	_play_animation("Idle")
+	
+	# Resume previous behavior when pause ends
+	if damage_pause_timer <= 0:
+		if player:
+			_change_state(State.RUNNING)
+		else:
+			_change_state(State.PATROLLING)
 
 func _stunned_state():
 	velocity = Vector2.ZERO
@@ -142,7 +205,7 @@ func _stunned_state():
 		if player:
 			_change_state(State.RUNNING)
 		else:
-			_change_state(State.IDLE)
+			_change_state(State.PATROLLING)
 
 func _hit_state():
 	velocity = Vector2.ZERO
@@ -203,10 +266,10 @@ func _die():
 	
 	if hit_area:
 		hit_area.set_deferred("monitoring", false)
-	if attack_area:
-		attack_area.set_deferred("monitoring", false)
 	if detection_area:
 		detection_area.set_deferred("monitoring", false)
+	if collision_shape:
+		collision_shape.set_deferred("disabled", true)
 	
 	_play_animation("Hit")
 	_drop_loot()
@@ -225,23 +288,6 @@ func _drop_loot():
 	for i in range(drop_count):
 		ItemSpawner.spawn_item("mushroom", global_position, get_parent())
 
-func _perform_attack():
-	if attack_cooldown > 0 or is_dead:
-		return
-	
-	attack_cooldown = 2.0
-	
-	if player and global_position.distance_to(player.global_position) <= attack_range:
-		if player.has_method("take_damage"):
-			player.take_damage(attack_damage)
-	
-	await get_tree().create_timer(0.5).timeout
-	if not is_dead:
-		if player and global_position.distance_to(player.global_position) <= detection_range:
-			_change_state(State.RUNNING)
-		else:
-			_change_state(State.IDLE)
-
 func _on_player_detected(body):
 	if body.is_in_group("player"):
 		player = body
@@ -250,29 +296,20 @@ func _on_player_lost(body):
 	if body == player:
 		player = null
 
-func _on_attack_range_entered(body):
-	if body == player and not is_dead and not is_stunned:
-		_change_state(State.ATTACKING)
-		_perform_attack()
-
-func _on_attack_range_exited(body):
-	if body == player and current_state == State.ATTACKING:
-		is_attacking = false
-
-func _on_animation_finished():
-	match current_state:
-		State.ATTACKING:
-			if player and global_position.distance_to(player.global_position) <= detection_range:
-				_change_state(State.RUNNING)
-			else:
-				_change_state(State.IDLE)
-
 func apply_knockback(force: Vector2):
 	"""Apply knockback force to push enemy away"""
 	if is_dead:
 		return
 	
 	knockback_velocity = force
+
+func _set_new_patrol_target():
+	"""Pick a random point within patrol radius of spawn"""
+	var random_offset = Vector2(
+		randf_range(-patrol_radius, patrol_radius),
+		randf_range(-patrol_radius, patrol_radius)
+	)
+	patrol_target = spawn_position + random_offset
 
 func _spawn_experience_particle():
 	"""Spawn experience particle effect on death"""

@@ -236,6 +236,7 @@ func _update_display():
 			for child in slots[i].get_children():
 				if child.name == "LockOverlay":
 					print("  Removing lock overlay from slot ", i)
+					slots[i].remove_child(child)
 					child.queue_free()
 			
 			# Add lock overlay if weapon exists but not unlocked

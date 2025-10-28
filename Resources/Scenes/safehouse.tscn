@@ -54,7 +54,6 @@ z_index = 1
 position = Vector2(565.141, 347.577)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
-visible = false
 
 [node name="WeaponStorageUI" parent="CanvasLayer" instance=ExtResource("8_3fhve")]
 unique_name_in_owner = true

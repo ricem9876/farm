@@ -1,4 +1,4 @@
-# Tree.gd - Treant version with chase and attack behavior
+# Tree.gd - Treant version with collision-based damage and patrol
 extends CharacterBody2D
 class_name TreeEnemy
 
@@ -8,17 +8,20 @@ signal died(experience_points: int)
 @export var experience_value: int = 50
 @export var move_speed: float = 80.0  # Slower than wolf/mushroom
 @export var chase_speed: float = 100.0  # Treants are slower but relentless
-@export var damage: float = 15.0  # Higher damage than wolf
-@export var attack_range: float = 40.0
+@export var contact_damage: float = 15.0  # Higher damage than wolf
+@export var damage_cooldown: float = 1.0  # Time between damage ticks
 @export var detection_range: float = 200.0
-@export var attack_cooldown: float = 2.0  # Slower attacks
+@export var patrol_radius: float = 50.0  # How far from spawn point to wander
+@export var damage_pause_duration: float = 0.25  # Pause after dealing damage
 
 var current_health: float
 var player: Node2D
 var is_chasing: bool = false
-var can_attack: bool = true
-var attack_timer: float = 0.0
-var is_attacking: bool = false
+var damage_timer: float = 0.0  # Timer for collision damage cooldown
+var damage_pause_timer: float = 0.0  # Timer for pause after dealing damage
+var spawn_position: Vector2  # Remember where we spawned
+var patrol_target: Vector2  # Current patrol destination
+var is_paused: bool = false
 var is_dead: bool = false
 var health_bar: EnemyHealthBar
 var health_bar_scene = preload("res://Resources/UI/EnemyHealthBar.tscn")
@@ -31,11 +34,12 @@ var knockback_friction: float = 400.0
 @onready var animated_sprite = $AnimatedSprite2D
 @onready var collision_shape = $CollisionShape2D
 @onready var detection_area = $DetectionArea
-@onready var attack_area = $AttackArea
 
 func _ready():
 	add_to_group("enemies")
 	current_health = max_health
+	spawn_position = global_position  # Remember spawn point
+	_set_new_patrol_target()  # Set initial patrol destination
 	
 	# Find player
 	player = get_tree().get_first_node_in_group("player")
@@ -49,17 +53,6 @@ func _ready():
 		var circle = CircleShape2D.new()
 		circle.radius = detection_range
 		var collision = detection_area.get_child(0) as CollisionShape2D
-		if collision:
-			collision.shape = circle
-	
-	# Setup attack area
-	if attack_area:
-		attack_area.body_entered.connect(_on_attack_area_entered)
-		
-		# Set attack radius
-		var circle = CircleShape2D.new()
-		circle.radius = attack_range
-		var collision = attack_area.get_child(0) as CollisionShape2D
 		if collision:
 			collision.shape = circle
 	
@@ -79,30 +72,55 @@ func _physics_process(delta):
 	if is_dead:
 		return
 	
-	# Handle attack cooldown
-	if not can_attack:
-		attack_timer -= delta
-		if attack_timer <= 0:
-			can_attack = true
+	# Handle damage cooldown
+	if damage_timer > 0:
+		damage_timer -= delta
+	
+	# Handle pause after damage
+	if damage_pause_timer > 0:
+		damage_pause_timer -= delta
+		if damage_pause_timer <= 0:
+			is_paused = false
 	
 	# Apply knockback friction
 	if knockback_velocity.length() > 1:
 		knockback_velocity = knockback_velocity.move_toward(Vector2.ZERO, knockback_friction * delta)
 	
-	# Don't move during attack animation or if being knocked back
-	if is_attacking:
+	# Apply knockback or normal movement
+	if is_paused:
+		# Don't move while paused
 		velocity = Vector2.ZERO
 	elif knockback_velocity.length() > 1:
-		# Apply knockback instead of normal movement
 		velocity = knockback_velocity
-	# Chase player if detected
 	elif is_chasing and player:
 		_chase_player(delta)
 	else:
 		_patrol(delta)
 	
+	# Check for collision damage with player
+	_check_player_collision()
+	
 	move_and_slide()
 	_update_animation()
+
+func _check_player_collision():
+	"""Deal damage to player on collision if cooldown is ready"""
+	if is_dead or damage_timer > 0 or is_paused:
+		return
+	
+	# Check if we're touching the player
+	for i in range(get_slide_collision_count()):
+		var collision = get_slide_collision(i)
+		var collider = collision.get_collider()
+		
+		if collider and collider.is_in_group("player"):
+			if collider.has_method("take_damage"):
+				collider.take_damage(contact_damage)
+				damage_timer = damage_cooldown
+				damage_pause_timer = damage_pause_duration
+				is_paused = true
+				print("Treant dealt ", contact_damage, " contact damage to player (pausing)")
+				break
 
 func _chase_player(delta):
 	if not player:
@@ -118,11 +136,27 @@ func _chase_player(delta):
 		animated_sprite.flip_h = direction.x < 0
 
 func _patrol(delta):
-	# Simple idle behavior - treants stand still when not chasing
-	velocity = velocity.move_toward(Vector2.ZERO, move_speed * delta)
+	# Move toward patrol target
+	var direction = (patrol_target - global_position).normalized()
+	var distance_to_target = global_position.distance_to(patrol_target)
+	
+	# If close to target, pick new target
+	if distance_to_target < 10:
+		_set_new_patrol_target()
+	
+	# Check if we're too far from spawn - return to spawn area
+	var distance_from_spawn = global_position.distance_to(spawn_position)
+	if distance_from_spawn > patrol_radius:
+		patrol_target = spawn_position
+		direction = (patrol_target - global_position).normalized()
+	
+	velocity = direction * (move_speed * 0.4)  # Patrol at 40% speed (treants are slow)
+	
+	if animated_sprite:
+		animated_sprite.flip_h = direction.x < 0
 
 func _update_animation():
-	if is_dead or is_attacking:
+	if is_dead:
 		return
 	
 	if not animated_sprite:
@@ -142,31 +176,6 @@ func _on_detection_area_exited(body):
 	if body == player:
 		is_chasing = false
 		print("Treant lost player")
-
-func _on_attack_area_entered(body):
-	if body.is_in_group("player") and can_attack and not is_attacking and not is_dead:
-		_attack_player(body)
-
-func _attack_player(target):
-	if not can_attack or is_attacking or is_dead:
-		return
-	
-	is_attacking = true
-	
-	# Keep playing walk animation during attack (looks like smashing motion)
-	if animated_sprite:
-		animated_sprite.play("walk")
-	
-	# Deal damage mid-animation
-	await get_tree().create_timer(0.4).timeout
-	
-	if target and target.has_method("take_damage") and not is_dead:
-		target.take_damage(damage)
-		print("Treant attacked for ", damage, " damage")
-	
-	can_attack = false
-	attack_timer = attack_cooldown
-	is_attacking = false
 
 func _on_animation_finished():
 	if is_dead:
@@ -191,9 +200,6 @@ func take_damage(amount: float, is_crit: bool = false):
 		_die()
 		return
 	
-	# Brief visual feedback when hit (could flash sprite or play faster animation)
-	# Since we only have walk and death, we just continue walking
-	
 	# Enrage - chase player when damaged
 	if player:
 		is_chasing = true
@@ -214,15 +220,12 @@ func _die():
 	# Stop movement immediately
 	velocity = Vector2.ZERO
 	is_chasing = false
-	is_attacking = false
 	
-	# Disable all collision areas
+	# Disable collision
 	if collision_shape:
 		collision_shape.set_deferred("disabled", true)
 	if detection_area:
 		detection_area.monitoring = false
-	if attack_area:
-		attack_area.monitoring = false
 	
 	# Play death animation
 	if animated_sprite:
@@ -250,3 +253,11 @@ func apply_knockback(force: Vector2):
 		return
 	
 	knockback_velocity = force
+
+func _set_new_patrol_target():
+	"""Pick a random point within patrol radius of spawn"""
+	var random_offset = Vector2(
+		randf_range(-patrol_radius, patrol_radius),
+		randf_range(-patrol_radius, patrol_radius)
+	)
+	patrol_target = spawn_position + random_offset
