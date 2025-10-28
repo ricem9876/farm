@@ -19,14 +19,9 @@ var is_being_attracted: bool = false
 
 
 func _ready():
-	#print("\n!!! ITEMPICKUP _READY CALLED !!!")
-	#print("Item name: ", item_name)
-	
 	body_entered.connect(_on_body_entered)
-	#print("body_entered signal connected")
 	
 	if pickup_area:
-		#print("pickup_area found")
 		pickup_area.body_entered.connect(_on_magnet_range_entered)
 		pickup_area.body_exited.connect(_on_magnet_range_exited)
 		
@@ -34,33 +29,22 @@ func _ready():
 			var magnet_shape = pickup_area.get_child(0) as CollisionShape2D
 			if magnet_shape and magnet_shape.shape is CircleShape2D:
 				magnet_shape.shape.radius = magnet_range
-	#else:
-		#print("WARNING: pickup_area is NULL!")
 				
 	if collision_shape and collision_shape.shape is CircleShape2D:
 		collision_shape.shape.radius = pickup_range
-		#print("collision_shape configured")
-	#else:
-		#print("WARNING: collision_shape issue!")
 	
 	# Set sprite based on item type
-	#print("About to call _setup_item_appearance()")
 	_setup_item_appearance()
-	#print("_setup_item_appearance() completed")
 	
 	# Add some bounce/float animation
 	_animate_item()
-	#print("!!! ITEMPICKUP _READY COMPLETE !!!\n")
 	
 	# Spawn loot sparkle effect
 	_spawn_loot_sparkle()
 
 func _setup_item_appearance():
 	if not sprite:
-		#print("ERROR: Sprite is NULL in _setup_item_appearance!")
 		return
-	
-	#print("ITEM APPEARANCE: ", item_name, " | Sprite exists: ", sprite != null)
 	
 	match item_name:
 		"mushroom":
@@ -83,10 +67,21 @@ func _setup_item_appearance():
 			sprite.scale = Vector2(.5,.5)
 		"health_potion":
 			sprite.modulate = Color.RED
+		# KEY ITEMS - NEW
+		"wood_key":
+			sprite.texture = preload("res://Resources/Map/Objects/WoodKey.png")
+			sprite.scale = Vector2(.6,.6)
+		"mushroom_key":
+			sprite.texture = preload("res://Resources/Map/Objects/MushroomKey.png")
+			sprite.scale = Vector2(.6,.6)
+		"wool_key":
+			sprite.texture = preload("res://Resources/Map/Objects/WoolKey.png")
+			sprite.scale = Vector2(.6,.6)
+		"fiber_key", "plant_key":
+			sprite.texture = preload("res://Resources/Map/Objects/PlantKey.png")
+			sprite.scale = Vector2(.6,.6)
 		_:
 			sprite.modulate = Color.WHITE
-	
-	#print("AFTER SETUP: texture=", sprite.texture, " visible=", sprite.visible, " scale=", sprite.scale)
 
 func _animate_item():
 	# Simple floating animation
@@ -116,9 +111,24 @@ func _on_magnet_range_exited(body):
 		player = null
 
 func _pickup_item(player_node):
-	# Simplified: just use collect_item method to avoid duplicate logic
+	# Convert key item names for player's collect_item method
+	var collect_name = item_name
+	
+	# Handle key items specially
+	if item_name.ends_with("_key"):
+		match item_name:
+			"wood_key":
+				collect_name = "Wood Key"
+			"mushroom_key":
+				collect_name = "Mushroom Key"
+			"wool_key":
+				collect_name = "Wool Key"
+			"fiber_key", "plant_key":
+				collect_name = "Plant Key"
+	
+	# Use collect_item method
 	if player_node.has_method("collect_item"):
-		player_node.collect_item(item_name)
+		player_node.collect_item(collect_name)
 	else:
 		print("Player doesn't have collect_item method!")
 	
@@ -143,14 +153,14 @@ func _create_item_resource() -> Item:
 			item.description = "Tough plant fibers used for crafting"
 			item.stack_size = 99
 			item.item_type = "material"
-			item.icon = preload("res://Resources/Inventory/Sprites/fiber.png")  # Replace with actual fiber icon
+			item.icon = preload("res://Resources/Inventory/Sprites/fiber.png")
 		
 		"fur":
 			item.name = "Wolf Fur"
 			item.description = "Soft fur from a wolf, useful for crafting"
 			item.stack_size = 99
 			item.item_type = "material"
-			item.icon = preload("res://Resources/Inventory/Sprites/fur.png")  # Replace with actual fur icon
+			item.icon = preload("res://Resources/Inventory/Sprites/fur.png")
 			
 		"wood":
 			item.name = "Wood"

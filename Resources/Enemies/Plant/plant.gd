@@ -4,12 +4,16 @@ class_name Plant
 
 signal died(experience_points: int)
 
-@export var max_health: float = 30.0
+@export var max_health: float = 35.0
 @export var experience_value: int = 25
 @export var move_speed: float = 0.0
-@export var damage: float = 5.0
+@export var damage: float = 10.0
 @export var attack_range: float = 100.0
 @export var attack_cooldown: float = 2.0
+
+# Level scaling
+var base_health: float = 35.0
+var base_damage: float = 10.0
 
 var current_health: float
 var player: Node2D
@@ -32,6 +36,7 @@ var knockback_friction: float = 400.0  # Reduced from 800 so knockback is more v
 
 func _ready():
 	add_to_group("enemies")
+	_apply_level_scaling()
 	current_health = max_health
 	player = get_tree().get_first_node_in_group("player")
 	
@@ -52,6 +57,21 @@ func _ready():
 	health_bar.z_index = 10
 	
 	print("Plant spawned with ", max_health, " HP")
+
+func _apply_level_scaling():
+	"""Scale enemy stats based on farm level (12% health, 3% damage per level)"""
+	var farm_level = GameManager.current_level if GameManager else 1
+	
+	if farm_level <= 1:
+		return
+	
+	var health_multiplier = 1.0 + (0.12 * (farm_level - 1))
+	var damage_multiplier = 1.0 + (0.03 * (farm_level - 1))
+	
+	max_health = base_health * health_multiplier
+	damage = base_damage * damage_multiplier
+	
+	print("🌱 Plant scaled to Farm Level ", farm_level, ": HP=", int(max_health), " (+", int((health_multiplier - 1) * 100), "%), Damage=", snappedf(damage, 0.1), " (+", int((damage_multiplier - 1) * 100), "%)")
 
 func _physics_process(delta):
 	if is_dead:

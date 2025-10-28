@@ -37,8 +37,40 @@ func _ready():
 		print("ERROR: Player not found!")
 		print("DEBUG: Available groups: ", get_tree().get_nodes_in_group("player"))
 		return
-	
+
 	print("✓ Player found: ", player.name)
+
+	# SET SPAWN POSITION FOR SAFEHOUSE - Use SpawnPoint marker
+	var spawn_point = get_node_or_null("SpawnPoint")
+	if spawn_point:
+		player.global_position = spawn_point.global_position
+		print("✓ Player spawned at SpawnPoint: ", player.global_position)
+	else:
+		# Fallback to hardcoded position if SpawnPoint doesn't exist
+		player.global_position = Vector2(475, 375)
+		print("⚠ SpawnPoint not found, using fallback position: ", player.global_position)
+	
+	# Track if returning from farm
+	var is_returning_from_farm = GameManager.returning_from_farm
+	if is_returning_from_farm:
+		print("  (Returned from farm)")
+		GameManager.returning_from_farm = false
+
+	# CRITICAL: Reset camera's local position to fix any camera issues
+	var camera = player.get_node_or_null("Camera2D")
+	if camera:
+		camera.position = Vector2.ZERO  # Reset to center of player
+		camera.offset = Vector2.ZERO    # Clear any offset
+		camera.enabled = true
+		camera.make_current()
+		
+		# Disable smoothing to prevent camera drift
+		if "position_smoothing_enabled" in camera:
+			camera.position_smoothing_enabled = false
+		
+		print("✓ Camera reset and locked to player")
+	else:
+		print("ERROR: Camera2D not found on player!")
 	
 	# Wait for player's _ready() to complete
 	await get_tree().process_frame
@@ -66,6 +98,7 @@ func _ready():
 				weapon_mgr.secondary_gun = null
 			
 			print("✓ Cleared default weapons for new game")
+	
 	
 	# Setup level select UI
 	var level_select = level_select_scene.instantiate()
@@ -96,9 +129,17 @@ func _ready():
 		player_weapon_manager.weapon_equipped.connect(_on_weapon_equipped)
 	
 	# CRITICAL: Load player data FIRST (this populates pending_load_data with unlocked_weapons)
+	# BUT: Don't restore position if returning from farm
 	if not GameManager.pending_load_data.is_empty():
 		print("Loading player from save file...")
-		SaveSystem.apply_player_data(player, GameManager.pending_load_data.get("player", {}))
+		
+		# If returning from farm, remove position data before restoring
+		var player_save_data = GameManager.pending_load_data.get("player", {})
+		if is_returning_from_farm and player_save_data.has("position"):
+			player_save_data.erase("position")
+			print("  ⚠ Skipped position restoration (returning from farm)")
+		
+		SaveSystem.apply_player_data(player, player_save_data)
 		
 		# Force refresh inventory UI
 		await get_tree().process_frame

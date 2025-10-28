@@ -21,7 +21,7 @@ static func create_pistol() -> WeaponItem:
 	pistol.weapon_type = "Pistol"
 	pistol.weapon_sprite = preload("res://Resources/Weapon/Sprites/pistol.png")
 	pistol.icon = preload("res://Resources/Weapon/Sprites/pistol.png")
-	pistol.base_damage = 15.0
+	pistol.base_damage = 18.0
 	pistol.base_fire_rate = 3.0
 	pistol.base_bullet_count = 1
 	pistol.base_accuracy = 0.95
@@ -36,8 +36,8 @@ static func create_shotgun() -> WeaponItem:
 	shotgun.weapon_type = "Shotgun"
 	shotgun.weapon_sprite = preload("res://Resources/Weapon/Sprites/shotgun.png")
 	shotgun.icon = preload("res://Resources/Weapon/Sprites/shotgun.png")
-	shotgun.base_damage = 8.0
-	shotgun.base_fire_rate = 1.0
+	shotgun.base_damage = 10.0
+	shotgun.base_fire_rate = 1.2
 	shotgun.base_bullet_count = 6
 	shotgun.base_accuracy = 0.6
 	shotgun.base_bullet_speed = 350.0
@@ -66,7 +66,7 @@ static func create_sniper() -> WeaponItem:
 	sniper.weapon_type = "Sniper"
 	sniper.weapon_sprite = preload("res://Resources/Weapon/Sprites/sniper.png")
 	sniper.icon = preload("res://Resources/Weapon/Sprites/sniper.png")
-	sniper.base_damage = 60.0
+	sniper.base_damage = 42.0
 	sniper.base_fire_rate = 0.7
 	sniper.base_bullet_count = 1
 	sniper.base_accuracy = 1.0
@@ -81,7 +81,7 @@ static func create_machine_gun() -> WeaponItem:
 	mg.weapon_type = "MachineGun"
 	mg.weapon_sprite = preload("res://Resources/Weapon/Sprites/machinegun.png")
 	mg.icon = preload("res://Resources/Weapon/Sprites/machinegun.png")
-	mg.base_damage = 6.0
+	mg.base_damage = 5.0
 	mg.base_fire_rate = 12.0
 	mg.base_bullet_count = 1
 	mg.base_accuracy = 0.75

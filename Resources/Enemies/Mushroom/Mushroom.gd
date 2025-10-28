@@ -4,14 +4,19 @@ class_name Mushroom
 
 signal died(experience_points: int)
 
-@export var max_health: float = 20.0
-@export var move_speed: float = 50.0
-@export var contact_damage: float = 10.0
+@export var max_health: float = 25.0
+@export var move_speed: float = 60.0
+@export var contact_damage: float = 8.0
 @export var damage_cooldown: float = 1.0  # Time between damage ticks
 @export var detection_range: float = 100.0
 @export var patrol_radius: float = 50.0  # How far from spawn point to wander
 @export var damage_pause_duration: float = 0.25  # Pause after dealing damage
 @export var experience_value: int = 50
+
+# Level scaling
+var base_health: float = 25.0
+var base_damage: float = 8.0
+var level_scale_factor: float = 0.12  # 12% increase per level
 
 # Particle effects
 var experience_particle_scene = preload("res://Resources/Effects/experienceondeath.tscn")
@@ -51,6 +56,7 @@ var current_state: State = State.IDLE
 
 func _ready():
 	add_to_group("enemies")
+	_apply_level_scaling()
 	current_health = max_health
 	spawn_position = global_position  # Remember spawn point
 	_set_new_patrol_target()  # Set initial patrol destination
@@ -70,6 +76,26 @@ func _setup_areas():
 		var detection_shape = detection_area.get_child(0) as CollisionShape2D
 		if detection_shape and detection_shape.shape is CircleShape2D:
 			detection_shape.shape.radius = detection_range
+
+func _apply_level_scaling():
+	"""Scale enemy stats based on farm level (12% health, 3% damage per level)"""
+	if not GameManager:
+		return
+		
+	var farm_level = GameManager.current_level
+	
+	if farm_level <= 1:
+		return  # No scaling for farm level 1
+	
+	# Calculate scaling multipliers
+	var health_multiplier = 1.0 + (0.12 * (farm_level - 1))
+	var damage_multiplier = 1.0 + (0.03 * (farm_level - 1))
+	
+	# Apply scaling
+	max_health = base_health * health_multiplier
+	contact_damage = base_damage * damage_multiplier
+	
+	print("🍄 Mushroom scaled to Farm Level ", farm_level, ": HP=", int(max_health), " (+", int((health_multiplier - 1) * 100), "%), Damage=", snappedf(contact_damage, 0.1), " (+", int((damage_multiplier - 1) * 100), "%)")
 
 func _physics_process(delta):
 	_update_timers(delta)

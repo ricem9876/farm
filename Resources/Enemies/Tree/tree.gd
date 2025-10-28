@@ -4,15 +4,19 @@ class_name TreeEnemy
 
 signal died(experience_points: int)
 
-@export var max_health: float = 80.0
+@export var max_health: float = 100.0
 @export var experience_value: int = 50
 @export var move_speed: float = 80.0  # Slower than wolf/mushroom
-@export var chase_speed: float = 100.0  # Treants are slower but relentless
-@export var contact_damage: float = 15.0  # Higher damage than wolf
+@export var chase_speed: float = 110.0  # Treants are slower but relentless
+@export var contact_damage: float = 20.0  # Higher damage than wolf
 @export var damage_cooldown: float = 1.0  # Time between damage ticks
 @export var detection_range: float = 200.0
 @export var patrol_radius: float = 50.0  # How far from spawn point to wander
 @export var damage_pause_duration: float = 0.25  # Pause after dealing damage
+
+# Level scaling
+var base_health: float = 100.0
+var base_damage: float = 20.0
 
 var current_health: float
 var player: Node2D
@@ -37,6 +41,7 @@ var knockback_friction: float = 400.0
 
 func _ready():
 	add_to_group("enemies")
+	_apply_level_scaling()
 	current_health = max_health
 	spawn_position = global_position  # Remember spawn point
 	_set_new_patrol_target()  # Set initial patrol destination
@@ -67,6 +72,21 @@ func _ready():
 	health_bar.position = Vector2(0, -35)
 	health_bar.z_index = 10
 	print("Treant spawned with ", max_health, " HP")
+
+func _apply_level_scaling():
+	"""Scale enemy stats based on farm level (12% health, 3% damage per level)"""
+	var farm_level = GameManager.current_level if GameManager else 1
+	
+	if farm_level <= 1:
+		return
+	
+	var health_multiplier = 1.0 + (0.12 * (farm_level - 1))
+	var damage_multiplier = 1.0 + (0.03 * (farm_level - 1))
+	
+	max_health = base_health * health_multiplier
+	contact_damage = base_damage * damage_multiplier
+	
+	print("🌳 Treant scaled to Farm Level ", farm_level, ": HP=", int(max_health), " (+", int((health_multiplier - 1) * 100), "%), Damage=", snappedf(contact_damage, 0.1), " (+", int((damage_multiplier - 1) * 100), "%)")
 
 func _physics_process(delta):
 	if is_dead:

@@ -40,15 +40,15 @@ func _initialize_upgrades():
 	_add_upgrade(mg_lil_friend)
 	
 	# === RIFLE UPGRADES ===
-	var rifle_headshot = WeaponUpgrade.create(
-		"rifle_headshot",
+	var rifle_pierce = WeaponUpgrade.create(
+		"rifle_penetrating",
 		"Rifle",
-		"Boom Headshot",
-		"10% chance to one-shot any enemy",
-		25
+		"Penetrating Rounds",
+		"Every 4th shot pierces enemies and grows in size",
+		15
 	)
-	rifle_headshot.headshot_chance = 0.1
-	_add_upgrade(rifle_headshot)
+	rifle_pierce.penetrating_shots = true
+	_add_upgrade(rifle_pierce)
 	
 	# === BURST RIFLE UPGRADES ===
 	var burst_double = WeaponUpgrade.create(
@@ -64,15 +64,15 @@ func _initialize_upgrades():
 	_add_upgrade(burst_double)
 	
 	# === SNIPER UPGRADES ===
-	var sniper_pierce = WeaponUpgrade.create(
-		"sniper_penetrating",
+	var sniper_oneshot = WeaponUpgrade.create(
+		"sniper_oneshot",
 		"Sniper",
-		"Penetrating Rounds",
-		"Every 4th shot pierces enemies and grows in size",
-		15
+		"Lucky Shot",
+		"40% chance to one-shot any enemy",
+		25
 	)
-	sniper_pierce.penetrating_shots = true
-	_add_upgrade(sniper_pierce)
+	sniper_oneshot.headshot_chance = 0.4
+	_add_upgrade(sniper_oneshot)
 	
 	# === SHOTGUN UPGRADES ===
 	var shotgun_360 = WeaponUpgrade.create(

@@ -1,26 +1,7 @@
-[gd_scene load_steps=10 format=3 uid="uid://b205a4qa8nl1h"]
+[gd_scene load_steps=12 format=3 uid="uid://b205a4qa8nl1h"]
 
+[ext_resource type="Script" uid="uid://dxqygciwagvgw" path="res://Resources/Enemies/Orc/orc.gd" id="1_0f6l0"]
 [ext_resource type="Texture2D" uid="uid://kxslrejxjwh3" path="res://Resources/Enemies/Orc/orc1_run_full.png" id="1_sq2vj"]
-
-[sub_resource type="CircleShape2D" id="CircleShape2D_0irep"]
-radius = 18.0
-
-[sub_resource type="Animation" id="Animation_0f6l0"]
-resource_name = "walkdown"
-length = 0.8
-loop_mode = 1
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("Sprite2D:frame")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7),
-"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1),
-"update": 1,
-"values": [0, 1, 2, 3, 4, 5, 6, 7]
-}
 
 [sub_resource type="Animation" id="Animation_j50r7"]
 length = 0.001
@@ -37,8 +18,8 @@ tracks/0/keys = {
 "values": [0]
 }
 
-[sub_resource type="Animation" id="Animation_pb30c"]
-resource_name = "walkup"
+[sub_resource type="Animation" id="Animation_0f6l0"]
+resource_name = "walkdown"
 length = 0.8
 loop_mode = 1
 tracks/0/type = "value"
@@ -51,7 +32,7 @@ tracks/0/keys = {
 "times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1),
 "update": 1,
-"values": [8, 9, 10, 11, 12, 13, 14, 15]
+"values": [0, 1, 2, 3, 4, 5, 6, 7]
 }
 
 [sub_resource type="Animation" id="Animation_6q7s7"]
@@ -88,6 +69,23 @@ tracks/0/keys = {
 "values": [24, 25, 26, 27, 28, 29, 30, 31]
 }
 
+[sub_resource type="Animation" id="Animation_pb30c"]
+resource_name = "walkup"
+length = 0.8
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [8, 9, 10, 11, 12, 13, 14, 15]
+}
+
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_obxhx"]
 _data = {
 &"RESET": SubResource("Animation_j50r7"),
@@ -97,14 +95,33 @@ _data = {
 &"walkup": SubResource("Animation_pb30c")
 }
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_0irep"]
+radius = 18.0
+
 [sub_resource type="CircleShape2D" id="CircleShape2D_sq2vj"]
 radius = 301.81
 
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_mglk3"]
+radius = 11.0
+height = 34.0
+
 [node name="Orc" type="CharacterBody2D"]
+script = ExtResource("1_0f6l0")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_obxhx")
+}
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(2, 0)
 shape = SubResource("CircleShape2D_0irep")
+
+[node name="DetectionArea" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea"]
+position = Vector2(3, 15)
+shape = SubResource("CircleShape2D_sq2vj")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 position = Vector2(1, -2)
@@ -113,13 +130,9 @@ texture = ExtResource("1_sq2vj")
 hframes = 8
 vframes = 4
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-libraries = {
-&"": SubResource("AnimationLibrary_obxhx")
-}
+[node name="HitArea" type="Area2D" parent="."]
 
-[node name="DetectionArea" type="Area2D" parent="."]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea"]
-position = Vector2(3, 15)
-shape = SubResource("CircleShape2D_sq2vj")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HitArea"]
+visible = false
+position = Vector2(0, 14)
+shape = SubResource("CapsuleShape2D_mglk3")

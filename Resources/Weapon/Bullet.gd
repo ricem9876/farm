@@ -33,6 +33,7 @@ func setup(bullet_damage: float, bullet_speed: float, bullet_direction: Vector2)
 	speed = bullet_speed
 	direction = bullet_direction.normalized()
 	rotation = direction.angle()
+	start_position = global_position  # Add this line here instead
 
 func _physics_process(delta):
 	global_position += direction * speed * delta

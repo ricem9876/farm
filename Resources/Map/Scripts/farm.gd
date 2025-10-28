@@ -13,6 +13,7 @@ var pause_menu_scene = preload("res://Resources/UI/PauseMenu.tscn")
 var current_enemy_count: int = 0
 var total_enemies_in_wave: int = 0
 var enemies_killed: int = 0
+var boss_spawned: bool = false  # Track if boss has been spawned
 
 func _ready():
 	print("\n=== FARM SCENE SETUP START ===")
@@ -96,6 +97,10 @@ func _ready():
 			enemy_spawner.enemy_spawned.connect(_on_enemy_spawned)
 		if enemy_spawner.has_signal("enemy_died"):
 			enemy_spawner.enemy_died.connect(_on_enemy_died)
+		if enemy_spawner.has_signal("boss_spawned"):
+			enemy_spawner.boss_spawned.connect(_on_boss_spawned)
+		if enemy_spawner.has_signal("wave_completed"):
+			enemy_spawner.wave_completed.connect(_on_wave_completed)
 		print("✓ Connected to enemy spawner signals")
 		
 		# CRITICAL: Initialize counter with existing enemies
@@ -175,7 +180,7 @@ func _ready():
 		elif "spawn_interval" in enemy_spawner:
 			enemy_spawner.spawn_interval = settings.spawn_interval
 		
-		# NEW: Set total enemies
+		# Set total enemies
 		if "total_enemies" in settings:
 			if "total_enemies" in enemy_spawner:
 				enemy_spawner.total_enemies = settings.total_enemies
@@ -183,16 +188,28 @@ func _ready():
 				enemies_killed = 0
 				_update_enemy_counter()  # Update display with wave total
 		
-		# NEW: Set spawn mode (gradual or all_at_once)
+		# Set spawn mode (gradual or all_at_once)
 		if "spawn_mode" in settings:
 			if "spawn_mode" in enemy_spawner:
 				enemy_spawner.spawn_mode = settings.spawn_mode
 				print("✓ Spawn mode set to: ", settings.spawn_mode)
 		
+		# NEW: Configure boss settings
+		if "boss_enabled" in settings:
+			if "boss_enabled" in enemy_spawner:
+				enemy_spawner.boss_enabled = settings.boss_enabled
+				print("✓ Boss enabled: ", settings.boss_enabled)
+		
+		if "boss_spawn_at_halfway" in settings:
+			if "boss_spawn_at_halfway" in enemy_spawner:
+				enemy_spawner.boss_spawn_at_halfway = settings.boss_spawn_at_halfway
+				print("✓ Boss spawn at halfway: ", settings.boss_spawn_at_halfway)
+		
 		print("✓ Spawner configured: max_enemies=", settings.max_enemies, 
 			  " spawn_interval=", settings.spawn_interval,
 			  " total_enemies=", settings.get("total_enemies", "N/A"),
-			  " spawn_mode=", settings.get("spawn_mode", "gradual"))
+			  " spawn_mode=", settings.get("spawn_mode", "gradual"),
+			  " boss_enabled=", settings.get("boss_enabled", false))
 		
 		# CRITICAL: Start spawning AFTER all configuration is done
 		if enemy_spawner.has_method("start_spawning"):
@@ -241,12 +258,13 @@ func _update_enemy_counter():
 	if not enemy_count_label:
 		print("[FARM] ERROR: enemy_count_label is null!")
 		return
-		
-	# NEW: Show "Killed / Total" format
+	
+	# Show "Killed / Total" format, with boss indicator if spawned
+	var boss_indicator = " 👹" if boss_spawned else ""
 	if total_enemies_in_wave > 0:
-		enemy_count_label.text = "Killed: %d / %d" % [enemies_killed, total_enemies_in_wave]
+		enemy_count_label.text = "Killed: %d / %d%s" % [enemies_killed, total_enemies_in_wave, boss_indicator]
 	else:
-		enemy_count_label.text = "Enemies: " + str(current_enemy_count)
+		enemy_count_label.text = "Enemies: " + str(current_enemy_count) + boss_indicator
 	print("[FARM] Updated counter display: ", enemy_count_label.text)
 	
 	# Change color based on progress
@@ -254,6 +272,8 @@ func _update_enemy_counter():
 		enemy_count_label.add_theme_color_override("font_color", Color(0.2, 1.0, 0.2))  # Green when wave complete
 	elif current_enemy_count < 5:
 		enemy_count_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.2))  # Yellow when few left
+	elif boss_spawned:
+		enemy_count_label.add_theme_color_override("font_color", Color(1.0, 0.2, 0.2))  # Red when boss is active
 	else:
 		enemy_count_label.add_theme_color_override("font_color", Color.WHITE)  # White normally
 
@@ -263,20 +283,31 @@ func _on_enemy_spawned():
 	print("[FARM] Enemy spawned! Count: ", current_enemy_count)
 	_update_enemy_counter()
 
+func _on_boss_spawned():
+	"""Called when the boss spawns"""
+	boss_spawned = true
+	print("[FARM] 🎺 BOSS HAS SPAWNED! 🎺")
+	_update_enemy_counter()
+	
+	# Optional: Show a dramatic message to the player
+	if player and player.has_method("show_message"):
+		player.show_message("⚠️ BOSS APPEARED! ⚠️")
+
 func _on_enemy_died():
 	"""Called when an enemy dies"""
 	current_enemy_count -= 1
 	current_enemy_count = max(0, current_enemy_count)  # Don't go below 0
-	enemies_killed += 1  # NEW: Track total kills
+	enemies_killed += 1
 	print("[FARM] Enemy died! Alive: ", current_enemy_count, " | Killed: ", enemies_killed, "/", total_enemies_in_wave)
 	_update_enemy_counter()
+
+func _on_wave_completed():
+	"""Called when all enemies (including boss) are defeated"""
+	print("[FARM] 🎉 WAVE COMPLETE! All enemies defeated!")
 	
-	# Check if wave is complete
-	if total_enemies_in_wave > 0 and enemies_killed >= total_enemies_in_wave:
-		print("🎉 WAVE COMPLETE! All ", total_enemies_in_wave, " enemies defeated!")
-	elif current_enemy_count == 0:
-		print("🎉 All enemies cleared!")
-		# You could show a victory popup here
+	# Optional: Show victory message
+	if player and player.has_method("show_message"):
+		player.show_message("🎉 VICTORY! 🎉")
 
 func _set_farm_state():
 	"""Set player location state to farm (enables guns)"""
@@ -311,4 +342,5 @@ func _restore_default_cursor():
 
 func _exit_tree():
 	"""Restore default cursor when leaving the farm"""
+
 	_restore_default_cursor()

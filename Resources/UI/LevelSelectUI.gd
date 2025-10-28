@@ -17,7 +17,8 @@ var levels = [
 		"total_enemies": 5,
 		"description": "A peaceful farm with few enemies",
 		"mushrooms_required": 0,  # Always unlocked
-		"spawn_mode": "gradual"
+		"spawn_mode": "gradual",
+		"boss_enabled": false  # No boss in level 1
 	},
 	{
 		"name": "Farm - 2", 
@@ -26,9 +27,11 @@ var levels = [
 		"max_enemies": 15,
 		"spawn_interval": 2.0,
 		"total_enemies": 25,
-		"description": "Standard difficulty",
+		"description": "Standard difficulty with BOSS at halfway!",
 		"mushrooms_required": 10,
-		"spawn_mode": "gradual"
+		"spawn_mode": "gradual",
+		"boss_enabled": true,  # Boss spawns at halfway point
+		"boss_spawn_at_halfway": true
 	},
 	{
 		"name": "Farm - 3",
@@ -37,9 +40,11 @@ var levels = [
 		"max_enemies": 25,
 		"spawn_interval": 1.0,
 		"total_enemies": 50,
-		"description": "Intense combat with many enemies",
+		"description": "Intense combat with BOSS at halfway!",
 		"mushrooms_required": 15,
-		"spawn_mode": "all_at_once"
+		"spawn_mode": "all_at_once",
+		"boss_enabled": true,  # Boss spawns at halfway point
+		"boss_spawn_at_halfway": true
 	},
 	{
 		"name": "Farm - 4",
@@ -48,9 +53,11 @@ var levels = [
 		"max_enemies": 40,
 		"spawn_interval": 1.0,
 		"total_enemies": 150,
-		"description": "Wave after wave of relentless enemies!",
+		"description": "Wave after wave with BOSS at halfway!",
 		"mushrooms_required": 25,
-		"spawn_mode": "all_at_once"
+		"spawn_mode": "all_at_once",
+		"boss_enabled": true,  # Boss spawns at halfway point
+		"boss_spawn_at_halfway": true
 	}
 ]
 
@@ -233,16 +240,17 @@ func _create_level_buttons():
 		
 		# Create the button
 		var button = Button.new()
-		button.custom_minimum_size = Vector2(300, 60)  # Set minimum size for proper spacing
+		button.custom_minimum_size = Vector2(300, 60)
 		button.size = Vector2(300, 60)
 		button.position = Vector2(0, 0)
 		
-		# Set button text
+		# Set button text - add boss indicator for levels with bosses
+		var boss_indicator = " 👹" if level_data.get("boss_enabled", false) else ""
 		if is_unlocked:
-			button.text = level_data.name
+			button.text = level_data.name + boss_indicator
 		else:
 			var can_afford_text = " ✓" if can_afford else " ✗"
-			button.text = level_data.name + "\n[" + str(level_data.mushrooms_required) + " Mushrooms" + can_afford_text + "]"
+			button.text = level_data.name + boss_indicator + "\n[" + str(level_data.mushrooms_required) + " Mushrooms" + can_afford_text + "]"
 		
 		var pixel_font = preload("res://Resources/Fonts/yoster.ttf")
 		button.add_theme_font_override("font", pixel_font)
@@ -354,6 +362,7 @@ func _on_level_selected(level_data: Dictionary):
 		GameManager.current_level = 1
 	
 	print("Starting level number: ", GameManager.current_level)
+	print("Boss enabled: ", level_data.get("boss_enabled", false))
 	
 	# Notify tutorial if it exists
 	var intro_tutorial = get_tree().root.get_node_or_null("Safehouse/IntroTutorial")

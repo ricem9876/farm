@@ -9,6 +9,7 @@ var current_save_slot: int = -1
 var current_level: int = 0  # Track which level number (1-4)
 var selected_character_id: String = "hero"  # Selected character for new games
 var last_scene: String = ""  # Track last played scene for death screen retry
+var returning_from_farm: bool = false  # ADD THIS LINE
 
 # Temporary holders for loading from save file
 var pending_load_data: Dictionary = {}
@@ -23,6 +24,14 @@ func _ready():
 # Simple scene transitions - WITH auto-save
 func change_to_safehouse():
 	_auto_save_before_transition()
+	
+	# CRITICAL: Load the save data back for the safehouse
+	if current_save_slot >= 0:
+		var save_data = SaveSystem.load_game(current_save_slot)
+		if not save_data.is_empty():
+			pending_load_data = save_data
+			print("✓ Save data loaded for safehouse transition")
+	
 	get_tree().change_scene_to_file(SAFEHOUSE_SCENE)
 
 func change_to_farm():
