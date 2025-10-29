@@ -102,10 +102,12 @@ radius = 18.0
 radius = 301.81
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_mglk3"]
-radius = 11.0
-height = 34.0
+radius = 16.0
+height = 42.0
 
 [node name="Orc" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 2
 script = ExtResource("1_0f6l0")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
@@ -133,6 +135,5 @@ vframes = 4
 [node name="HitArea" type="Area2D" parent="."]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HitArea"]
-visible = false
-position = Vector2(0, 14)
+position = Vector2(1, -5)
 shape = SubResource("CapsuleShape2D_mglk3")

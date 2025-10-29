@@ -1,4 +1,4 @@
-# SaveSelectScreen.gd
+# SaveSelectScreen.gd - SAFE VERSION (checks for methods before calling)
 extends Control
 
 @onready var title_label = $VBoxContainer/TitleLabel
@@ -13,6 +13,11 @@ const SAFEHOUSE_SCENE = "res://Resources/Scenes/safehouse.tscn"
 
 func _ready():
 	_setup_ui()
+	
+	# CRITICAL FIX: Reset all global state when entering save select screen
+	# This prevents save slot data from bleeding across slots
+	_reset_global_state()
+	
 	_load_save_slots()
 	
 	back_button.pressed.connect(_on_back_pressed)
@@ -41,10 +46,62 @@ func _setup_ui():
 		back_button.add_theme_font_override("font", pixel_font)
 		back_button.add_theme_font_size_override("font_size", 24)
 
+func _reset_global_state():
+	"""Reset all autoload singletons to prevent save slot bleeding"""
+	print("\n=== RESETTING GLOBAL STATE ===")
+	
+	# Reset weapon unlocks to default (Pistol only)
+	if GlobalWeaponStorage:
+		if GlobalWeaponStorage.has_method("set_unlocked_weapons"):
+			GlobalWeaponStorage.set_unlocked_weapons(["Pistol"])
+			print("✓ GlobalWeaponStorage reset to default")
+		else:
+			print("⚠ GlobalWeaponStorage doesn't have set_unlocked_weapons method")
+	
+	# Reset weapon upgrades
+	if WeaponUpgradeManager:
+		if WeaponUpgradeManager.has_method("reset_all_upgrades"):
+			WeaponUpgradeManager.reset_all_upgrades()
+			print("✓ WeaponUpgradeManager reset")
+		else:
+			print("⚠ WeaponUpgradeManager doesn't have reset_all_upgrades method")
+	
+	# Reset tutorial progress - CHECK if method exists first
+	if TutorialManager:
+		if TutorialManager.has_method("reset_all_tutorials"):
+			TutorialManager.reset_all_tutorials()
+			print("✓ TutorialManager reset")
+		else:
+			# If no reset method, manually clear tutorial data if possible
+			if "completed_tutorials" in TutorialManager:
+				TutorialManager.completed_tutorials.clear()
+				print("✓ TutorialManager.completed_tutorials cleared manually")
+			else:
+				print("⚠ TutorialManager doesn't have reset method - skipping")
+	
+	# Reset stats
+	if StatsTracker:
+		if StatsTracker.has_method("reset_stats"):
+			StatsTracker.reset_stats()
+			print("✓ StatsTracker reset")
+		else:
+			print("⚠ StatsTracker doesn't have reset_stats method")
+	
+	# Clear GameManager state
+	GameManager.current_save_slot = -1
+	GameManager.pending_load_data = {}
+	GameManager.returning_from_farm = false
+	if "selected_character_id" in GameManager:
+		GameManager.selected_character_id = "hero"
+	print("✓ GameManager state cleared")
+	
+	print("=== GLOBAL STATE RESET COMPLETE ===\n")
+
 func _load_save_slots():
-	# Clear existing slots
+	# Clear existing slots IMMEDIATELY to prevent duplicates
 	for child in slots_container.get_children():
-		child.queue_free()
+		slots_container.remove_child(child)  # Remove from tree immediately
+		child.queue_free()  # Then mark for deletion
 	
 	# Get all saves
 	var saves = SaveSystem.get_all_saves()
@@ -77,6 +134,13 @@ func _show_character_selection(slot: int):
 	
 	# Store the slot for later
 	GameManager.current_save_slot = slot
+	
+	# CRITICAL FIX: Ensure global systems are reset for new game
+	# (Defense in depth - this should already be done in _reset_global_state, 
+	# but we double-check here to be safe)
+	if GlobalWeaponStorage and GlobalWeaponStorage.has_method("set_unlocked_weapons"):
+		GlobalWeaponStorage.set_unlocked_weapons(["Pistol"])
+		print("✓ Confirmed GlobalWeaponStorage reset for new game")
 	
 	# Load character selection scene
 	get_tree().change_scene_to_file("res://Resources/UI/CharacterSelectScene.tscn")
@@ -124,6 +188,11 @@ func _on_slot_deleted(slot: int):
 func _confirm_delete(slot: int):
 	if SaveSystem.delete_save(slot):
 		print("Deleted save slot ", slot)
+		
+		# CRITICAL FIX: Reset global state after deletion
+		# If we just deleted the currently "active" data in memory, clear it
+		_reset_global_state()
+		
 		# Refresh the display
 		_load_save_slots()
 	else:

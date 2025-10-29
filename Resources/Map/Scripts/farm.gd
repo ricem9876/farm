@@ -1,4 +1,4 @@
-# farm.gd
+# farm.gd - FIXED: Better spawner configuration for exports
 # Clean version - mirrors safehouse logic, loads from save when needed
 extends Node2D
 
@@ -18,6 +18,20 @@ var boss_spawned: bool = false  # Track if boss has been spawned
 func _ready():
 	print("\n=== FARM SCENE SETUP START ===")
 	AudioManager.play_music(AudioManager.farm_music)
+	
+	# CRITICAL: Validate enemy spawner exists FIRST
+	if not enemy_spawner:
+		print("❌ CRITICAL ERROR: EnemySpawner node not found!")
+		print("Scene tree children:")
+		for child in get_children():
+			print("  - ", child.name, " (", child.get_class(), ")")
+		# Try to find it manually
+		enemy_spawner = get_node_or_null("EnemySpawner")
+		if not enemy_spawner:
+			push_error("EnemySpawner is missing from the farm scene!")
+			# Continue anyway but log the error
+	else:
+		print("✓ EnemySpawner found: ", enemy_spawner.name)
 	
 	# Set custom crosshair cursor for farm
 	_set_custom_cursor()
@@ -165,62 +179,108 @@ func _ready():
 	if GameManager.pending_load_data.is_empty():
 		_set_farm_state()
 	
-	# Configure enemy spawner with level settings
-	if enemy_spawner and not GameManager.current_level_settings.is_empty():
-		var settings = GameManager.current_level_settings
-		print("⚙️ Configuring spawner with difficulty: ", settings.difficulty)
-		
-		if enemy_spawner.has_method("set_max_enemies"):
-			enemy_spawner.set_max_enemies(settings.max_enemies)
-		elif "max_enemies" in enemy_spawner:
-			enemy_spawner.max_enemies = settings.max_enemies
-		
-		if enemy_spawner.has_method("set_spawn_interval"):
-			enemy_spawner.set_spawn_interval(settings.spawn_interval)
-		elif "spawn_interval" in enemy_spawner:
-			enemy_spawner.spawn_interval = settings.spawn_interval
-		
-		# Set total enemies
-		if "total_enemies" in settings:
-			if "total_enemies" in enemy_spawner:
-				enemy_spawner.total_enemies = settings.total_enemies
-				total_enemies_in_wave = settings.total_enemies
-				enemies_killed = 0
-				_update_enemy_counter()  # Update display with wave total
-		
-		# Set spawn mode (gradual or all_at_once)
-		if "spawn_mode" in settings:
-			if "spawn_mode" in enemy_spawner:
-				enemy_spawner.spawn_mode = settings.spawn_mode
-				print("✓ Spawn mode set to: ", settings.spawn_mode)
-		
-		# NEW: Configure boss settings
-		if "boss_enabled" in settings:
-			if "boss_enabled" in enemy_spawner:
-				enemy_spawner.boss_enabled = settings.boss_enabled
-				print("✓ Boss enabled: ", settings.boss_enabled)
-		
-		if "boss_spawn_at_halfway" in settings:
-			if "boss_spawn_at_halfway" in enemy_spawner:
-				enemy_spawner.boss_spawn_at_halfway = settings.boss_spawn_at_halfway
-				print("✓ Boss spawn at halfway: ", settings.boss_spawn_at_halfway)
-		
-		print("✓ Spawner configured: max_enemies=", settings.max_enemies, 
-			  " spawn_interval=", settings.spawn_interval,
-			  " total_enemies=", settings.get("total_enemies", "N/A"),
-			  " spawn_mode=", settings.get("spawn_mode", "gradual"),
-			  " boss_enabled=", settings.get("boss_enabled", false))
-		
-		# CRITICAL: Start spawning AFTER all configuration is done
-		if enemy_spawner.has_method("start_spawning"):
-			enemy_spawner.start_spawning()
-			print("✓ Spawner started!")
-		
-		# Add pause menu
-		var pause_menu = pause_menu_scene.instantiate()
-		add_child(pause_menu)
+	# CRITICAL FIX: Configure spawner separately, always
+	_configure_enemy_spawner()
+	
+	# Add pause menu
+	var pause_menu = pause_menu_scene.instantiate()
+	add_child(pause_menu)
 	
 	print("=== FARM SCENE SETUP COMPLETE ===\n")
+
+func _configure_enemy_spawner():
+	"""Configure and start the enemy spawner - works even if settings are missing"""
+	if not enemy_spawner:
+		print("❌ ERROR: Cannot configure spawner - enemy_spawner is null!")
+		return
+	
+	print("\n=== CONFIGURING ENEMY SPAWNER ===")
+	print("GameManager.current_level_settings: ", GameManager.current_level_settings)
+	
+	# Get settings or use defaults
+	var settings = GameManager.current_level_settings
+	
+	if settings.is_empty():
+		print("⚠️ WARNING: GameManager.current_level_settings is EMPTY!")
+		print("Using default settings for Level 1")
+		settings = {
+			"difficulty": "easy",
+			"max_enemies": 10,
+			"spawn_interval": 2.0,
+			"total_enemies": 5,
+			"spawn_mode": "gradual",
+			"boss_enabled": false
+		}
+	
+	print("⚙️ Configuring spawner with difficulty: ", settings.difficulty)
+	
+	# Configure max enemies
+	if enemy_spawner.has_method("set_max_enemies"):
+		enemy_spawner.set_max_enemies(settings.max_enemies)
+		print("  ✓ Set max_enemies via method: ", settings.max_enemies)
+	elif "max_enemies" in enemy_spawner:
+		enemy_spawner.max_enemies = settings.max_enemies
+		print("  ✓ Set max_enemies directly: ", settings.max_enemies)
+	else:
+		print("  ⚠️ Could not set max_enemies")
+	
+	# Configure spawn interval
+	if enemy_spawner.has_method("set_spawn_interval"):
+		enemy_spawner.set_spawn_interval(settings.spawn_interval)
+		print("  ✓ Set spawn_interval via method: ", settings.spawn_interval)
+	elif "spawn_interval" in enemy_spawner:
+		enemy_spawner.spawn_interval = settings.spawn_interval
+		print("  ✓ Set spawn_interval directly: ", settings.spawn_interval)
+	else:
+		print("  ⚠️ Could not set spawn_interval")
+	
+	# Set total enemies
+	if "total_enemies" in settings:
+		if "total_enemies" in enemy_spawner:
+			enemy_spawner.total_enemies = settings.total_enemies
+			total_enemies_in_wave = settings.total_enemies
+			enemies_killed = 0
+			_update_enemy_counter()
+			print("  ✓ Set total_enemies: ", settings.total_enemies)
+	
+	# Set spawn mode
+	if "spawn_mode" in settings:
+		if "spawn_mode" in enemy_spawner:
+			enemy_spawner.spawn_mode = settings.spawn_mode
+			print("  ✓ Set spawn_mode: ", settings.spawn_mode)
+	
+	# Configure boss settings
+	if "boss_enabled" in settings:
+		if "boss_enabled" in enemy_spawner:
+			enemy_spawner.boss_enabled = settings.boss_enabled
+			print("  ✓ Set boss_enabled: ", settings.boss_enabled)
+	
+	if "boss_spawn_at_halfway" in settings:
+		if "boss_spawn_at_halfway" in enemy_spawner:
+			enemy_spawner.boss_spawn_at_halfway = settings.boss_spawn_at_halfway
+			print("  ✓ Set boss_spawn_at_halfway: ", settings.boss_spawn_at_halfway)
+	
+	print("✓ Spawner configuration complete")
+	print("Configuration summary:")
+	print("  - max_enemies: ", settings.get("max_enemies", "N/A"))
+	print("  - spawn_interval: ", settings.get("spawn_interval", "N/A"))
+	print("  - total_enemies: ", settings.get("total_enemies", "N/A"))
+	print("  - spawn_mode: ", settings.get("spawn_mode", "gradual"))
+	print("  - boss_enabled: ", settings.get("boss_enabled", false))
+	
+	# CRITICAL: Start spawning
+	if enemy_spawner.has_method("start_spawning"):
+		print("🚀 Calling enemy_spawner.start_spawning()...")
+		enemy_spawner.start_spawning()
+		print("✓ Spawner started!")
+	else:
+		print("❌ ERROR: enemy_spawner doesn't have start_spawning() method!")
+		print("Available methods on enemy_spawner:")
+		for method in enemy_spawner.get_method_list():
+			if not method.name.begins_with("_"):
+				print("  - ", method.name)
+	
+	print("=== SPAWNER CONFIGURATION COMPLETE ===\n")
 
 func _setup_enemy_counter_ui():
 	"""Style the enemy counter label"""
@@ -265,7 +325,6 @@ func _update_enemy_counter():
 		enemy_count_label.text = "Killed: %d / %d%s" % [enemies_killed, total_enemies_in_wave, boss_indicator]
 	else:
 		enemy_count_label.text = "Enemies: " + str(current_enemy_count) + boss_indicator
-	print("[FARM] Updated counter display: ", enemy_count_label.text)
 	
 	# Change color based on progress
 	if total_enemies_in_wave > 0 and enemies_killed >= total_enemies_in_wave:
@@ -342,5 +401,4 @@ func _restore_default_cursor():
 
 func _exit_tree():
 	"""Restore default cursor when leaving the farm"""
-
 	_restore_default_cursor()

@@ -20,7 +20,7 @@ var current_dialogue_queue: Array = []
 var current_dialogue_index: int = 0
 
 # References
-var dialogue_ui: Control = null
+var dialogue_ui: CanvasLayer = null
 var tutorial_ui: Node = null
 
 func _ready():
@@ -126,7 +126,7 @@ func skip_dialogue():
 		end_dialogue()
 
 # Tutorial UI registration
-func register_dialogue_ui(ui: Node):
+func register_dialogue_ui(ui:):
 	dialogue_ui = ui
 
 func register_tutorial_ui(ui: Node):

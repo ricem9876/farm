@@ -24,7 +24,7 @@ var is_dead: bool = false
 var health_bar: EnemyHealthBar
 var health_bar_scene = preload("res://Resources/UI/EnemyHealthBar.tscn")
 var damage_number_scene = preload("res://Resources/UI/DamageNumber.tscn")
-
+var experience_particle_scene = preload("res://Resources/Effects/experienceondeath.tscn")
 # NEW: Knockback system
 var knockback_velocity: Vector2 = Vector2.ZERO
 var knockback_friction: float = 400.0  # Reduced from 800 so knockback is more visible
@@ -179,7 +179,7 @@ func _die():
 		
 	print("Plant died!")
 	is_dead = true
-	
+	_spawn_experience_particle()
 	if collision_shape:
 		collision_shape.set_deferred("disabled", true)
 	if detection_area:
@@ -206,3 +206,19 @@ func apply_knockback(force: Vector2):
 		return
 	
 	knockback_velocity = force
+
+func _spawn_experience_particle():
+	"""Spawn experience particle effect on death"""
+	var exp_particle = experience_particle_scene.instantiate()
+	get_tree().current_scene.add_child(exp_particle)
+	exp_particle.global_position = global_position
+	exp_particle.z_index = 10  # Above most objects
+	
+	var particles = exp_particle.get_node("GPUParticles2D")
+	if particles:
+		particles.emitting = true
+		particles.restart()
+		# Auto-cleanup after particles finish
+		await get_tree().create_timer(particles.lifetime).timeout
+		if is_instance_valid(exp_particle):
+			exp_particle.queue_free()

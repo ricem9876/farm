@@ -228,6 +228,15 @@ func _setup_weapon_hud():
 func _physics_process(delta):
 	# Movement is handled by state machine
 	move_and_slide()
+	
+func _process(delta):
+	var beam = $ParticleBeam
+	if beam:
+		var has_enemies = get_tree().get_nodes_in_group("enemies").size() > 0
+		if has_enemies:
+			beam.enable_beam()
+		else:
+			beam.disable_beam()
 
 # Called by enemies when they die (via EnemySpawner)
 func gain_experience(amount: int):

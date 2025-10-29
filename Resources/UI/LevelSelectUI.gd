@@ -1,4 +1,4 @@
-# LevelSelectUI.gd
+# LevelSelectUI.gd - FIXED: Deferred scene transition for exports
 # Handles level selection with mushroom-based unlocking system (shop style)
 extends CanvasLayer
 
@@ -348,10 +348,13 @@ func close():
 	get_tree().paused = false
 
 func _on_level_selected(level_data: Dictionary):
-	print("Level selected: ", level_data.name)
+	print("\n🎮 === LEVEL SELECTED ===")
+	print("Level name: ", level_data.name)
+	print("Level data: ", level_data)
 	
-	# Store level settings
-	GameManager.current_level_settings = level_data
+	# CRITICAL FIX: Store level settings FIRST, before anything else
+	GameManager.current_level_settings = level_data.duplicate()
+	print("✓ GameManager.current_level_settings set: ", GameManager.current_level_settings)
 	
 	# Extract level number from name ("Farm - 1" -> 1)
 	var level_name = level_data.name
@@ -361,32 +364,42 @@ func _on_level_selected(level_data: Dictionary):
 	else:
 		GameManager.current_level = 1
 	
-	print("Starting level number: ", GameManager.current_level)
-	print("Boss enabled: ", level_data.get("boss_enabled", false))
+	print("✓ Level number: ", GameManager.current_level)
+	print("✓ Boss enabled: ", level_data.get("boss_enabled", false))
 	
 	# Notify tutorial if it exists
 	var intro_tutorial = get_tree().root.get_node_or_null("Safehouse/IntroTutorial")
 	if intro_tutorial and intro_tutorial.has_method("on_level_started"):
 		intro_tutorial.on_level_started(GameManager.current_level)
 	
-	# CRITICAL: Auto-save RIGHT HERE, before any scene changes
+	# Auto-save before transition
 	var player = get_tree().get_first_node_in_group("player")
 	if player and GameManager.current_save_slot >= 0:
-		print("Auto-saving before farm transition...")
+		print("💾 Auto-saving before farm transition...")
 		var player_data = SaveSystem.collect_player_data(player)
 		player_data["unlocked_levels"] = unlocked_levels.duplicate()
 		SaveSystem.save_game(GameManager.current_save_slot, player_data)
-		print("Auto-save complete - all data captured")
+		print("✓ Auto-save complete")
 		
-		# CRITICAL FIX: Load the save back into pending_load_data
+		# Load the save back into pending_load_data
 		var save_data = SaveSystem.load_game(GameManager.current_save_slot)
 		if not save_data.is_empty():
 			GameManager.pending_load_data = save_data
-			print("Save data loaded into pending_load_data for farm")
+			print("✓ Save data loaded into pending_load_data")
 	
-	# Now it's safe to transition
 	close()
+	
+	# CRITICAL FIX: Wait a frame before scene transition
+	# This ensures GameManager.current_level_settings is fully propagated
+	print("⏳ Waiting one frame before scene transition...")
+	await get_tree().process_frame
+	
+	print("🚀 Transitioning to farm scene...")
+	print("Final check - GameManager.current_level_settings: ", GameManager.current_level_settings)
+	
 	get_tree().change_scene_to_file(level_data.scene)
+	
+	print("=== LEVEL TRANSITION INITIATED ===\n")
 
 func _on_back_pressed():
 	close()

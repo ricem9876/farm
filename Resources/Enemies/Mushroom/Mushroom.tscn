@@ -1,4 +1,4 @@
-[gd_scene load_steps=63 format=3 uid="uid://bku3wgg175nyp"]
+[gd_scene load_steps=62 format=3 uid="uid://bku3wgg175nyp"]
 
 [ext_resource type="Script" uid="uid://ccmq6q52g0k7l" path="res://Resources/Enemies/Mushroom/Mushroom.gd" id="1_735lc"]
 [ext_resource type="Texture2D" uid="uid://cvsjbj3bmcv1m" path="res://Resources/Enemies/Mushroom/Animations/Mushroom-Attack.png" id="2_x5fgu"]
@@ -399,9 +399,6 @@ height = 26.0
 radius = 11.0
 height = 34.0
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_vjark"]
-radius = 31.9061
-
 [sub_resource type="CircleShape2D" id="CircleShape2D_ifls1"]
 radius = 301.81
 
@@ -428,14 +425,6 @@ shape = SubResource("CapsuleShape2D_mhf5x")
 visible = false
 position = Vector2(0, 14)
 shape = SubResource("CapsuleShape2D_ar7cb")
-
-[node name="AttackArea" type="Area2D" parent="."]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackArea"]
-visible = false
-position = Vector2(1, 15)
-rotation = 1.07687
-shape = SubResource("CircleShape2D_vjark")
 
 [node name="DetectionArea" type="Area2D" parent="."]
 

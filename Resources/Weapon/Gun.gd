@@ -267,10 +267,10 @@ func _aim_at_mouse(delta):
 		
 		if should_flip:
 			gun_sprite.scale = Vector2(scale_magnitude, -scale_magnitude)
-			position.y = 2.0  # Move the entire gun node down when flipped
+			position.y = 0.0  # Move the entire gun node down when flipped
 		else:
 			gun_sprite.scale = Vector2(scale_magnitude, scale_magnitude)
-			position.y = 5.0  # Reset position when not flipped
+			position.y = 0.0  # Reset position when not flipped
 		
 func _handle_firing(delta):
 	if fire_timer > 0:
@@ -534,7 +534,7 @@ func create_second_gun():
 		
 		# Set position offset for second gun (mirror the first gun's offset)
 		# First gun is at position.y = 5.0, so put second gun at opposite side
-		second_gun.position = Vector2(0, -5.0)  # Opposite side of player
+		second_gun.position = Vector2(1, -2.0)  # Opposite side of player
 		print("  Position offset applied: ", second_gun.position)
 		
 		# Copy the sprite texture

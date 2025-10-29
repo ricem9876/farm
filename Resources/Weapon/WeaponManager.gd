@@ -1,4 +1,4 @@
-# WeaponManager.gd - UPDATED WITH UPGRADE SUPPORT
+# WeaponManager.gd - UPDATED WITH UPGRADE SUPPORT AND DUAL WIELD FIX
 extends Node
 class_name WeaponManager
 
@@ -58,17 +58,6 @@ func equip_weapon(weapon_item: WeaponItem, slot: int = 0) -> bool:
 	if WeaponUpgradeManager:
 		WeaponUpgradeManager.apply_upgrade_to_gun(gun, weapon_item.weapon_type)
 		print("✓ Applied upgrades for ", weapon_item.weapon_type)
-		
-		# Check if any upgrades were applied and make gun gold
-		var has_upgrades = false
-		for upgrade in WeaponUpgradeManager.get_upgrades_for_weapon(weapon_item.weapon_type):
-			if upgrade.is_purchased:
-				has_upgrades = true
-				break
-		
-		if has_upgrades and gun.gun_sprite:
-			gun.gun_sprite.modulate = Color(1.0, 0.84, 0.0)  # Gold color
-			print("✨ Weapon is upgraded - made GOLD")
 	
 	# Store reference
 	if slot == 0:
@@ -80,6 +69,11 @@ func equip_weapon(weapon_item: WeaponItem, slot: int = 0) -> bool:
 	if slot != active_slot:
 		gun.visible = false
 		gun.process_mode = Node.PROCESS_MODE_DISABLED
+		
+		# CRITICAL: Also hide second gun if it exists
+		if gun.second_gun and is_instance_valid(gun.second_gun):
+			gun.second_gun.visible = false
+			gun.second_gun.process_mode = Node.PROCESS_MODE_DISABLED
 	
 	weapon_equipped.emit(slot, weapon_item)
 	print("Equipped weapon in slot ", slot, ": ", weapon_item.name)
@@ -109,6 +103,12 @@ func unequip_weapon(slot: int) -> WeaponItem:
 		secondary_gun = null
 	
 	if gun:
+		# CRITICAL: Remove second gun first if it exists
+		if gun.second_gun and is_instance_valid(gun.second_gun):
+			gun.second_gun.queue_free()
+			gun.second_gun = null
+			print("  ✓ Removed second gun during unequip")
+		
 		gun.queue_free()
 	
 	if weapon_item:
@@ -130,6 +130,14 @@ func switch_weapon():
 		current_gun.process_mode = Node.PROCESS_MODE_DISABLED
 		current_gun.stop_firing()
 		current_gun.set_can_fire(false)
+		
+		# CRITICAL: Also disable the second gun if it exists
+		if current_gun.second_gun and is_instance_valid(current_gun.second_gun):
+			current_gun.second_gun.visible = false
+			current_gun.second_gun.process_mode = Node.PROCESS_MODE_DISABLED
+			current_gun.second_gun.stop_firing()
+			current_gun.second_gun.set_can_fire(false)
+			print("  ✓ Second gun disabled during weapon switch")
 	
 	active_slot = new_slot
 	var new_gun = get_active_gun()
@@ -144,16 +152,37 @@ func switch_weapon():
 				new_gun.set_can_fire(true)
 				new_gun.visible = true
 				new_gun.process_mode = Node.PROCESS_MODE_INHERIT
+				
+				# CRITICAL: Also enable the second gun if it exists
+				if new_gun.second_gun and is_instance_valid(new_gun.second_gun):
+					new_gun.second_gun.set_can_fire(true)
+					new_gun.second_gun.visible = true
+					new_gun.second_gun.process_mode = Node.PROCESS_MODE_INHERIT
+					print("  ✓ Second gun enabled during weapon switch")
+				
 				print("Switched to ", "primary" if active_slot == 0 else "secondary", " weapon: ", new_weapon.name, " (ENABLED)")
 			else:
 				new_gun.set_can_fire(false)
 				new_gun.visible = false
 				new_gun.process_mode = Node.PROCESS_MODE_DISABLED
+				
+				# CRITICAL: Keep second gun disabled in non-farm states
+				if new_gun.second_gun and is_instance_valid(new_gun.second_gun):
+					new_gun.second_gun.set_can_fire(false)
+					new_gun.second_gun.visible = false
+					new_gun.second_gun.process_mode = Node.PROCESS_MODE_DISABLED
+				
 				print("Switched to ", "primary" if active_slot == 0 else "secondary", " weapon: ", new_weapon.name, " (DISABLED)")
 		else:
 			new_gun.set_can_fire(true)
 			new_gun.visible = true
 			new_gun.process_mode = Node.PROCESS_MODE_INHERIT
+			
+			# Enable second gun if it exists and location state doesn't exist (fallback)
+			if new_gun.second_gun and is_instance_valid(new_gun.second_gun):
+				new_gun.second_gun.set_can_fire(true)
+				new_gun.second_gun.visible = true
+				new_gun.second_gun.process_mode = Node.PROCESS_MODE_INHERIT
 		
 		weapon_switched.emit(active_slot, new_gun)
 
@@ -183,11 +212,15 @@ func instantiate_weapons_from_save():
 	# CRITICAL: Clear any existing guns first (from scene defaults)
 	if primary_gun:
 		print("Removing existing primary gun from scene")
+		if primary_gun.second_gun and is_instance_valid(primary_gun.second_gun):
+			primary_gun.second_gun.queue_free()
 		primary_gun.queue_free()
 		primary_gun = null
 	
 	if secondary_gun:
 		print("Removing existing secondary gun from scene")
+		if secondary_gun.second_gun and is_instance_valid(secondary_gun.second_gun):
+			secondary_gun.second_gun.queue_free()
 		secondary_gun.queue_free()
 		secondary_gun = null
 	
@@ -208,17 +241,6 @@ func instantiate_weapons_from_save():
 			# Apply upgrades
 			if WeaponUpgradeManager:
 				WeaponUpgradeManager.apply_upgrade_to_gun(primary_gun, primary_slot.weapon_type)
-				
-				# Check if any upgrades were applied and make gun gold
-				var has_upgrades = false
-				for upgrade in WeaponUpgradeManager.get_upgrades_for_weapon(primary_slot.weapon_type):
-					if upgrade.is_purchased:
-						has_upgrades = true
-						break
-				
-				if has_upgrades and primary_gun.gun_sprite:
-					primary_gun.gun_sprite.modulate = Color(1.0, 0.84, 0.0)  # Gold color
-					print("✨ Primary weapon is upgraded - made GOLD")
 			
 			print("✓ Primary weapon instantiated")
 	else:
@@ -240,17 +262,6 @@ func instantiate_weapons_from_save():
 			# Apply upgrades
 			if WeaponUpgradeManager:
 				WeaponUpgradeManager.apply_upgrade_to_gun(secondary_gun, secondary_slot.weapon_type)
-				
-				# Check if any upgrades were applied and make gun gold
-				var has_upgrades = false
-				for upgrade in WeaponUpgradeManager.get_upgrades_for_weapon(secondary_slot.weapon_type):
-					if upgrade.is_purchased:
-						has_upgrades = true
-						break
-				
-				if has_upgrades and secondary_gun.gun_sprite:
-					secondary_gun.gun_sprite.modulate = Color(1.0, 0.84, 0.0)  # Gold color
-					print("✨ Secondary weapon is upgraded - made GOLD")
 			
 			print("✓ Secondary weapon instantiated")
 	else:
@@ -329,11 +340,25 @@ func _update_weapon_visibility_after_load():
 			primary_gun.set_can_fire(true)
 			primary_gun.visible = true
 			primary_gun.process_mode = Node.PROCESS_MODE_INHERIT
+			
+			# Enable second gun if it exists
+			if primary_gun.second_gun and is_instance_valid(primary_gun.second_gun):
+				primary_gun.second_gun.set_can_fire(true)
+				primary_gun.second_gun.visible = true
+				primary_gun.second_gun.process_mode = Node.PROCESS_MODE_INHERIT
+			
 			print("  ✓ Primary weapon enabled (active in farm)")
 		else:
 			primary_gun.set_can_fire(false)
 			primary_gun.visible = false
 			primary_gun.process_mode = Node.PROCESS_MODE_DISABLED
+			
+			# Disable second gun if it exists
+			if primary_gun.second_gun and is_instance_valid(primary_gun.second_gun):
+				primary_gun.second_gun.set_can_fire(false)
+				primary_gun.second_gun.visible = false
+				primary_gun.second_gun.process_mode = Node.PROCESS_MODE_DISABLED
+			
 			print("  ✓ Primary weapon disabled")
 	
 	if secondary_gun:
@@ -341,9 +366,23 @@ func _update_weapon_visibility_after_load():
 			secondary_gun.set_can_fire(true)
 			secondary_gun.visible = true
 			secondary_gun.process_mode = Node.PROCESS_MODE_INHERIT
+			
+			# Enable second gun if it exists
+			if secondary_gun.second_gun and is_instance_valid(secondary_gun.second_gun):
+				secondary_gun.second_gun.set_can_fire(true)
+				secondary_gun.second_gun.visible = true
+				secondary_gun.second_gun.process_mode = Node.PROCESS_MODE_INHERIT
+			
 			print("  ✓ Secondary weapon enabled (active in farm)")
 		else:
 			secondary_gun.set_can_fire(false)
 			secondary_gun.visible = false
 			secondary_gun.process_mode = Node.PROCESS_MODE_DISABLED
+			
+			# Disable second gun if it exists
+			if secondary_gun.second_gun and is_instance_valid(secondary_gun.second_gun):
+				secondary_gun.second_gun.set_can_fire(false)
+				secondary_gun.second_gun.visible = false
+				secondary_gun.second_gun.process_mode = Node.PROCESS_MODE_DISABLED
+			
 			print("  ✓ Secondary weapon disabled")

@@ -1,13 +1,15 @@
-# IntroTutorial.gd
+# IntroTutorial.gd - Enhanced with First-Time Dialogue
 # Manages the intro tutorial sequence for new players
 # This is an autoload singleton that persists across scenes
 extends Node
 
 signal step_changed(step_index: int, step_name: String)
 signal tutorial_complete
+signal first_time_dialogue_complete
 
 enum TutorialStep {
 	NOT_STARTED,
+	FIRST_TIME_DIALOGUE,  # NEW: Added dialogue step
 	OPEN_WEAPON_STORAGE,
 	EQUIP_PISTOL,
 	KILL_ENEMIES_LEVEL1,
@@ -20,6 +22,7 @@ enum TutorialStep {
 var current_step: TutorialStep = TutorialStep.NOT_STARTED
 var enemies_killed: int = 0
 var enemies_required: int = 0
+var dialogue_shown: bool = false  # NEW: Track if dialogue was shown
 
 # References
 var player: Node2D
@@ -39,6 +42,62 @@ func start_tutorial():
 		return
 	
 	TutorialManager.start_tutorial("intro_tutorial")
+	
+	# NEW: Start with dialogue step if this is truly the first time
+	if not dialogue_shown:
+		current_step = TutorialStep.FIRST_TIME_DIALOGUE
+		_show_first_time_dialogue()
+	else:
+		current_step = TutorialStep.OPEN_WEAPON_STORAGE
+		set_process(true)
+		_show_current_step_objective()
+
+# NEW: Show first-time dialogue
+func _show_first_time_dialogue():
+	print("Starting first-time dialogue...")
+	
+	# Create dialogue data
+	var dialogue_data = [
+		{
+			"speaker": "???",
+			"text": "You wake up in an unfamiliar place. The air is thick with an eerie silence."
+		},
+		{
+			"speaker": "Mysterious Voice",
+			"text": "Ah, you're finally awake. Welcome to the Safehouse."
+		},
+		{
+			"speaker": "Mysterious Voice",
+			"text": "This world has been overrun by creatures from the corrupted farm. Your task is to cleanse it."
+		},
+		{
+			"speaker": "Mysterious Voice",
+			"text": "You'll find weapons in the chest over there. Arm yourself and prepare for battle."
+		},
+		{
+			"speaker": "Mysterious Voice",
+			"text": "Good luck, warrior. The fate of this realm rests in your hands..."
+		}
+	]
+	
+	# Connect to dialogue ended signal
+	if not TutorialManager.dialogue_ended.is_connected(_on_first_time_dialogue_ended):
+		TutorialManager.dialogue_ended.connect(_on_first_time_dialogue_ended)
+	
+	# Start the dialogue
+	TutorialManager.start_dialogue(dialogue_data)
+
+# NEW: Handle dialogue completion
+func _on_first_time_dialogue_ended():
+	print("First-time dialogue complete")
+	dialogue_shown = true
+	first_time_dialogue_complete.emit()
+	
+	# Disconnect the signal
+	if TutorialManager.dialogue_ended.is_connected(_on_first_time_dialogue_ended):
+		TutorialManager.dialogue_ended.disconnect(_on_first_time_dialogue_ended)
+	
+	# Advance to next step
 	current_step = TutorialStep.OPEN_WEAPON_STORAGE
 	set_process(true)
 	_show_current_step_objective()
@@ -107,6 +166,10 @@ func setup_for_farm(farm_node: Node):
 
 func _show_current_step_objective():
 	match current_step:
+		TutorialStep.FIRST_TIME_DIALOGUE:
+			# Dialogue is shown via _show_first_time_dialogue()
+			pass
+		
 		TutorialStep.OPEN_WEAPON_STORAGE:
 			TutorialManager.show_hint("Press E near the Weapon Chest to open Weapon Storage", 5.0)
 			if TutorialManager.tutorial_ui:
@@ -245,7 +308,8 @@ func get_save_data() -> Dictionary:
 	return {
 		"current_step": current_step,
 		"enemies_killed": enemies_killed,
-		"enemies_required": enemies_required
+		"enemies_required": enemies_required,
+		"dialogue_shown": dialogue_shown  # NEW: Save dialogue state
 	}
 
 func load_save_data(data: Dictionary):
@@ -255,6 +319,8 @@ func load_save_data(data: Dictionary):
 		enemies_killed = data.enemies_killed
 	if data.has("enemies_required"):
 		enemies_required = data.enemies_required
+	if data.has("dialogue_shown"):  # NEW: Load dialogue state
+		dialogue_shown = data.dialogue_shown
 	
 	print("[TUTORIAL] Loaded tutorial state - current_step: ", TutorialStep.keys()[current_step])
 	

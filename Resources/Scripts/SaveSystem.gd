@@ -1,4 +1,4 @@
-# SaveSystem.gd - UPDATED WITH WEAPON UNLOCKS & UPGRADES & LEVEL UNLOCKS
+# SaveSystem.gd - FIXED WITH CONTEXT-AWARE POSITION SAVING
 # The ONLY source of truth for all persistent player data
 extends Node
 
@@ -102,7 +102,7 @@ func collect_player_data(player: Node2D) -> Dictionary:
 		"experience": 0,
 		"skill_points": 0,
 		"stats": {},
-		"position": {"x": player.global_position.x, "y": player.global_position.y},
+		# Position will be set conditionally below - not here!
 		"health": 100,
 		"max_health": 100,
 		"inventory": [],
@@ -110,20 +110,32 @@ func collect_player_data(player: Node2D) -> Dictionary:
 		"weapon_storage": [],
 		"unlocked_weapons": ["Pistol"],  # Save unlocked weapons
 		"weapon_upgrades": {},  # Save weapon upgrades
-		"unlocked_levels": [true, false, false, false],  # NEW: Save level unlocks
+		"unlocked_levels": [true, false, false, false],  # Save level unlocks
 		"storage_chests": {},
-		"current_scene": "farm",
+		"current_scene": "safehouse",
 		"player_stats": {},
-	"character_id": "hero",  # Selected character
+		"character_id": "hero",  # Selected character
 	}
 	
 	# Detect current scene
+	var current_scene = "safehouse"  # Default assumption
 	if player.is_inside_tree():
 		var scene_path = player.get_tree().current_scene.scene_file_path
 		if "safehouse" in scene_path.to_lower():
+			current_scene = "safehouse"
 			data.current_scene = "safehouse"
 		elif "farm" in scene_path.to_lower():
+			current_scene = "farm"
 			data.current_scene = "farm"
+	
+	# CRITICAL FIX: Only save position if in safehouse
+	# Farm positions should NEVER be saved/restored - always spawn at SpawnPoint
+	if current_scene == "safehouse":
+		data.position = {"x": player.global_position.x, "y": player.global_position.y}
+		print("  ✓ Saved safehouse position: ", data.position)
+	else:
+		data.position = null  # Don't save position from other scenes
+		print("  ✓ Not saving position (player not in safehouse)")
 	
 	# Level system
 	if player.level_system:
@@ -221,7 +233,7 @@ func collect_player_data(player: Node2D) -> Dictionary:
 	else:
 		data.character_id = "hero"  # Default fallback
 	
-	# NEW: Preserve unlocked_levels if they exist in the existing save
+	# Preserve unlocked_levels if they exist in the existing save
 	if GameManager.current_save_slot >= 0:
 		var existing_save = get_save_data(GameManager.current_save_slot)
 		if existing_save.has("player") and existing_save.player.has("unlocked_levels"):
@@ -240,9 +252,13 @@ func apply_player_data(player: Node2D, data: Dictionary):
 	
 	print("Restoring player from save file...")
 	
-	# Position
+	# Position - Only restore if it exists and is not null
+	# Note: Safehouse scene should handle spawning at SpawnPoint if position is null/missing
 	if data.has("position") and data.position != null:
 		player.global_position = Vector2(data.position.x, data.position.y)
+		print("  ✓ Restored position: ", player.global_position)
+	else:
+		print("  ℹ No position to restore (will use scene's default spawn)")
 	
 	# Health
 	if data.has("health"):
@@ -342,7 +358,7 @@ func apply_player_data(player: Node2D, data: Dictionary):
 			WeaponUpgradeManager.load_save_data(data.weapon_upgrades)
 			print("  ✓ Weapon upgrades restored")
 	
-	# NEW: Restore unlocked levels - put into pending_load_data for LevelSelectUI
+	# Restore unlocked levels - put into pending_load_data for LevelSelectUI
 	if data.has("unlocked_levels") and data.unlocked_levels != null:
 		GameManager.pending_load_data["unlocked_levels"] = data.unlocked_levels
 		print("  ✓ Restored unlocked levels: ", data.unlocked_levels)

@@ -1,4 +1,4 @@
-# safehouse.gd
+# safehouse.gd - FIXED: Always spawn at SpawnPoint
 # Clean version - loads from save file when needed, no scattered save/restore calls
 extends Node2D
 
@@ -11,10 +11,19 @@ var tutorial_ui_scene = preload("res://Resources/UI/TutorialUI.tscn")
 var player: Node2D
 var weapon_storage: WeaponStorageManager
 var level_select_scene = preload("res://Resources/UI/LevelSelectUI.tscn")
+var dialogue_ui_scene = preload("res://Resources/UI/DialogueUI.tscn")
 
 func _ready():
 	print("\n=== SAFEHOUSE SETUP START ===")
 	AudioManager.play_music(AudioManager.safehouse_music)
+	
+	# CRITICAL FIX: Detect if this is a new game (no pending load data)
+	var is_new_game = GameManager.pending_load_data.is_empty()
+	
+	# CRITICAL FIX: For new games, reset all global systems
+	if is_new_game:
+		print("NEW GAME DETECTED - Resetting all global systems")
+		_reset_global_systems_for_new_game()
 	
 	# CRITICAL FIX: Wait for scene tree to be ready
 	await get_tree().process_frame
@@ -40,7 +49,7 @@ func _ready():
 
 	print("✓ Player found: ", player.name)
 
-	# SET SPAWN POSITION FOR SAFEHOUSE - Use SpawnPoint marker
+	# CRITICAL FIX: ALWAYS spawn at SpawnPoint, regardless of saved position
 	var spawn_point = get_node_or_null("SpawnPoint")
 	if spawn_point:
 		player.global_position = spawn_point.global_position
@@ -50,7 +59,7 @@ func _ready():
 		player.global_position = Vector2(475, 375)
 		print("⚠ SpawnPoint not found, using fallback position: ", player.global_position)
 	
-	# Track if returning from farm
+	# Track if returning from farm (but we ignore this for position now)
 	var is_returning_from_farm = GameManager.returning_from_farm
 	if is_returning_from_farm:
 		print("  (Returned from farm)")
@@ -81,7 +90,7 @@ func _ready():
 		player.add_to_group("player")
 	
 	# CRITICAL: For new games, ensure no weapons are equipped
-	if GameManager.pending_load_data.is_empty():
+	if is_new_game:
 		print("New game - clearing any default weapons")
 		var weapon_mgr = player.get_weapon_manager()
 		if weapon_mgr:
@@ -128,16 +137,18 @@ func _ready():
 	if player_weapon_manager and player_weapon_manager.has_signal("weapon_equipped"):
 		player_weapon_manager.weapon_equipped.connect(_on_weapon_equipped)
 	
-	# CRITICAL: Load player data FIRST (this populates pending_load_data with unlocked_weapons)
-	# BUT: Don't restore position if returning from farm
-	if not GameManager.pending_load_data.is_empty():
+	# CRITICAL: Load player data
+	# BUT: ALWAYS ignore position - we already set it at SpawnPoint above
+	if not is_new_game:
 		print("Loading player from save file...")
 		
-		# If returning from farm, remove position data before restoring
 		var player_save_data = GameManager.pending_load_data.get("player", {})
-		if is_returning_from_farm and player_save_data.has("position"):
+		
+		# CRITICAL FIX: ALWAYS remove position data
+		# We handle spawning at SpawnPoint ourselves - never restore saved position
+		if player_save_data.has("position"):
 			player_save_data.erase("position")
-			print("  ⚠ Skipped position restoration (returning from farm)")
+			print("  ⚠ Ignored saved position - always spawn at SpawnPoint")
 		
 		SaveSystem.apply_player_data(player, player_save_data)
 		
@@ -204,11 +215,56 @@ func _ready():
 	add_child(tutorial_ui)
 	print("✓ Tutorial UI added")
 	
+	var dialogue_ui = dialogue_ui_scene.instantiate()
+	add_child(dialogue_ui)
+	
 	# Setup intro tutorial for new games
-	if not TutorialManager.is_tutorial_completed("intro_tutorial"):
-		_setup_intro_tutorial()
+	if TutorialManager and TutorialManager.has_method("is_tutorial_completed"):
+		if not TutorialManager.is_tutorial_completed("intro_tutorial"):
+			_setup_intro_tutorial()
 	
 	print("=== SAFEHOUSE SETUP COMPLETE ===\n")
+
+func _reset_global_systems_for_new_game():
+	"""Reset all autoload singletons for a fresh new game"""
+	print("  Resetting GlobalWeaponStorage...")
+	if GlobalWeaponStorage:
+		if GlobalWeaponStorage.has_method("set_unlocked_weapons"):
+			GlobalWeaponStorage.set_unlocked_weapons(["Pistol"])
+			print("  ✓ GlobalWeaponStorage reset to default (Pistol only)")
+		else:
+			print("  ⚠ GlobalWeaponStorage doesn't have set_unlocked_weapons method")
+	
+	print("  Resetting WeaponUpgradeManager...")
+	if WeaponUpgradeManager:
+		if WeaponUpgradeManager.has_method("reset_all_upgrades"):
+			WeaponUpgradeManager.reset_all_upgrades()
+			print("  ✓ WeaponUpgradeManager reset")
+		else:
+			print("  ⚠ WeaponUpgradeManager doesn't have reset_all_upgrades method")
+	
+	print("  Resetting TutorialManager...")
+	if TutorialManager:
+		if TutorialManager.has_method("reset_tutorials"):
+			TutorialManager.reset_tutorials()
+			print("  ✓ TutorialManager reset")
+		else:
+			# Try to manually clear if the property exists
+			if "completed_tutorials" in TutorialManager:
+				TutorialManager.completed_tutorials.clear()
+				print("  ✓ TutorialManager.completed_tutorials cleared manually")
+			else:
+				print("  ⚠ TutorialManager doesn't have reset method - skipping")
+	
+	print("  Resetting StatsTracker...")
+	if StatsTracker:
+		if StatsTracker.has_method("reset_stats"):
+			StatsTracker.reset_stats()
+			print("  ✓ StatsTracker reset")
+		else:
+			print("  ⚠ StatsTracker doesn't have reset_stats method")
+	
+	print("✓ All global systems reset for new game\n")
 
 func _restore_weapon_storage_from_save(weapon_data: Array):
 	"""Restore weapon chest contents from save data"""

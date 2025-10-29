@@ -7,7 +7,7 @@
 script = ExtResource("1_81jfq")
 
 [node name="GunSprite" type="Sprite2D" parent="."]
-position = Vector2(7, 5)
+position = Vector2(9, 3)
 scale = Vector2(0.24, 0.262)
 texture = ExtResource("2_81jfq")
 

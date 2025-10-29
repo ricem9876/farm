@@ -30,6 +30,7 @@ var is_dead: bool = false
 var health_bar: EnemyHealthBar
 var health_bar_scene = preload("res://Resources/UI/EnemyHealthBar.tscn")
 var damage_number_scene = preload("res://Resources/UI/DamageNumber.tscn")
+var experience_particle_scene = preload("res://Resources/Effects/experienceondeath.tscn")
 
 # Knockback system
 var knockback_velocity: Vector2 = Vector2.ZERO
@@ -242,7 +243,7 @@ func _die():
 	
 	is_dead = true
 	print("Wolf died!")
-	
+	_spawn_experience_particle()
 	# Stop movement immediately
 	velocity = Vector2.ZERO
 	is_chasing = false
@@ -287,3 +288,19 @@ func _set_new_patrol_target():
 		randf_range(-patrol_radius, patrol_radius)
 	)
 	patrol_target = spawn_position + random_offset
+
+func _spawn_experience_particle():
+	"""Spawn experience particle effect on death"""
+	var exp_particle = experience_particle_scene.instantiate()
+	get_tree().current_scene.add_child(exp_particle)
+	exp_particle.global_position = global_position
+	exp_particle.z_index = 10  # Above most objects
+	
+	var particles = exp_particle.get_node("GPUParticles2D")
+	if particles:
+		particles.emitting = true
+		particles.restart()
+		# Auto-cleanup after particles finish
+		await get_tree().create_timer(particles.lifetime).timeout
+		if is_instance_valid(exp_particle):
+			exp_particle.queue_free()
