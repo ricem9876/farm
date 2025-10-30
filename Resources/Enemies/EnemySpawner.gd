@@ -22,7 +22,7 @@ var enemy_scenes = {
 	"mushroom": preload("res://Resources/Enemies/Mushroom/Mushroom.tscn")
 }
 
-var boss_scene = preload("res://Resources/Enemies/Orc/Orc.tscn")  # Path to your orc boss scene
+var boss_scene = preload("res://Resources/Enemies/Orc/orc.tscn")  # Path to your orc boss scene
 
 var spawn_weights = {
 	"plant": 40,

@@ -23,10 +23,25 @@ var weapon_manager: WeaponManager
 # State Machine Reference
 @onready var state_machine = $StateMachine
 
+# Camera and Effects
+@onready var camera: Camera2D = $Camera2D if has_node("Camera2D") else null
+@onready var sprite: Sprite2D = $Sprite2D if has_node("Sprite2D") else null
+@onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D if has_node("AnimatedSprite2D") else null
+
+# Hit effect variables
+var is_flashing: bool = false
+var original_modulate: Color = Color.WHITE
+
 const SKILL_TREE_ALLOWED_STATES = ["SafehouseState"]  # Add more as needed
 
 func _ready():
 	add_to_group("player")  # IMPORTANT: Ensure player is in "player" group
+	
+	# Store original sprite color
+	if sprite:
+		original_modulate = sprite.modulate
+	elif animated_sprite:
+		original_modulate = animated_sprite.modulate
 	
 	# Load character data if selected
 	_load_character_data()
@@ -259,7 +274,7 @@ func take_damage(damage: float):
 		
 		if roll < dodge_chance:
 			print("⚡ DODGED! No damage taken")
-			# TODO: Add visual effect for dodge
+			_play_dodge_effect()
 			return
 	
 	StatsTracker.record_damage_taken(damage)
@@ -269,8 +284,82 @@ func take_damage(damage: float):
 	
 	print("Player took ", damage, " damage! Health: ", current_health, "/", max_health)
 	
+	# Trigger hit effects
+	_play_hit_effects()
+	
 	if current_health <= 0:
 		_die()
+
+# === HIT EFFECTS ===
+
+func _play_hit_effects():
+	"""Play camera shake and visual feedback when hit"""
+	print("💥 Playing hit effects...")
+	print("  - Camera found: ", camera != null)
+	print("  - Sprite found: ", sprite != null)
+	print("  - AnimatedSprite found: ", animated_sprite != null)
+	
+	_shake_camera()
+	_flash_red()
+
+func _shake_camera():
+	"""Shake the camera when player takes damage using CameraShake system"""
+	if not camera:
+		return
+	
+	# Check if camera has the apply_shake method (from CameraShake.gd)
+	if camera.has_method("apply_shake"):
+		# Apply medium intensity shake
+		camera.apply_shake(10.0, 0.3)  # intensity: 10 pixels, duration: 0.3 seconds
+	else:
+		print("⚠ Camera doesn't have apply_shake method - make sure CameraShake.gd is attached")
+
+func _flash_red():
+	"""Flash the player sprite red when hit"""
+	if is_flashing:
+		print("  ⚠ Already flashing, skipping")
+		return
+	
+	var target_sprite = sprite if sprite else animated_sprite
+	if not target_sprite:
+		print("  ⚠ No sprite found to flash!")
+		return
+	
+	print("  ✓ Flashing sprite red...")
+	is_flashing = true
+	
+	# Flash red multiple times
+	var flash_color = Color(1.5, 0.3, 0.3, 1.0)  # Bright red
+	var flash_count = 3
+	var flash_duration = 0.1
+	
+	for i in range(flash_count):
+		# Flash to red
+		target_sprite.modulate = flash_color
+		await get_tree().create_timer(flash_duration).timeout
+		
+		# Flash back to normal
+		target_sprite.modulate = original_modulate
+		await get_tree().create_timer(flash_duration).timeout
+	
+	# Ensure we end on normal color
+	target_sprite.modulate = original_modulate
+	is_flashing = false
+	print("  ✓ Flash complete")
+
+func _play_dodge_effect():
+	"""Play a visual effect when player dodges"""
+	var target_sprite = sprite if sprite else animated_sprite
+	if not target_sprite:
+		return
+	
+	# Quick flash to indicate dodge
+	var dodge_color = Color(0.3, 0.8, 1.5, 1.0)  # Bright blue/cyan
+	var original_color = target_sprite.modulate
+	
+	target_sprite.modulate = dodge_color
+	await get_tree().create_timer(0.1).timeout
+	target_sprite.modulate = original_color
 
 func heal(amount: float):
 	current_health += amount

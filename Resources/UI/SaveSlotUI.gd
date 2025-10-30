@@ -27,6 +27,12 @@ func setup(slot: int, data: Dictionary):
 	
 	_update_display()
 
+func refresh():
+	"""Refresh the slot display with current save data"""
+	save_data = SaveSystem.get_save_data(slot_index)
+	is_empty = save_data.is_empty()
+	_update_display()
+
 func _update_display():
 	var pixel_font = preload("res://Resources/Fonts/yoster.ttf")
 	
@@ -114,7 +120,10 @@ func _on_delete_pressed():
 			# CRITICAL: Reset all global systems
 			SaveSystem.reset_global_systems_for_deleted_save()
 			
-			# Emit the signal to update UI
+			# Refresh this slot's display to show as empty
+			refresh()
+			
+			# Emit the signal to notify parent (if needed)
 			slot_deleted.emit(slot_index)
 			
 			print("Save slot ", slot_index, " deleted and systems reset")
