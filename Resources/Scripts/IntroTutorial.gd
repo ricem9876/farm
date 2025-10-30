@@ -60,23 +60,23 @@ func _show_first_time_dialogue():
 	var dialogue_data = [
 		{
 			"speaker": "???",
-			"text": "You wake up in an unfamiliar place. The air is thick with an eerie silence."
+			"text": "Don't read this."
 		},
 		{
 			"speaker": "Mysterious Voice",
-			"text": "Ah, you're finally awake. Welcome to the Safehouse."
+			"text": "Seriously."
 		},
 		{
 			"speaker": "Mysterious Voice",
-			"text": "This world has been overrun by creatures from the corrupted farm. Your task is to cleanse it."
+			"text": "You're going to run around and shoot things. No need to read the story."
 		},
 		{
 			"speaker": "Mysterious Voice",
-			"text": "You'll find weapons in the chest over there. Arm yourself and prepare for battle."
+			"text": "Get a weapon from the chest, kill things, collect items, make keys, and open chests."
 		},
 		{
 			"speaker": "Mysterious Voice",
-			"text": "Good luck, warrior. The fate of this realm rests in your hands..."
+			"text": "Убейте всех врагов"
 		}
 	]
 	

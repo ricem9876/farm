@@ -57,6 +57,7 @@ func _ready():
 	if not GameManager.pending_load_data.is_empty():
 		print("\n=== RESTORING PLAYER FROM PENDING SAVE DATA ===")
 		call_deferred("_restore_from_pending_data")
+		call_deferred("_debug_inventory_after_load")
 	
 	print("Player initialized - Level: ", level_system.current_level, " | Health: ", current_health, "/", max_health)
 
@@ -601,3 +602,39 @@ func _debug_topup_resources():
 			print("✗ Failed to create item: ", resource.name)
 	
 	print("=== TOPUP COMPLETE ===")
+
+func _debug_inventory_after_load():
+	"""Debug function to check inventory state after loading"""
+	if not inventory_manager:
+		print("DEBUG: No inventory manager!")
+		return
+	
+	# Wait a bit longer to ensure inventory is fully restored
+	await get_tree().create_timer(0.5).timeout
+	
+	print("\n=== INVENTORY AFTER LOAD (0.5s delay) ===")
+	var key_count = 0
+	var total_items = 0
+	
+	for i in range(inventory_manager.max_slots):
+		var item = inventory_manager.items[i]
+		if item:
+			total_items += 1
+			print("Slot ", i, ": ", item.name, " x", inventory_manager.quantities[i])
+			print("  - is Item: ", item is Item)
+			print("  - is KeyItem: ", item is KeyItem)
+			print("  - item_type: ", item.item_type if "item_type" in item else "NO ITEM_TYPE")
+			print("  - script: ", item.get_script())
+			
+			if item is KeyItem:
+				print("  - chest_type: ", item.chest_type)
+				print("  ✓ This is a proper KeyItem!")
+				key_count += 1
+			elif "item_type" in item and item.item_type == "key":
+				print("  ⚠ WARNING: This is a 'key' but NOT a KeyItem class!")
+				print("  - This will cause beam detection to FAIL!")
+	
+	print("\n=== INVENTORY SUMMARY ===")
+	print("Total items: ", total_items)
+	print("Total KeyItems: ", key_count)
+	print("=========================\n")

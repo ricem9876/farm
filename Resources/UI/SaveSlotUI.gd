@@ -61,11 +61,9 @@ func _update_display():
 		var level = player_data.get("level", 1)
 		var health = player_data.get("health", 100)
 		var max_health = player_data.get("max_health", 100)
-
 		# Convert to proper types with validation
 		var health_int = int(float(health)) if health != null else 100
 		var max_health_int = int(float(max_health)) if max_health != null else 100
-
 		info_label.text = "Level " + str(level) + " | HP: " + str(health_int) + "/" + str(max_health_int)
 		timestamp_label.text = save_data.get("timestamp", "Unknown")
 		select_button.text = "CONTINUE"
@@ -100,4 +98,34 @@ func _on_select_pressed():
 	slot_selected.emit(slot_index)
 
 func _on_delete_pressed():
-	slot_deleted.emit(slot_index)
+	# Create a confirmation dialog
+	var confirm_dialog = ConfirmationDialog.new()
+	confirm_dialog.dialog_text = "Are you sure you want to delete this save?\nThis action cannot be undone!"
+	confirm_dialog.title = "Delete Save"
+	
+	# Style the dialog with pixel font
+	var pixel_font = preload("res://Resources/Fonts/yoster.ttf")
+	confirm_dialog.add_theme_font_override("font", pixel_font)
+	
+	# Connect the confirmed signal
+	confirm_dialog.confirmed.connect(func():
+		# Actually delete the save
+		if SaveSystem.delete_save(slot_index):
+			# CRITICAL: Reset all global systems
+			SaveSystem.reset_global_systems_for_deleted_save()
+			
+			# Emit the signal to update UI
+			slot_deleted.emit(slot_index)
+			
+			print("Save slot ", slot_index, " deleted and systems reset")
+	)
+	
+	# Add dialog to scene tree and show
+	add_child(confirm_dialog)
+	confirm_dialog.popup_centered()
+	
+	# Clean up dialog after it's closed
+	confirm_dialog.visibility_changed.connect(func():
+		if not confirm_dialog.visible:
+			confirm_dialog.queue_free()
+	)

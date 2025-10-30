@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=3 uid="uid://rhebvs8qauqd"]
+[gd_scene load_steps=26 format=3 uid="uid://rhebvs8qauqd"]
 
 [ext_resource type="Script" uid="uid://banmwipl3lkhs" path="res://Resources/Character/scripts/player.gd" id="1_13ehe"]
 [ext_resource type="Script" uid="uid://dmrce6nni3voo" path="res://Resources/Character/scripts/CameraShake.gd" id="2_csx37"]
@@ -14,6 +14,7 @@
 [ext_resource type="Script" uid="uid://dj5r5ky5jg58q" path="res://Resources/Character/scripts/State/LocationStateMachine.gd" id="12_25ma8"]
 [ext_resource type="Script" uid="uid://bt3u4ciyln77x" path="res://Resources/Character/FarmState.gd" id="13_paeun"]
 [ext_resource type="PackedScene" uid="uid://chmbncpfja5tx" path="res://Resources/Character/PlayerHUD.tscn" id="14_paeun"]
+[ext_resource type="Texture2D" uid="uid://c07l37djff5bl" path="res://Resources/Effects/Particles/trackerparticle.png" id="15_523yf"]
 [ext_resource type="Script" uid="uid://dvhy3w5it27r" path="res://Resources/UI/ParticleBeamToEnemy.gd" id="15_csx37"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_paeun"]
@@ -133,6 +134,15 @@ _data = {
 &"runup": SubResource("Animation_ar6ke")
 }
 
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_csx37"]
+particle_flag_disable_z = true
+flatness = 1.0
+initial_velocity_min = 1.0
+initial_velocity_max = 2.0
+gravity = Vector3(0, 98, 0)
+scale_min = 0.2
+scale_max = 0.2
+
 [node name="player" type="CharacterBody2D"]
 script = ExtResource("1_13ehe")
 
@@ -189,11 +199,6 @@ script = ExtResource("7_3s00l")
 [node name="PlayerHUD" parent="." instance=ExtResource("14_paeun")]
 
 [node name="ParticleBeam" type="GPUParticles2D" parent="."]
-emitting = false
-amount = 554
-amount_ratio = 0.2177
-fixed_fps = 5
-trail_sections = 2
-trail_section_subdivisions = 1
+texture = ExtResource("15_523yf")
+process_material = SubResource("ParticleProcessMaterial_csx37")
 script = ExtResource("15_csx37")
-particle_count = 20

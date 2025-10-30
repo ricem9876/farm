@@ -214,6 +214,13 @@ func _configure_enemy_spawner():
 	
 	print("⚙️ Configuring spawner with difficulty: ", settings.difficulty)
 	
+	# DYNAMIC SPAWN BOUNDARY BASED ON LEVEL
+	var level_num = GameManager.current_level if GameManager.current_level > 0 else 1
+	var spawn_rect = _calculate_spawn_boundary_for_level(level_num)
+	if "spawn_boundary" in enemy_spawner:
+		enemy_spawner.spawn_boundary = spawn_rect
+		print("  ✓ Set spawn_boundary for Level ", level_num, ": ", spawn_rect)
+	
 	# Configure max enemies
 	if enemy_spawner.has_method("set_max_enemies"):
 		enemy_spawner.set_max_enemies(settings.max_enemies)
@@ -262,6 +269,7 @@ func _configure_enemy_spawner():
 	
 	print("✓ Spawner configuration complete")
 	print("Configuration summary:")
+	print("  - spawn_boundary: ", spawn_rect)
 	print("  - max_enemies: ", settings.get("max_enemies", "N/A"))
 	print("  - spawn_interval: ", settings.get("spawn_interval", "N/A"))
 	print("  - total_enemies: ", settings.get("total_enemies", "N/A"))
@@ -281,6 +289,52 @@ func _configure_enemy_spawner():
 				print("  - ", method.name)
 	
 	print("=== SPAWNER CONFIGURATION COMPLETE ===\n")
+
+func _calculate_spawn_boundary_for_level(level: int) -> Rect2:
+	"""Calculate spawn boundary that expands with each level
+	Map size: 2555 x 1600
+	Level 1: Small area around spawn
+	Level 2: Medium area (50% of map)
+	Level 3: Large area (75% of map)  
+	Level 4: Full map coverage
+	"""
+	const MAP_WIDTH = 2555.0
+	const MAP_HEIGHT = 1600.0
+	
+	# Center spawn area around middle of map
+	var center_x = MAP_WIDTH / 2.0
+	var center_y = MAP_HEIGHT / 2.0
+	
+	var width: float
+	var height: float
+	
+	match level:
+		1:
+			# Level 1: 40% of map (small starter area)
+			width = MAP_WIDTH * 0.4
+			height = MAP_HEIGHT * 0.4
+		2:
+			# Level 2: 60% of map
+			width = MAP_WIDTH * 0.6
+			height = MAP_HEIGHT * 0.6
+		3:
+			# Level 3: 80% of map
+			width = MAP_WIDTH * 0.8
+			height = MAP_HEIGHT * 0.8
+		4, _:
+			# Level 4+: Full map
+			width = MAP_WIDTH
+			height = MAP_HEIGHT
+	
+	# Calculate top-left corner to center the spawn area
+	var x = center_x - (width / 2.0)
+	var y = center_y - (height / 2.0)
+	
+	# Clamp to map boundaries
+	x = max(0, x)
+	y = max(0, y)
+	
+	return Rect2(x, y, width, height)
 
 func _setup_enemy_counter_ui():
 	"""Style the enemy counter label"""

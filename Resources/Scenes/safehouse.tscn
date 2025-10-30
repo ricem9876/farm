@@ -88,7 +88,7 @@ z_index = 1
 position = Vector2(4.46075, 2.86768)
 texture = ExtResource("11_mlc5f")
 
-[node name="Label" type="Label" parent="KeyForge"]
+[node name="InteractionPrompt" type="Label" parent="KeyForge"]
 offset_left = -13.7011
 offset_top = -9.55893
 offset_right = 26.2989

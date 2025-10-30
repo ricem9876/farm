@@ -3,6 +3,7 @@ class_name LootChest
 
 ## LootChest - A chest that requires a specific key to unlock
 ## Contains randomized loot (technology points, coins)
+## NOW WITH: Automatic beam guide that appears after 30 seconds if player has the key
 
 @export var required_key_type: String  # "wood", "mushroom", "plant", "wool"
 @export var chest_name: String = "Locked Chest"
@@ -20,6 +21,11 @@ class_name LootChest
 @export var locked_texture: Texture2D
 @export var unlocked_texture: Texture2D
 
+## Beam Guide configuration
+@export_group("Beam Guide")
+@export var enable_beam_guide: bool = true  # Toggle beam feature
+@export var beam_activation_delay: float = 30.0  # Seconds before beam appears
+
 @onready var sprite = $Sprite2D if has_node("Sprite2D") else null
 @onready var collision_shape = $CollisionShape2D if has_node("CollisionShape2D") else null
 @onready var interaction_prompt = $InteractionPrompt if has_node("InteractionPrompt") else null
@@ -28,6 +34,7 @@ var player_in_area: bool = false
 var player_ref: Node2D
 var loot_generated: bool = false
 var chest_contents: Dictionary = {}
+var beam_guide: Node2D  # Reference to the beam guide node
 
 signal chest_opened(loot: Dictionary)
 signal chest_unlocked
@@ -47,7 +54,30 @@ func _ready():
 		update_prompt()
 		interaction_prompt.visible = false
 	
+	# Setup beam guide
+	if enable_beam_guide and is_locked:
+		setup_beam_guide()
+	
 	print("Loot chest '", chest_name, "' initialized - Requires ", required_key_type, " key")
+
+func setup_beam_guide():
+	"""Create and add the beam guide component"""
+	# Load the ChestBeamGuide script
+	var beam_script = load("res://Resources/UI/chestbeamguide.gd")
+	if not beam_script:
+		push_error("Could not load ChestBeamGuide.gd - beam guide disabled")
+		return
+	
+	# Create the beam guide node
+	beam_guide = Node2D.new()
+	beam_guide.set_script(beam_script)
+	beam_guide.name = "BeamGuide"
+	
+	# Set custom activation delay if different from default
+	beam_guide.set("activation_delay", beam_activation_delay)
+	
+	add_child(beam_guide)
+	print("  ✓ Beam guide added to ", chest_name)
 
 func update_prompt():
 	if not interaction_prompt:

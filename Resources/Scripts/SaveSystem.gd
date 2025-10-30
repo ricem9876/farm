@@ -87,6 +87,45 @@ func delete_save(slot: int) -> bool:
 		return true
 	return false
 
+func reset_global_systems_for_deleted_save():
+	"""Reset all autoload singletons when a save is deleted"""
+	print("Resetting global systems after save deletion...")
+	
+	# Reset TutorialManager
+	if TutorialManager and TutorialManager.has_method("reset_tutorials"):
+		TutorialManager.reset_tutorials()
+		print("  ✓ TutorialManager reset")
+	
+	# Reset IntroTutorial
+	if IntroTutorial:
+		IntroTutorial.current_step = IntroTutorial.TutorialStep.NOT_STARTED
+		IntroTutorial.enemies_killed = 0
+		IntroTutorial.enemies_required = 0
+		IntroTutorial.dialogue_shown = false
+		IntroTutorial.set_process(false)
+		print("  ✓ IntroTutorial reset")
+	
+	# Reset GlobalWeaponStorage
+	if GlobalWeaponStorage and GlobalWeaponStorage.has_method("set_unlocked_weapons"):
+		GlobalWeaponStorage.set_unlocked_weapons(["Pistol"])
+		print("  ✓ GlobalWeaponStorage reset")
+	
+	# Reset WeaponUpgradeManager
+	if WeaponUpgradeManager and WeaponUpgradeManager.has_method("reset_all_upgrades"):
+		WeaponUpgradeManager.reset_all_upgrades()
+		print("  ✓ WeaponUpgradeManager reset")
+	
+	# Reset StatsTracker
+	if StatsTracker and StatsTracker.has_method("reset_stats"):
+		StatsTracker.reset_stats()
+		print("  ✓ StatsTracker reset")
+	
+	# Clear GameManager pending data
+	GameManager.pending_load_data = {}
+	GameManager.current_save_slot = -1
+	
+	print("✓ All global systems reset\n")
+
 func get_all_saves() -> Array:
 	var saves = []
 	for i in range(MAX_SAVES):
@@ -111,6 +150,7 @@ func collect_player_data(player: Node2D) -> Dictionary:
 		"unlocked_weapons": ["Pistol"],  # Save unlocked weapons
 		"weapon_upgrades": {},  # Save weapon upgrades
 		"unlocked_levels": [true, false, false, false],  # Save level unlocks
+		"unlock_dialogues_shown": [true, false, false, false],  # Save dialogue tracking
 		"storage_chests": {},
 		"current_scene": "safehouse",
 		"player_stats": {},
@@ -233,12 +273,16 @@ func collect_player_data(player: Node2D) -> Dictionary:
 	else:
 		data.character_id = "hero"  # Default fallback
 	
-	# Preserve unlocked_levels if they exist in the existing save
+	# Preserve unlocked_levels and unlock_dialogues_shown if they exist in the existing save
 	if GameManager.current_save_slot >= 0:
 		var existing_save = get_save_data(GameManager.current_save_slot)
-		if existing_save.has("player") and existing_save.player.has("unlocked_levels"):
-			data.unlocked_levels = existing_save.player.unlocked_levels
-			print("  ✓ Preserved unlocked_levels from existing save: ", data.unlocked_levels)
+		if existing_save.has("player"):
+			if existing_save.player.has("unlocked_levels"):
+				data.unlocked_levels = existing_save.player.unlocked_levels
+				print("  ✓ Preserved unlocked_levels from existing save: ", data.unlocked_levels)
+			if existing_save.player.has("unlock_dialogues_shown"):
+				data.unlock_dialogues_shown = existing_save.player.unlock_dialogues_shown
+				print("  ✓ Preserved unlock_dialogues_shown from existing save: ", data.unlock_dialogues_shown)
 	
 	return data
 
@@ -362,6 +406,11 @@ func apply_player_data(player: Node2D, data: Dictionary):
 	if data.has("unlocked_levels") and data.unlocked_levels != null:
 		GameManager.pending_load_data["unlocked_levels"] = data.unlocked_levels
 		print("  ✓ Restored unlocked levels: ", data.unlocked_levels)
+	
+	# Restore unlock dialogues shown - put into pending_load_data for LevelSelectUI
+	if data.has("unlock_dialogues_shown") and data.unlock_dialogues_shown != null:
+		GameManager.pending_load_data["unlock_dialogues_shown"] = data.unlock_dialogues_shown
+		print("  ✓ Restored unlock dialogues shown: ", data.unlock_dialogues_shown)
 	
 	# Storage chests
 	if data.has("storage_chests") and data.storage_chests != null:

@@ -1,4 +1,4 @@
-# LevelSelectUI.gd - FIXED: Deferred scene transition for exports
+# LevelSelectUI.gd - FIXED: Deferred scene transition for exports + Unlock Dialogues
 # Handles level selection with mushroom-based unlocking system (shop style)
 extends CanvasLayer
 
@@ -64,6 +64,9 @@ var levels = [
 # Track which levels have been permanently unlocked
 var unlocked_levels: Array = [true, false, false, false]  # Level 1 is always unlocked
 
+# Track which levels have shown their unlock dialogue (per session/save)
+var unlock_dialogues_shown: Array = [true, false, false, false]  # Level 1 doesn't need dialogue
+
 # Preload the lock texture
 var lock_texture: Texture2D = preload("res://Resources/Inventory/Sprites/lock.png")
 
@@ -72,6 +75,7 @@ func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	
 	_load_unlocked_levels()
+	_load_unlock_dialogues_shown()
 	_setup_ui()
 	_create_level_buttons()
 	
@@ -139,6 +143,22 @@ func _load_unlocked_levels():
 	else:
 		print("⚠ No save slot selected, using default unlocked levels: ", unlocked_levels)
 
+func _load_unlock_dialogues_shown():
+	"""Load which unlock dialogues have been shown from save data"""
+	if GameManager.current_save_slot >= 0:
+		var save_data = SaveSystem.get_save_data(GameManager.current_save_slot)
+		if save_data.has("player") and save_data.player.has("unlock_dialogues_shown"):
+			var loaded_data = save_data.player.unlock_dialogues_shown
+			if loaded_data is Array and loaded_data.size() == levels.size():
+				unlock_dialogues_shown = loaded_data.duplicate()
+				print("✓ Loaded unlock dialogues shown from save file: ", unlock_dialogues_shown)
+			else:
+				print("⚠ Saved unlock dialogues invalid, using defaults: ", unlock_dialogues_shown)
+		else:
+			print("ℹ No saved unlock dialogues found, using defaults: ", unlock_dialogues_shown)
+	else:
+		print("⚠ No save slot selected, using default unlock dialogues: ", unlock_dialogues_shown)
+
 func _save_unlocked_levels():
 	"""Save unlocked levels to save data immediately after purchase"""
 	var player = get_tree().get_first_node_in_group("player")
@@ -152,14 +172,17 @@ func _save_unlocked_levels():
 	
 	print("\n=== SAVING UNLOCKED LEVELS ===")
 	print("Current unlocked_levels state: ", unlocked_levels)
+	print("Current unlock_dialogues_shown state: ", unlock_dialogues_shown)
 	
 	# Collect all player data
 	var player_data = SaveSystem.collect_player_data(player)
 	
-	# Add unlocked levels to the save data
+	# Add unlocked levels and dialogue tracking to the save data
 	player_data["unlocked_levels"] = unlocked_levels.duplicate()
+	player_data["unlock_dialogues_shown"] = unlock_dialogues_shown.duplicate()
 	
 	print("Player data unlocked_levels field: ", player_data["unlocked_levels"])
+	print("Player data unlock_dialogues_shown field: ", player_data["unlock_dialogues_shown"])
 	
 	# Save to file
 	var success = SaveSystem.save_game(GameManager.current_save_slot, player_data)
@@ -177,6 +200,81 @@ func _save_unlocked_levels():
 		print("✗ Failed to save unlocked levels!")
 	
 	print("=== SAVE COMPLETE ===\n")
+
+func _get_unlock_dialogue(level_index: int) -> Array:
+	"""Get the unlock dialogue for a specific level"""
+	match level_index:
+		1:  # Farm - 2
+			return [
+				{
+					"speaker": "Mysterious Voice",
+					"text": "Feel proud of yourself?."
+				},
+			
+			]
+		2:  # Farm - 3
+			return [
+				{
+					"speaker": "Mysterious Voice",
+					"text": "Impressive work, nerd."
+				}
+			]
+		3:  # Farm - 4
+			return [
+				{
+					"speaker": "Mysterious Voice",
+					"text": "Most people beat this level blindfolded with their monitor off. I bet you aren't one of them."
+				},
+			
+			]
+		_:
+			return []
+
+func _show_unlock_dialogue(level_index: int):
+	"""Show the unlock dialogue for a newly unlocked level"""
+	var dialogue_data = _get_unlock_dialogue(level_index)
+	
+	if dialogue_data.is_empty():
+		print("No dialogue for level ", level_index)
+		return
+	
+	print("Showing unlock dialogue for level ", level_index + 1)
+	
+	# Connect to dialogue ended signal
+	if not TutorialManager.dialogue_ended.is_connected(_on_unlock_dialogue_ended.bind(level_index)):
+		TutorialManager.dialogue_ended.connect(_on_unlock_dialogue_ended.bind(level_index))
+	
+	# Hide the level select UI while dialogue is showing
+	panel.visible = false
+	
+	# CRITICAL FIX: Unpause the game so dialogue can receive input
+	get_tree().paused = false
+	
+	# Start the dialogue
+	TutorialManager.start_dialogue(dialogue_data)
+
+func _on_unlock_dialogue_ended(level_index: int):
+	"""Called when unlock dialogue ends"""
+	print("Unlock dialogue ended for level ", level_index + 1)
+	
+	# Disconnect the signal
+	if TutorialManager.dialogue_ended.is_connected(_on_unlock_dialogue_ended):
+		TutorialManager.dialogue_ended.disconnect(_on_unlock_dialogue_ended)
+	
+	# Mark this dialogue as shown
+	unlock_dialogues_shown[level_index] = true
+	
+	# Save the state
+	_save_unlocked_levels()
+	
+	# CRITICAL FIX: Re-pause the game since level select should still be open
+	get_tree().paused = true
+	
+	# Show the level select UI again
+	panel.visible = true
+	
+	# Refresh buttons to show the newly unlocked level
+	_refresh_buttons()
 
 func _spend_mushrooms_to_unlock(level_index: int) -> bool:
 	"""Attempt to spend mushrooms to unlock a level"""
@@ -203,10 +301,21 @@ func _spend_mushrooms_to_unlock(level_index: int) -> bool:
 					unlocked_levels[level_index] = true
 					print("✓ Level ", level_index + 1, " marked as unlocked")
 					
-					# Save immediately
+					# Check if we should show the unlock dialogue
+					var should_show_dialogue = not unlock_dialogues_shown[level_index]
+					
+					# Save immediately (before showing dialogue)
 					_save_unlocked_levels()
 					
 					print("✓ Level ", level_index + 1, " unlocked! Spent ", level_data.mushrooms_required, " mushrooms")
+					
+					# Show unlock dialogue if this is the first time
+					if should_show_dialogue:
+						_show_unlock_dialogue(level_index)
+					else:
+						# Just refresh buttons if dialogue already shown
+						_refresh_buttons()
+					
 					return true
 				else:
 					print("✗ Could not find mushroom item in inventory")
@@ -300,7 +409,8 @@ func _on_purchase_level(level_index: int):
 	if mushroom_count >= level_data.mushrooms_required:
 		if _spend_mushrooms_to_unlock(level_index):
 			print("✓ Successfully unlocked ", level_data.name)
-			_refresh_buttons()
+			# Don't refresh here if dialogue is being shown
+			# _refresh_buttons() is called after dialogue ends
 		else:
 			print("✗ Failed to unlock level")
 	else:
@@ -330,6 +440,7 @@ func open():
 	
 	# Reload unlocked levels when opening to get latest state
 	_load_unlocked_levels()
+	_load_unlock_dialogues_shown()
 	
 	# Refresh the buttons when opening to show current unlock status
 	_refresh_buttons()
@@ -378,6 +489,7 @@ func _on_level_selected(level_data: Dictionary):
 		print("💾 Auto-saving before farm transition...")
 		var player_data = SaveSystem.collect_player_data(player)
 		player_data["unlocked_levels"] = unlocked_levels.duplicate()
+		player_data["unlock_dialogues_shown"] = unlock_dialogues_shown.duplicate()
 		SaveSystem.save_game(GameManager.current_save_slot, player_data)
 		print("✓ Auto-save complete")
 		
