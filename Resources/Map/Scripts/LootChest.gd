@@ -25,6 +25,7 @@ class_name LootChest
 @export_group("Beam Guide")
 @export var enable_beam_guide: bool = true  # Toggle beam feature
 @export var beam_activation_delay: float = 30.0  # Seconds before beam appears
+@onready var open_particles = $GPUParticles2D if has_node("GPUParticles2D") else null
 
 @onready var sprite = $Sprite2D if has_node("Sprite2D") else null
 @onready var collision_shape = $CollisionShape2D if has_node("CollisionShape2D") else null
@@ -149,6 +150,10 @@ func unlock_chest():
 	open_chest()
 
 func open_chest():
+	
+	if open_particles:
+		open_particles.emitting = true
+		
 	if not loot_generated:
 		generate_loot()
 	
@@ -159,6 +164,8 @@ func open_chest():
 	chest_opened.emit(chest_contents)
 	print("Chest opened: ", chest_name)
 	
+	if open_particles:
+		await get_tree().create_timer(open_particles.lifetime).timeout
 	# Optionally: Make chest disappear or change appearance
 	queue_free()  # Remove chest after opening
 
