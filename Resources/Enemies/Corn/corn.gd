@@ -1,22 +1,22 @@
-# Mushroom.gd - Mushroom enemy with 4-direction movement
+# Corn.gd - Corn enemy with tornado animation
 extends CharacterBody2D
-class_name Mushroom
+class_name Corn
 
 signal died(experience_points: int)
 
-@export var max_health: float = 50.0
-@export var experience_value: int = 30
+@export var max_health: float = 80.0
+@export var experience_value: int = 50
 @export var move_speed: float = 100.0
-@export var chase_speed: float = 120.0
-@export var contact_damage: float = 12.0
+@export var chase_speed: float = 150.0
+@export var contact_damage: float = 20.0
 @export var damage_cooldown: float = 1.0
-@export var detection_range: float = 180.0
-@export var patrol_radius: float = 50.0
+@export var detection_range: float = 250.0
+@export var patrol_radius: float = 60.0
 @export var damage_pause_duration: float = 0.25
 
 # Level scaling
-var base_health: float = 50.0
-var base_damage: float = 12.0
+var base_health: float = 80.0
+var base_damage: float = 20.0
 
 var current_health: float
 var player: Node2D
@@ -35,9 +35,6 @@ var experience_particle_scene = preload("res://Resources/Effects/experienceondea
 # Knockback system
 var knockback_velocity: Vector2 = Vector2.ZERO
 var knockback_friction: float = 400.0
-
-# Current direction for animation
-var current_direction: Vector2 = Vector2.DOWN
 
 @onready var animated_sprite = $AnimatedSprite2D
 @onready var collision_shape = $CollisionShape2D
@@ -63,11 +60,11 @@ func _ready():
 			collision.shape = circle
 	
 	if animated_sprite:
-		animated_sprite.play("walk_down")
+		animated_sprite.play("tornado")
 	
 	health_bar = health_bar_scene.instantiate()
 	add_child(health_bar)
-	health_bar.position = Vector2(0, -35)
+	health_bar.position = Vector2(0, -40)
 	health_bar.z_index = 10
 
 func _apply_level_scaling():
@@ -82,7 +79,7 @@ func _apply_level_scaling():
 	max_health = base_health * health_multiplier
 	contact_damage = base_damage * damage_multiplier
 	
-	print("🍄 Mushroom scaled to Farm Level ", farm_level, ": HP=", int(max_health), " Damage=", snappedf(contact_damage, 0.1))
+	print("🌽 Corn scaled to Farm Level ", farm_level, ": HP=", int(max_health), " Damage=", snappedf(contact_damage, 0.1))
 
 func _physics_process(delta):
 	if is_dead:
@@ -111,7 +108,6 @@ func _physics_process(delta):
 	_check_player_collision()
 	
 	move_and_slide()
-	_update_animation()
 
 func _check_player_collision():
 	if is_dead or damage_timer > 0 or is_paused:
@@ -127,7 +123,7 @@ func _check_player_collision():
 				damage_timer = damage_cooldown
 				damage_pause_timer = damage_pause_duration
 				is_paused = true
-				print("Mushroom dealt ", contact_damage, " contact damage")
+				print("Corn tornado dealt ", contact_damage, " contact damage")
 				break
 
 func _chase_player(delta):
@@ -137,7 +133,6 @@ func _chase_player(delta):
 	
 	var direction = (player.global_position - global_position).normalized()
 	velocity = direction * chase_speed
-	current_direction = direction
 
 func _patrol(delta):
 	var direction = (patrol_target - global_position).normalized()
@@ -152,33 +147,12 @@ func _patrol(delta):
 		direction = (patrol_target - global_position).normalized()
 	
 	velocity = direction * (move_speed * 0.5)
-	current_direction = direction
-
-func _update_animation():
-	if is_dead or not animated_sprite:
-		return
-	
-	if velocity.length() < 10:
-		return
-	
-	var dir = current_direction.normalized()
-	
-	if abs(dir.x) > abs(dir.y):
-		if dir.x > 0:
-			animated_sprite.play("walk_right")
-		else:
-			animated_sprite.play("walk_left")
-	else:
-		if dir.y > 0:
-			animated_sprite.play("walk_down")
-		else:
-			animated_sprite.play("walk_up")
 
 func _on_detection_area_entered(body):
 	if body.is_in_group("player") and not is_dead:
 		player = body
 		is_chasing = true
-		print("Mushroom detected player!")
+		print("Corn tornado detected player!")
 
 func _on_detection_area_exited(body):
 	if body == player:
@@ -225,7 +199,9 @@ func _die():
 	
 	if animated_sprite:
 		var tween = create_tween()
-		tween.tween_property(animated_sprite, "modulate:a", 0.0, 0.3)
+		tween.set_parallel(true)
+		tween.tween_property(animated_sprite, "modulate:a", 0.0, 0.5)
+		tween.tween_property(animated_sprite, "scale", Vector2.ZERO, 0.5)
 		await tween.finished
 	
 	_drop_loot()
@@ -238,10 +214,10 @@ func _drop_loot():
 	if player and player.level_system:
 		if randf() < player.level_system.luck:
 			drop_count = 2
-			print("DOUBLE DROPS! 2x mushroom!")
+			print("DOUBLE DROPS! 2x corn!")
 	
 	for i in range(drop_count):
-		ItemSpawner.spawn_item("mushroom", global_position, get_parent())
+		ItemSpawner.spawn_item("corn", global_position, get_parent())
 
 func apply_knockback(force: Vector2):
 	if is_dead:

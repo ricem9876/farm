@@ -1,11 +1,11 @@
 extends Node2D
 class_name ChestBeamGuide
 
-## ChestBeamGuide - Draws a pulsing yellow beam from chest to player
-## Appears after 30 seconds if player has the matching key
+## ChestBeamGuide - Draws a pulsing golden beam from Harvest Basket to player
+## Appears after 30 seconds if player has a Harvest Key
 ## Automatically attaches to LootChest parent
 
-@export var beam_color: Color = Color(1.0, 1.0, 0.0, 0.3)  # Transparent yellow
+@export var beam_color: Color = Color(0.9, 0.7, 0.2, 0.3)  # Golden/harvest color
 @export var beam_width: float = 2.0
 @export var pulse_speed: float = 2.0  # Speed of pulse animation
 @export var min_alpha: float = 0.2  # Minimum transparency
@@ -54,7 +54,7 @@ func _process(delta):
 		queue_redraw()  # Request redraw each frame
 
 func check_if_should_activate():
-	"""Check if player has the matching key"""
+	"""Check if player has a Harvest Key"""
 	if not chest or not chest.is_locked:
 		return
 	
@@ -63,23 +63,22 @@ func check_if_should_activate():
 	if not player:
 		return
 	
-	# Check if player has the matching key
+	# Check if player has a Harvest Key
 	if player.has_method("get_inventory_manager"):
 		var inventory = player.get_inventory_manager()
-		if has_matching_key(inventory):
+		if has_harvest_key(inventory):
 			activate_beam()
 
-func has_matching_key(inventory: InventoryManager) -> bool:
-	"""Check if inventory contains the key needed for this chest"""
-	if not inventory or not chest:
+func has_harvest_key(inventory: InventoryManager) -> bool:
+	"""Check if inventory contains a Harvest Key"""
+	if not inventory:
 		return false
 	
 	for i in range(inventory.max_slots):
 		var item = inventory.items[i]
 		if item and item is KeyItem:
-			var key = item as KeyItem
-			if key.chest_type == chest.required_key_type:
-				return true
+			# Since there's only one key type now, any KeyItem is a Harvest Key
+			return true
 	
 	return false
 
@@ -89,7 +88,7 @@ func activate_beam():
 		return
 	
 	is_active = true
-	print("Beam activated for ", chest.chest_name, " - Player has ", chest.required_key_type, " key!")
+	print("Beam activated for ", chest.chest_name, " - Player has Harvest Key!")
 
 func deactivate_beam():
 	"""Deactivate the guiding beam"""

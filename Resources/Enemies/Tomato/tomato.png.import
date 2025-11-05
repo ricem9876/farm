@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cvsjbj3bmcv1m"
-path="res://.godot/imported/Mushroom-Attack.png-fee4648df30c653f0bc1c2408b41fd39.ctex"
+uid="uid://c8k8e427fym8x"
+path="res://.godot/imported/tomato.png-5ea6648963e2e022dfa9b6766adf6fbb.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Resources/Enemies/Mushroom/Animations/Mushroom-Attack.png"
-dest_files=["res://.godot/imported/Mushroom-Attack.png-fee4648df30c653f0bc1c2408b41fd39.ctex"]
+source_file="res://Resources/Enemies/Tomato/tomato.png"
+dest_files=["res://.godot/imported/tomato.png-5ea6648963e2e022dfa9b6766adf6fbb.ctex"]
 
 [params]
 

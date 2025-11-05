@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bcp1ojec7vpx4"
-path="res://.godot/imported/Mushroom-Die.png-5b15470b26d2b0170ad5f366cccbea62.ctex"
+uid="uid://d128movdqptnk"
+path="res://.godot/imported/pumpkin.png-c48448de880e50df4e7f21862fb60272.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Resources/Enemies/Mushroom/Animations/Mushroom-Die.png"
-dest_files=["res://.godot/imported/Mushroom-Die.png-5b15470b26d2b0170ad5f366cccbea62.ctex"]
+source_file="res://Resources/Enemies/Pumpkin/pumpkin.png"
+dest_files=["res://.godot/imported/pumpkin.png-c48448de880e50df4e7f21862fb60272.ctex"]
 
 [params]
 

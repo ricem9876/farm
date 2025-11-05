@@ -70,16 +70,10 @@ func _ready():
 func _setup_ui():
 	var pixel_font = preload("res://Resources/Fonts/yoster.ttf")
 	
-	# Setup title
-	if title_label:
-		title_label.text = "FARM DEFENSE"
-		title_label.add_theme_font_override("font", pixel_font)
-		title_label.add_theme_font_size_override("font_size", 64)
-		title_label.add_theme_color_override("font_color", Color(0.87058824, 0.72156864, 0.5294118))
-	
+
 	# Setup version label
 	if version_label:
-		version_label.text = "v0.0.1"
+		version_label.text = "v0.2.1"
 		version_label.add_theme_font_override("font", pixel_font)
 		version_label.add_theme_font_size_override("font_size", 16)
 		version_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))

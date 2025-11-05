@@ -428,31 +428,31 @@ func _create_item_from_name(item_name: String) -> Item:
 	match name_lower:
 		"mushroom":
 			item.name = "Mushroom"
-			item.description = "A tasty mushroom dropped by an enemy"
+			item.description = "A tasty mushroom that can be cooked or sold"
 			item.stack_size = 99
-			item.item_type = "material"
-			item.icon = preload("res://Resources/Inventory/Sprites/mushroom.png")
+			item.item_type = "food"
+			item.icon = preload("res://Resources/Inventory/Sprites/item_mushroom.png")
 		
-		"fiber", "plant fiber":
-			item.name = "Plant Fiber"
-			item.description = "Tough plant fibers used for crafting"
+		"corn":
+			item.name = "Corn"
+			item.description = "Fresh corn harvested from the field"
 			item.stack_size = 99
-			item.item_type = "material"
-			item.icon = preload("res://Resources/Inventory/Sprites/fiber.png")
+			item.item_type = "food"
+			item.icon = preload("res://Resources/Inventory/Sprites/item_corn.png")
 		
-		"fur", "wolf fur":
-			item.name = "Wolf Fur"
-			item.description = "Soft fur from a wolf, useful for crafting"
+		"pumpkin":
+			item.name = "Pumpkin"
+			item.description = "A large pumpkin ready for cooking or selling"
 			item.stack_size = 99
-			item.item_type = "material"
-			item.icon = preload("res://Resources/Inventory/Sprites/fur.png")
+			item.item_type = "food"
+			item.icon = preload("res://Resources/Inventory/Sprites/item_pumpkin.png")
 		
-		"wood":
-			item.name = "Wood"
-			item.description = "Sturdy wood from a fallen tree"
+		"tomato":
+			item.name = "Tomato"
+			item.description = "A ripe tomato full of nutrients"
 			item.stack_size = 99
-			item.item_type = "material"
-			item.icon = preload("res://Resources/Inventory/Sprites/wood.png")
+			item.item_type = "food"
+			item.icon = preload("res://Resources/Inventory/Sprites/item_tomato.png")
 		
 		"coin", "coins":
 			item.name = "Coin"
@@ -475,39 +475,18 @@ func _create_item_from_name(item_name: String) -> Item:
 	return item
 
 func _create_key_item_from_name(item_name: String) -> KeyItem:
-	"""Create a KeyItem based on the item name (e.g., 'Wood Key', 'Mushroom Key')"""
+	"""Create a KeyItem based on the item name - now only Harvest Key"""
 	var key = KeyItem.new()
 	var name_lower = item_name.to_lower()
 	
-	# Determine chest type from name
-	if "wood" in name_lower:
-		key.name = "Wood Key"
-		key.description = "A key crafted from wood. Opens Wood Chests."
-		key.chest_type = "wood"
-		key.key_color = Color(0.6, 0.4, 0.2)  # Brown
-		key.icon = preload("res://Resources/Map/Objects/WoodKey.png")
-	
-	elif "mushroom" in name_lower:
-		key.name = "Mushroom Key"
-		key.description = "A key crafted from mushrooms. Opens Mushroom Chests."
-		key.chest_type = "mushroom"
-		key.key_color = Color(0.8, 0.3, 0.3)  # Red
-		key.icon = preload("res://Resources/Map/Objects/MushroomKey.png")
-	
-	elif "plant" in name_lower or "fiber" in name_lower:
-		key.name = "Plant Key"
-		key.description = "A key crafted from plant fiber. Opens Plant Chests."
-		key.chest_type = "plant"
-		key.key_color = Color(0.3, 0.8, 0.3)  # Green
-		key.icon = preload("res://Resources/Map/Objects/PlantKey.png")
-	
-	elif "wool" in name_lower or "fur" in name_lower:
-		key.name = "Wool Key"
-		key.description = "A key crafted from wool. Opens Wool Chests."
-		key.chest_type = "wool"
-		key.key_color = Color(0.9, 0.9, 0.9)  # White
-		key.icon = preload("res://Resources/Map/Objects/WoolKey.png")
-	
+	# Check if this is a harvest key
+	if "harvest" in name_lower or name_lower.ends_with("key"):
+		# All keys are now Harvest Keys
+		key.name = "Harvest Key"
+		key.description = "A golden key crafted from fresh vegetables. Opens Harvest Baskets."
+		key.chest_type = "harvest"
+		key.key_color = Color(0.8, 0.6, 0.2)  # Golden harvest color
+		key.icon = preload("res://Resources/Inventory/Sprites/HarvestKey.png")
 	else:
 		print("Unknown key type: ", item_name)
 		return null
@@ -665,16 +644,16 @@ func debug_level_up():
 	print("DEBUG: Forced level up")
 
 func _debug_topup_resources():
-	"""Debug cheat: Grant 25 of each resource material"""
+	"""Debug cheat: Grant 25 of each food item"""
 	if not inventory_manager:
 		print("DEBUG: Cannot add resources - no inventory manager")
 		return
 	
 	var resources = [
-		{"name": "Wood", "quantity": 25},
-		{"name": "Plant Fiber", "quantity": 25},
-		{"name": "Wolf Fur", "quantity": 25},
 		{"name": "Mushroom", "quantity": 25},
+		{"name": "Corn", "quantity": 25},
+		{"name": "Pumpkin", "quantity": 25},
+		{"name": "Tomato", "quantity": 25},
 		{"name": "Coin", "quantity": 100},
 		{"name": "Tech Point", "quantity": 50}
 	]

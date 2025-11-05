@@ -1,22 +1,22 @@
-# Mushroom.gd - Mushroom enemy with 4-direction movement
+# Tomato.gd - Tomato enemy with 4-direction movement
 extends CharacterBody2D
-class_name Mushroom
+class_name Tomato
 
 signal died(experience_points: int)
 
-@export var max_health: float = 50.0
-@export var experience_value: int = 30
-@export var move_speed: float = 100.0
-@export var chase_speed: float = 120.0
-@export var contact_damage: float = 12.0
+@export var max_health: float = 55.0
+@export var experience_value: int = 35
+@export var move_speed: float = 130.0
+@export var chase_speed: float = 150.0
+@export var contact_damage: float = 14.0
 @export var damage_cooldown: float = 1.0
-@export var detection_range: float = 180.0
-@export var patrol_radius: float = 50.0
+@export var detection_range: float = 220.0
+@export var patrol_radius: float = 55.0
 @export var damage_pause_duration: float = 0.25
 
 # Level scaling
-var base_health: float = 50.0
-var base_damage: float = 12.0
+var base_health: float = 55.0
+var base_damage: float = 14.0
 
 var current_health: float
 var player: Node2D
@@ -82,7 +82,7 @@ func _apply_level_scaling():
 	max_health = base_health * health_multiplier
 	contact_damage = base_damage * damage_multiplier
 	
-	print("🍄 Mushroom scaled to Farm Level ", farm_level, ": HP=", int(max_health), " Damage=", snappedf(contact_damage, 0.1))
+	print("🍅 Tomato scaled to Farm Level ", farm_level, ": HP=", int(max_health), " Damage=", snappedf(contact_damage, 0.1))
 
 func _physics_process(delta):
 	if is_dead:
@@ -127,7 +127,7 @@ func _check_player_collision():
 				damage_timer = damage_cooldown
 				damage_pause_timer = damage_pause_duration
 				is_paused = true
-				print("Mushroom dealt ", contact_damage, " contact damage")
+				print("Tomato dealt ", contact_damage, " contact damage")
 				break
 
 func _chase_player(delta):
@@ -178,7 +178,7 @@ func _on_detection_area_entered(body):
 	if body.is_in_group("player") and not is_dead:
 		player = body
 		is_chasing = true
-		print("Mushroom detected player!")
+		print("Tomato detected player!")
 
 func _on_detection_area_exited(body):
 	if body == player:
@@ -238,10 +238,10 @@ func _drop_loot():
 	if player and player.level_system:
 		if randf() < player.level_system.luck:
 			drop_count = 2
-			print("DOUBLE DROPS! 2x mushroom!")
+			print("DOUBLE DROPS! 2x tomato!")
 	
 	for i in range(drop_count):
-		ItemSpawner.spawn_item("mushroom", global_position, get_parent())
+		ItemSpawner.spawn_item("tomato", global_position, get_parent())
 
 func apply_knockback(force: Vector2):
 	if is_dead:

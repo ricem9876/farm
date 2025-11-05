@@ -6,7 +6,7 @@ signal forge_closed
 @onready var control_node = $Control
 @onready var background_panel = $Control/Background
 @onready var title_label = $Control/Background/VBox/TitleBar/TitleLabel
-@onready var recipes_container = $Control/Background/VBox/ScrollContainer/RecipesContainer
+@onready var recipe_container = $Control/Background/VBox/ScrollContainer/RecipesContainer
 @onready var close_button = $Control/Background/CloseButton
 
 var player: Node2D
@@ -14,12 +14,16 @@ var key_forge: KeyForge
 
 const UI_SCALE = 0.5
 
-# Crafting recipes: material_name -> {quantity_required, key_name}
-const RECIPES = {
-	"Mushroom": {"quantity": 25, "key": "Mushroom Key"},
-	"Wood": {"quantity": 25, "key": "Wood Key"},
-	"Plant Fiber": {"quantity": 25, "key": "Plant Key"},
-	"Wolf Fur": {"quantity": 25, "key": "Wool Key"}
+# Single Harvest Key recipe: requires 25 of each vegetable
+const HARVEST_KEY_RECIPE = {
+	"name": "Harvest Key",
+	"description": "A golden key crafted from fresh vegetables",
+	"ingredients": {
+		"Mushroom": 25,
+		"Corn": 25,
+		"Pumpkin": 25,
+		"Tomato": 25
+	}
 }
 
 func _ready():
@@ -28,7 +32,7 @@ func _ready():
 	# Wait a frame for nodes to be ready
 	await get_tree().process_frame
 	
-	# Setup the control node instead
+	# Setup the control node
 	if control_node:
 		control_node.set_anchors_preset(Control.PRESET_FULL_RECT)
 		control_node.scale = Vector2(UI_SCALE, UI_SCALE)
@@ -54,7 +58,7 @@ func _setup_styling():
 		style_box.border_width_right = 8
 		style_box.border_width_top = 8
 		style_box.border_width_bottom = 8
-		style_box.border_color = Color(0.6, 0.4, 0.2)
+		style_box.border_color = Color(0.8, 0.6, 0.2)  # Golden border
 		style_box.corner_radius_top_left = 16
 		style_box.corner_radius_top_right = 16
 		style_box.corner_radius_bottom_left = 16
@@ -63,8 +67,8 @@ func _setup_styling():
 	
 	# Title
 	if title_label:
-		title_label.text = "KEY FORGE"
-		title_label.add_theme_color_override("font_color", Color(0.4, 0.3, 0.15))
+		title_label.text = "HARVEST KEY FORGE"
+		title_label.add_theme_color_override("font_color", Color(0.8, 0.6, 0.2))  # Golden text
 		title_label.add_theme_font_override("font", pixel_font)
 		title_label.add_theme_font_size_override("font_size", 56)
 	
@@ -76,7 +80,6 @@ func _setup_styling():
 		close_button.anchor_top = 0.0
 		close_button.anchor_right = 1.0
 		close_button.anchor_bottom = 0.0
-
 		
 		close_button.offset_left = -100.0
 		close_button.offset_top = 20.0
@@ -123,35 +126,31 @@ func open():
 	
 	visible = true
 	_position_ui_centered()
-	_populate_recipes()
-	print("Key Forge UI opened")
+	_populate_recipe()
+	print("Harvest Key Forge UI opened")
 
-func _populate_recipes():
-	# Clear existing recipe cards
-	for child in recipes_container.get_children():
+func _populate_recipe():
+	# Clear existing recipe card
+	for child in recipe_container.get_children():
 		child.queue_free()
 	
 	var inventory = player.get_inventory_manager()
-	
-	# Create a recipe card for each material
-	for material_name in RECIPES.keys():
-		var recipe = RECIPES[material_name]
-		_create_recipe_card(material_name, recipe, inventory)
+	_create_harvest_key_card(inventory)
 
-func _create_recipe_card(material_name: String, recipe: Dictionary, inventory: InventoryManager):
+func _create_harvest_key_card(inventory: InventoryManager):
 	var pixel_font = preload("res://Resources/Fonts/yoster.ttf")
 	
-	# Card container
+	# Main card container
 	var card = PanelContainer.new()
-	card.custom_minimum_size = Vector2(1100, 160)
+	card.custom_minimum_size = Vector2(1100, 550)  # Reduced height for horizontal layout
 	
 	var card_style = StyleBoxFlat.new()
 	card_style.bg_color = Color(0.98, 0.96, 0.92)
-	card_style.border_width_left = 4
-	card_style.border_width_right = 4
-	card_style.border_width_top = 4
-	card_style.border_width_bottom = 4
-	card_style.border_color = Color(0.5, 0.35, 0.2)
+	card_style.border_width_left = 6
+	card_style.border_width_right = 6
+	card_style.border_width_top = 6
+	card_style.border_width_bottom = 6
+	card_style.border_color = Color(0.8, 0.6, 0.2)  # Golden border
 	card_style.corner_radius_top_left = 12
 	card_style.corner_radius_top_right = 12
 	card_style.corner_radius_bottom_left = 12
@@ -160,133 +159,226 @@ func _create_recipe_card(material_name: String, recipe: Dictionary, inventory: I
 	
 	# Margin
 	var margin = MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 20)
-	margin.add_theme_constant_override("margin_top", 20)
-	margin.add_theme_constant_override("margin_right", 20)
-	margin.add_theme_constant_override("margin_bottom", 20)
+	margin.add_theme_constant_override("margin_left", 30)
+	margin.add_theme_constant_override("margin_top", 30)
+	margin.add_theme_constant_override("margin_right", 30)
+	margin.add_theme_constant_override("margin_bottom", 30)
 	card.add_child(margin)
 	
-	# Horizontal layout
-	var hbox = HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 40)
-	margin.add_child(hbox)
+	# Main vertical layout
+	var main_vbox = VBoxContainer.new()
+	main_vbox.add_theme_constant_override("separation", 30)
+	margin.add_child(main_vbox)
 	
-	# Left side - Material info
+	# Title section
+	var title_hbox = HBoxContainer.new()
+	title_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	title_hbox.add_theme_constant_override("separation", 20)
+	main_vbox.add_child(title_hbox)
+	
+	# Harvest Key icon
+	var key_icon = TextureRect.new()
+	key_icon.texture = preload("res://Resources/Inventory/Sprites/HarvestKey.png")
+	key_icon.custom_minimum_size = Vector2(100, 100)
+	key_icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	key_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	title_hbox.add_child(key_icon)
+	
+	# Title label
+	var key_title = Label.new()
+	key_title.text = HARVEST_KEY_RECIPE.name
+	key_title.add_theme_font_override("font", pixel_font)
+	key_title.add_theme_font_size_override("font_size", 48)
+	key_title.add_theme_color_override("font_color", Color(0.8, 0.6, 0.2))
+	title_hbox.add_child(key_title)
+	
+	# Description
+	var desc_label = Label.new()
+	desc_label.text = HARVEST_KEY_RECIPE.description
+	desc_label.add_theme_font_override("font", pixel_font)
+	desc_label.add_theme_font_size_override("font_size", 24)
+	desc_label.add_theme_color_override("font_color", Color(0.4, 0.3, 0.2))
+	desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	main_vbox.add_child(desc_label)
+	
+	# Separator
+	var separator = HSeparator.new()
+	separator.add_theme_constant_override("separation", 20)
+	main_vbox.add_child(separator)
+	
+	# Main content area - horizontal split
+	var content_hbox = HBoxContainer.new()
+	content_hbox.add_theme_constant_override("separation", 60)
+	main_vbox.add_child(content_hbox)
+	
+	# LEFT SIDE - Ingredients
 	var left_vbox = VBoxContainer.new()
 	left_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hbox.add_child(left_vbox)
+	left_vbox.add_theme_constant_override("separation", 20)
+	content_hbox.add_child(left_vbox)
 	
-	# Material icon and quantity
-	var material_hbox = HBoxContainer.new()
-	material_hbox.add_theme_constant_override("separation", 15)
-	left_vbox.add_child(material_hbox)
+	# Ingredients section
+	var ingredients_label = Label.new()
+	ingredients_label.text = "Required Ingredients:"
+	ingredients_label.add_theme_font_override("font", pixel_font)
+	ingredients_label.add_theme_font_size_override("font_size", 32)
+	ingredients_label.add_theme_color_override("font_color", Color(0.3, 0.2, 0.1))
+	left_vbox.add_child(ingredients_label)
 	
-	# Material icon
-	var icon_texture = _get_material_icon(material_name)
-	if icon_texture:
-		var icon_rect = TextureRect.new()
-		icon_rect.texture = icon_texture
-		icon_rect.custom_minimum_size = Vector2(80, 80)
-		icon_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
-		icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		material_hbox.add_child(icon_rect)
+	# Ingredients list (vertical)
+	var ingredients_vbox = VBoxContainer.new()
+	ingredients_vbox.add_theme_constant_override("separation", 15)
+	left_vbox.add_child(ingredients_vbox)
 	
-	# Material name and owned quantity
-	var material_info = VBoxContainer.new()
-	material_hbox.add_child(material_info)
+	var can_craft = true
 	
-	var name_label = Label.new()
-	name_label.text = "[%d %s]" % [recipe.quantity, material_name]
-	name_label.add_theme_font_override("font", pixel_font)
-	name_label.add_theme_font_size_override("font_size", 36)
-	name_label.add_theme_color_override("font_color", Color(0.3, 0.2, 0.1))
-	material_info.add_child(name_label)
+	# Create ingredient rows
+	for ingredient_name in HARVEST_KEY_RECIPE.ingredients:
+		var required = HARVEST_KEY_RECIPE.ingredients[ingredient_name]
+		var owned = inventory.count_item_by_name(ingredient_name)
+		var has_enough = owned >= required
+		
+		if not has_enough:
+			can_craft = false
+		
+		# Ingredient container
+		var ingredient_container = VBoxContainer.new()
+		ingredient_container.add_theme_constant_override("separation", 8)
+		
+		# Ingredient row (icon + name + count)
+		var ingredient_hbox = HBoxContainer.new()
+		ingredient_hbox.add_theme_constant_override("separation", 15)
+		
+		# Icon
+		var icon_texture = _get_vegetable_icon(ingredient_name)
+		if icon_texture:
+			var icon_rect = TextureRect.new()
+			icon_rect.texture = icon_texture
+			icon_rect.custom_minimum_size = Vector2(50, 50)
+			icon_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+			icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			ingredient_hbox.add_child(icon_rect)
+		
+		# Name and quantity
+		var info_hbox = HBoxContainer.new()
+		info_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		info_hbox.add_theme_constant_override("separation", 20)
+		
+		var name_label = Label.new()
+		name_label.text = ingredient_name
+		name_label.add_theme_font_override("font", pixel_font)
+		name_label.add_theme_font_size_override("font_size", 28)
+		name_label.add_theme_color_override("font_color", Color(0.3, 0.2, 0.1))
+		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		info_hbox.add_child(name_label)
+		
+		var qty_label = Label.new()
+		qty_label.text = "%d / %d" % [owned, required]
+		qty_label.add_theme_font_override("font", pixel_font)
+		qty_label.add_theme_font_size_override("font_size", 24)
+		var qty_color = Color(0.2, 0.7, 0.2) if has_enough else Color(0.8, 0.3, 0.3)
+		qty_label.add_theme_color_override("font_color", qty_color)
+		info_hbox.add_child(qty_label)
+		
+		ingredient_hbox.add_child(info_hbox)
+		ingredient_container.add_child(ingredient_hbox)
+		
+		# Progress bar
+		var progress = ProgressBar.new()
+		progress.custom_minimum_size = Vector2(400, 25)
+		progress.max_value = required
+		progress.value = owned
+		progress.show_percentage = false
+		
+		var progress_style = StyleBoxFlat.new()
+		progress_style.bg_color = Color(0.3, 0.3, 0.3, 0.3)
+		progress_style.corner_radius_top_left = 5
+		progress_style.corner_radius_top_right = 5
+		progress_style.corner_radius_bottom_left = 5
+		progress_style.corner_radius_bottom_right = 5
+		progress.add_theme_stylebox_override("background", progress_style)
+		
+		var fill_style = StyleBoxFlat.new()
+		fill_style.bg_color = Color(0.2, 0.7, 0.2) if has_enough else Color(0.8, 0.6, 0.2)
+		fill_style.corner_radius_top_left = 5
+		fill_style.corner_radius_top_right = 5
+		fill_style.corner_radius_bottom_left = 5
+		fill_style.corner_radius_bottom_right = 5
+		progress.add_theme_stylebox_override("fill", fill_style)
+		
+		ingredient_container.add_child(progress)
+		ingredients_vbox.add_child(ingredient_container)
 	
-	var owned = inventory.count_item_by_name(material_name)
-	var owned_label = Label.new()
-	owned_label.text = "Owned: %d" % owned
-	owned_label.add_theme_font_override("font", pixel_font)
-	owned_label.add_theme_font_size_override("font_size", 28)
-	var color = Color(0.2, 0.7, 0.2) if owned >= recipe.quantity else Color(0.8, 0.3, 0.3)
-	owned_label.add_theme_color_override("font_color", color)
-	material_info.add_child(owned_label)
-	
-	# Arrow
-	var arrow = Label.new()
-	arrow.text = "→"
-	arrow.add_theme_font_override("font", pixel_font)
-	arrow.add_theme_font_size_override("font_size", 48)
-	arrow.add_theme_color_override("font_color", Color(0.5, 0.4, 0.2))
-	hbox.add_child(arrow)
-	
-	# Right side - Key info
+	# RIGHT SIDE - Key preview and craft button
 	var right_vbox = VBoxContainer.new()
-	right_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hbox.add_child(right_vbox)
+	right_vbox.custom_minimum_size = Vector2(350, 0)
+	right_vbox.add_theme_constant_override("separation", 30)
+	content_hbox.add_child(right_vbox)
 	
-	# Key icon and name
-	var key_hbox = HBoxContainer.new()
-	key_hbox.add_theme_constant_override("separation", 15)
-	right_vbox.add_child(key_hbox)
+	# Key preview section
+	var key_preview_vbox = VBoxContainer.new()
+	key_preview_vbox.add_theme_constant_override("separation", 15)
+	right_vbox.add_child(key_preview_vbox)
 	
-	# Key icon
-	var key_icon = _get_key_icon(material_name)
-	if key_icon:
-		var key_icon_rect = TextureRect.new()
-		key_icon_rect.texture = key_icon
-		key_icon_rect.custom_minimum_size = Vector2(80, 80)
-		key_icon_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
-		key_icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		key_hbox.add_child(key_icon_rect)
+	var preview_label = Label.new()
+	preview_label.text = "Crafts:"
+	preview_label.add_theme_font_override("font", pixel_font)
+	preview_label.add_theme_font_size_override("font_size", 28)
+	preview_label.add_theme_color_override("font_color", Color(0.3, 0.2, 0.1))
+	preview_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	key_preview_vbox.add_child(preview_label)
 	
-	# Key name
-	var key_label = Label.new()
-	key_label.text = recipe.key
-	key_label.add_theme_font_override("font", pixel_font)
-	key_label.add_theme_font_size_override("font_size", 36)
-	key_label.add_theme_color_override("font_color", Color(0.7, 0.6, 0.0))
-	key_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	key_hbox.add_child(key_label)
+	# Large key icon
+	var large_key_icon = TextureRect.new()
+	large_key_icon.texture = preload("res://Resources/Inventory/Sprites/HarvestKey.png")
+	large_key_icon.custom_minimum_size = Vector2(200, 200)
+	large_key_icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	large_key_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	key_preview_vbox.add_child(large_key_icon)
+	
+	var key_name_label = Label.new()
+	key_name_label.text = "Harvest Key"
+	key_name_label.add_theme_font_override("font", pixel_font)
+	key_name_label.add_theme_font_size_override("font_size", 32)
+	key_name_label.add_theme_color_override("font_color", Color(0.8, 0.6, 0.2))
+	key_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	key_preview_vbox.add_child(key_name_label)
+	
+	# Spacer to push button down
+	var spacer = Control.new()
+	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	right_vbox.add_child(spacer)
 	
 	# Craft button
 	var craft_button = Button.new()
-	craft_button.text = "CRAFT"
-	craft_button.custom_minimum_size = Vector2(200, 70)
+	craft_button.text = "CRAFT" if can_craft else "NEED MORE"
+	craft_button.custom_minimum_size = Vector2(300, 80)
 	craft_button.add_theme_font_override("font", pixel_font)
-	craft_button.add_theme_font_size_override("font_size", 32)
-	
-	var can_craft = owned >= recipe.quantity
+	craft_button.add_theme_font_size_override("font_size", 36)
 	craft_button.disabled = not can_craft
 	
-	_style_button(craft_button, Color(0.3, 0.7, 0.3) if can_craft else Color(0.6, 0.6, 0.6))
+	print("DEBUG: Creating craft button - can_craft: ", can_craft)
+	print("DEBUG: Button text: ", craft_button.text)
 	
-	craft_button.pressed.connect(_on_craft_pressed.bind(material_name, recipe))
-	hbox.add_child(craft_button)
+	_style_button(craft_button, Color(0.8, 0.6, 0.2) if can_craft else Color(0.5, 0.5, 0.5))
 	
-	recipes_container.add_child(card)
+	craft_button.pressed.connect(_on_craft_harvest_key_pressed)
+	right_vbox.add_child(craft_button)
+	
+	print("DEBUG: Button added to right panel")
+	
+	recipe_container.add_child(card)
 
-func _get_material_icon(material_name: String) -> Texture2D:
-	match material_name:
+func _get_vegetable_icon(vegetable_name: String) -> Texture2D:
+	match vegetable_name:
 		"Mushroom":
-			return preload("res://Resources/Inventory/Sprites/mushroom.png")
-		"Wood":
-			return preload("res://Resources/Inventory/Sprites/wood.png")
-		"Plant Fiber":
-			return preload("res://Resources/Inventory/Sprites/fiber.png")
-		"Wolf Fur":
-			return preload("res://Resources/Inventory/Sprites/fur.png")
-	return null
-
-func _get_key_icon(material_name: String) -> Texture2D:
-	match material_name:
-		"Mushroom":
-			return preload("res://Resources/Map/Objects/MushroomKey.png")
-		"Wood":
-			return preload("res://Resources/Map/Objects/WoodKey.png")
-		"Plant Fiber":
-			return preload("res://Resources/Map/Objects/PlantKey.png")
-		"Wolf Fur":
-			return preload("res://Resources/Map/Objects/WoolKey.png")
+			return preload("res://Resources/Inventory/Sprites/item_mushroom.png")
+		"Corn":
+			return preload("res://Resources/Inventory/Sprites/item_corn.png")
+		"Pumpkin":
+			return preload("res://Resources/Inventory/Sprites/item_pumpkin.png")
+		"Tomato":
+			return preload("res://Resources/Inventory/Sprites/item_tomato.png")
 	return null
 
 func _style_button(button: Button, color: Color):
@@ -310,57 +402,47 @@ func _style_button(button: Button, color: Color):
 	var pressed_style = normal.duplicate()
 	pressed_style.bg_color = color.darkened(0.2)
 	button.add_theme_stylebox_override("pressed", pressed_style)
+	
+	var disabled_style = normal.duplicate()
+	disabled_style.bg_color = Color(0.5, 0.5, 0.5)
+	disabled_style.border_color = Color(0.3, 0.3, 0.3)
+	button.add_theme_stylebox_override("disabled", disabled_style)
 
-func _on_craft_pressed(material_name: String, recipe: Dictionary):
+func _on_craft_harvest_key_pressed():
+	if not key_forge:
+		print("ERROR: No key forge reference!")
+		return
+	
 	var inventory = player.get_inventory_manager()
 	
-	# Check if player has enough materials
-	if not inventory.has_enough_items(material_name, recipe.quantity):
-		print("Not enough ", material_name, "!")
-		return
+	# Verify player has all ingredients
+	for ingredient_name in HARVEST_KEY_RECIPE.ingredients:
+		var required = HARVEST_KEY_RECIPE.ingredients[ingredient_name]
+		if inventory.count_item_by_name(ingredient_name) < required:
+			print("Not enough ", ingredient_name, "!")
+			return
 	
-	# Remove materials
-	if not inventory.remove_item_by_name(material_name, recipe.quantity):
-		print("Failed to remove materials!")
-		return
-	
-	# Create and add key
-	var key_item = _create_key_item(material_name, recipe.key)
-	if key_item and player.add_item_to_inventory(key_item, 1):
-		print("✓ Crafted: ", recipe.key)
-		# Refresh the UI to update owned quantities
-		_populate_recipes()
+	# Use the KeyForge's craft method
+	if key_forge.has_method("craft_harvest_key"):
+		if key_forge.craft_harvest_key(inventory):
+			print("✓ Successfully crafted Harvest Key!")
+			
+			# Notify ChestBeamManager if it exists
+			if has_node("/root/ChestBeamManager"):
+				var beam_manager = get_node("/root/ChestBeamManager")
+				beam_manager.notify_key_acquired("harvest")
+			
+			# Refresh the UI to update quantities
+			_populate_recipe()
+		else:
+			print("✗ Failed to craft Harvest Key")
 	else:
-		print("✗ Failed to craft key (inventory full?)")
-		# Return materials
-		var material_item = player._create_item_from_name(material_name)
-		if material_item:
-			inventory.add_item(material_item, recipe.quantity)
-
-func _create_key_item(material_name: String, key_name: String) -> Item:
-	var key = Item.new()
-	key.name = key_name
-	key.description = "Key to unlock a " + material_name.to_lower() + " chest"
-	key.stack_size = 1
-	key.item_type = "key"
-	
-	# Set the correct icon
-	match material_name:
-		"Mushroom":
-			key.icon = preload("res://Resources/Map/Objects/MushroomKey.png")
-		"Wood":
-			key.icon = preload("res://Resources/Map/Objects/WoodKey.png")
-		"Plant Fiber":
-			key.icon = preload("res://Resources/Map/Objects/PlantKey.png")
-		"Wolf Fur":
-			key.icon = preload("res://Resources/Map/Objects/WoolKey.png")
-	
-	return key
+		print("ERROR: KeyForge doesn't have craft_harvest_key method!")
 
 func _on_close_pressed():
 	visible = false
 	forge_closed.emit()
-	print("Key Forge UI closed")
+	print("Harvest Key Forge UI closed")
 
 func _position_ui_centered():
 	if not background_panel:

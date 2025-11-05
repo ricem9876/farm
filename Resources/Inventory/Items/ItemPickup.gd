@@ -48,16 +48,16 @@ func _setup_item_appearance():
 	
 	match item_name:
 		"mushroom":
-			sprite.texture = preload("res://Resources/Inventory/Sprites/mushroom.png")
+			sprite.texture = preload("res://Resources/Inventory/Sprites/item_mushroom.png")
 			sprite.scale = Vector2(.5,.5)
-		"fiber":
-			sprite.texture = preload("res://Resources/Inventory/Sprites/fiber.png")
+		"corn":
+			sprite.texture = preload("res://Resources/Inventory/Sprites/item_corn.png")
 			sprite.scale = Vector2(.5,.5)
-		"fur":
-			sprite.texture = preload("res://Resources/Inventory/Sprites/fur.png")
+		"pumpkin":
+			sprite.texture = preload("res://Resources/Inventory/Sprites/item_pumpkin.png")
 			sprite.scale = Vector2(.5,.5)
-		"wood":
-			sprite.texture = preload("res://Resources/Inventory/Sprites/wood.png")
+		"tomato":
+			sprite.texture = preload("res://Resources/Inventory/Sprites/item_tomato.png")
 			sprite.scale = Vector2(.5,.5)
 		"coin":
 			sprite.texture = preload("res://Resources/Map/Objects/Coin.png")
@@ -67,18 +67,9 @@ func _setup_item_appearance():
 			sprite.scale = Vector2(.5,.5)
 		"health_potion":
 			sprite.modulate = Color.RED
-		# KEY ITEMS - NEW
-		"wood_key":
-			sprite.texture = preload("res://Resources/Map/Objects/WoodKey.png")
-			sprite.scale = Vector2(.6,.6)
-		"mushroom_key":
-			sprite.texture = preload("res://Resources/Map/Objects/MushroomKey.png")
-			sprite.scale = Vector2(.6,.6)
-		"wool_key":
-			sprite.texture = preload("res://Resources/Map/Objects/WoolKey.png")
-			sprite.scale = Vector2(.6,.6)
-		"fiber_key", "plant_key":
-			sprite.texture = preload("res://Resources/Map/Objects/PlantKey.png")
+		# KEY ITEMS - Single Harvest Key
+		"harvest_key":
+			sprite.texture = preload("res://Resources/Inventory/Sprites/HarvestKey.png")
 			sprite.scale = Vector2(.6,.6)
 		_:
 			sprite.modulate = Color.WHITE
@@ -114,17 +105,9 @@ func _pickup_item(player_node):
 	# Convert key item names for player's collect_item method
 	var collect_name = item_name
 	
-	# Handle key items specially
-	if item_name.ends_with("_key"):
-		match item_name:
-			"wood_key":
-				collect_name = "Wood Key"
-			"mushroom_key":
-				collect_name = "Mushroom Key"
-			"wool_key":
-				collect_name = "Wool Key"
-			"fiber_key", "plant_key":
-				collect_name = "Plant Key"
+	# Handle harvest key specially
+	if item_name == "harvest_key":
+		collect_name = "Harvest Key"
 	
 	# Use collect_item method
 	if player_node.has_method("collect_item"):
@@ -143,31 +126,31 @@ func _create_item_resource() -> Item:
 	match item_name:
 		"mushroom":
 			item.name = "Mushroom"
-			item.description = "A tasty mushroom dropped by an enemy"
+			item.description = "A tasty mushroom that can be cooked or sold"
 			item.stack_size = 99
-			item.item_type = "material"
-			item.icon = preload("res://Resources/Inventory/Sprites/mushroom.png")
+			item.item_type = "food"
+			item.icon = preload("res://Resources/Inventory/Sprites/item_mushroom.png")
 		
-		"fiber":
-			item.name = "Plant Fiber"
-			item.description = "Tough plant fibers used for crafting"
+		"corn":
+			item.name = "Corn"
+			item.description = "Fresh corn harvested from the field"
 			item.stack_size = 99
-			item.item_type = "material"
-			item.icon = preload("res://Resources/Inventory/Sprites/fiber.png")
+			item.item_type = "food"
+			item.icon = preload("res://Resources/Inventory/Sprites/item_corn.png")
 		
-		"fur":
-			item.name = "Wolf Fur"
-			item.description = "Soft fur from a wolf, useful for crafting"
+		"pumpkin":
+			item.name = "Pumpkin"
+			item.description = "A large pumpkin ready for cooking or selling"
 			item.stack_size = 99
-			item.item_type = "material"
-			item.icon = preload("res://Resources/Inventory/Sprites/fur.png")
-			
-		"wood":
-			item.name = "Wood"
-			item.description = "A log"
+			item.item_type = "food"
+			item.icon = preload("res://Resources/Inventory/Sprites/item_pumpkin.png")
+		
+		"tomato":
+			item.name = "Tomato"
+			item.description = "A ripe tomato full of nutrients"
 			item.stack_size = 99
-			item.item_type = "material"
-			item.icon = preload("res://Resources/Inventory/Sprites/wood.png")
+			item.item_type = "food"
+			item.icon = preload("res://Resources/Inventory/Sprites/item_tomato.png")
 		
 		"coin":
 			item.name = "Coin"

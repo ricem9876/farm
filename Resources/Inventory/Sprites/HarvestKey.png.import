@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d2u3qimcosyly"
-path="res://.godot/imported/Mushroom-Idle.png-f3e3e70c28c5a22188c691cf65b97258.ctex"
+uid="uid://csk7e6bevc21g"
+path="res://.godot/imported/HarvestKey.png-64326babe92d7e8ddc398b2ac35922b8.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Resources/Enemies/Mushroom/Animations/Mushroom-Idle.png"
-dest_files=["res://.godot/imported/Mushroom-Idle.png-f3e3e70c28c5a22188c691cf65b97258.ctex"]
+source_file="res://Resources/Inventory/Sprites/HarvestKey.png"
+dest_files=["res://.godot/imported/HarvestKey.png-64326babe92d7e8ddc398b2ac35922b8.ctex"]
 
 [params]
 

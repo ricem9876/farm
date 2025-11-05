@@ -16,19 +16,19 @@ signal wave_completed
 signal boss_spawned_now  # NEW: Signal when boss spawns
 
 var enemy_scenes = {
-	"plant": preload("res://Resources/Enemies/Plant/plant.tscn"),
-	"wolf": preload("res://Resources/Enemies/Wolf/wolf.tscn"),
-	"tree": preload("res://Resources/Enemies/Tree/tree.tscn"),
-	"mushroom": preload("res://Resources/Enemies/Mushroom/Mushroom.tscn")
+	"mushroom": preload("res://Resources/Enemies/Mushroom/Mushroom.tscn"),
+	"tomato": preload("res://Resources/Enemies/Tomato/Tomato.tscn"),
+	"pumpkin": preload("res://Resources/Enemies/Pumpkin/Pumpkin.tscn"),
+	"corn": preload("res://Resources/Enemies/Corn/Corn.tscn")
 }
 
 var boss_scene = preload("res://Resources/Enemies/Orc/orc.tscn")  # Path to your orc boss scene
 
 var spawn_weights = {
-	"plant": 40,
-	"wolf": 20,
-	"tree": 40,
-	"mushroom": 50
+	"mushroom": 50,
+	"tomato": 40,
+	"pumpkin": 30,
+	"corn": 40
 }
 
 var current_enemy_count: int = 0
@@ -47,6 +47,7 @@ func _ready():
 	print("Total enemies: ", total_enemies)
 	print("Boss enabled: ", boss_enabled)
 	print("Boss at halfway: ", boss_spawn_at_halfway)
+	print("Enemy types: Mushroom, Tomato, Pumpkin, Corn")
 	print("=================================\n")
 
 func _process(delta):
@@ -179,7 +180,7 @@ func _weighted_random_choice() -> String:
 		if random_value <= cumulative_weight:
 			return enemy_type
 	
-	return "plant"
+	return "mushroom"  # Default fallback
 
 func _get_random_spawn_position() -> Vector2:
 	var x = spawn_boundary.position.x + randf() * spawn_boundary.size.x
@@ -216,6 +217,10 @@ func _on_enemy_died(experience_points: int, enemy_type: String):
 	# Give experience to the player
 	if player and player.has_method("gain_experience"):
 		player.gain_experience(experience_points)
+	
+	# Drop the vegetable item at enemy's last position (passed via binding)
+	# Note: We need to get the enemy's position before it's freed
+	# This is handled by connecting with the enemy's global_position
 	
 	enemy_died.emit()
 	

@@ -1,18 +1,18 @@
 extends Item
 class_name KeyItem
 
-## KeyItem - Represents a key that can unlock specific chests
-## Keys are created from base materials (wood, mushroom, plant, wool)
+## KeyItem - Special item type for unlocking chests
+## Now simplified to a single Harvest Key type
 
-@export var chest_type: String  # "wood", "mushroom", "plant", "wool"
-@export var key_color: Color = Color.GOLD  # Visual identifier for UI
+@export var key_color: Color = Color(0.8, 0.6, 0.2)  # Golden/harvest color
+var chest_type: String = "harvest"  # Single type for harvest baskets
 
 func _init():
+	# Don't call super._init() - Item class doesn't have one
 	item_type = "key"
 	stack_size = 1  # Keys don't stack
-
-## Check if this key can unlock a specific chest
-func can_unlock_chest(chest: LootChest) -> bool:
-	if chest and chest is LootChest:
-		return chest.required_key_type == chest_type
-	return false
+	name = "Harvest Key"
+	description = "A golden key crafted from fresh vegetables. Opens Harvest Baskets."
+	icon = preload("res://Resources/Inventory/Sprites/HarvestKey.png")
+	chest_type = "harvest"
+	key_color = Color(0.8, 0.6, 0.2)  # Golden harvest color

@@ -1,7 +1,7 @@
 extends Node2D
 class_name ChestSpawner
 
-## ChestSpawner - Randomly spawns 1-4 loot chests on the farm
+## ChestSpawner - Randomly spawns 1-4 Harvest Baskets on the farm
 ## Place this node in your farm scene with spawn point markers
 
 @export_group("Spawn Configuration")
@@ -9,16 +9,10 @@ class_name ChestSpawner
 @export var max_chests: int = 4
 @export var spawn_markers: Array[Marker2D] = []  # Drag Marker2D nodes here
 
-@export_group("Chest Types")
+@export_group("Harvest Basket")
 @export var chest_scene: PackedScene  # Drag LootChest.tscn here
-@export var chest_textures: Dictionary = {
-	"wood": preload("res://Resources/Map/Objects/WoodChest.png"),
-	"mushroom": preload("res://Resources/Map/Objects/MushroomChest.png"),
-	"plant": preload("res://Resources/Map/Objects/PlantChest.png"),
-	"wool": preload("res://Resources/Map/Objects/WoolChest.png")
-}
+@export var basket_texture: Texture2D = preload("res://Resources/Inventory/Sprites/harvestbasket.png")
 
-var chest_types: Array[String] = ["wood", "mushroom", "plant", "wool"]
 var spawned_chests: Array[Node] = []
 
 signal chests_spawned(count: int)
@@ -29,7 +23,7 @@ func _ready():
 	spawn_random_chests()
 
 func spawn_random_chests():
-	"""Spawn random number of chests at random locations"""
+	"""Spawn random number of Harvest Baskets at random locations"""
 	
 	if spawn_markers.is_empty():
 		push_error("ChestSpawner: No spawn markers assigned!")
@@ -39,85 +33,64 @@ func spawn_random_chests():
 		push_error("ChestSpawner: No chest scene assigned!")
 		return
 	
-	# Determine how many chests to spawn
+	# Determine how many baskets to spawn
 	var num_chests = randi_range(min_chests, max_chests)
-	print("\n=== SPAWNING CHESTS ===")
-	print("Spawning ", num_chests, " chests on the farm")
+	print("\n=== SPAWNING HARVEST BASKETS ===")
+	print("Spawning ", num_chests, " harvest baskets on the farm")
 	
 	# Get shuffled list of spawn positions
 	var available_positions = spawn_markers.duplicate()
 	available_positions.shuffle()
 	
-	# Spawn chests
+	# Spawn baskets
 	for i in range(min(num_chests, available_positions.size())):
 		var marker = available_positions[i]
 		spawn_chest_at(marker.global_position)
 	
-	print("✓ Spawned ", spawned_chests.size(), " chests")
+	print("✓ Spawned ", spawned_chests.size(), " harvest baskets")
 	chests_spawned.emit(spawned_chests.size())
 
 func spawn_chest_at(position: Vector2):
-	"""Spawn a single chest at the given position"""
+	"""Spawn a single Harvest Basket at the given position"""
 	
 	# Create chest instance
 	var chest = chest_scene.instantiate() as LootChest
 	if not chest:
-		push_error("Failed to instantiate chest!")
+		push_error("Failed to instantiate harvest basket!")
 		return
 	
-	# Choose random chest type
-	var chest_type = chest_types[randi() % chest_types.size()]
-	
-	# Configure chest
+	# Configure harvest basket
 	chest.global_position = position
-	chest.required_key_type = chest_type
-	chest.chest_name = chest_type.capitalize() + " Chest"
+	chest.required_key_type = "harvest"
+	chest.chest_name = "Harvest Basket"
 	chest.is_locked = true
 	
-	# Set textures
-	if chest_textures.has(chest_type):
-		chest.locked_texture = chest_textures[chest_type]
-		chest.unlocked_texture = chest_textures[chest_type]
+	# Set texture
+	chest.locked_texture = basket_texture
+	chest.unlocked_texture = basket_texture
 	
-	# Set loot based on chest type
-	match chest_type:
-		"wood":
-			chest.tech_points_min = 10
-			chest.tech_points_max = 30
-			chest.coins_min = 50
-			chest.coins_max = 150
-		"mushroom":
-			chest.tech_points_min = 20
-			chest.tech_points_max = 50
-			chest.coins_min = 100
-			chest.coins_max = 300
-		"plant":
-			chest.tech_points_min = 15
-			chest.tech_points_max = 40
-			chest.coins_min = 75
-			chest.coins_max = 200
-		"wool":
-			chest.tech_points_min = 25
-			chest.tech_points_max = 60
-			chest.coins_min = 150
-			chest.coins_max = 400
+	# Set loot - generous rewards for collecting all vegetables
+	chest.tech_points_min = 50
+	chest.tech_points_max = 100
+	chest.coins_min = 200
+	chest.coins_max = 500
 	
 	# Add to scene
 	get_parent().add_child(chest)
 	spawned_chests.append(chest)
 	
-	print("  ✓ Spawned ", chest_type.capitalize(), " Chest at ", position)
+	print("  ✓ Spawned Harvest Basket at ", position)
 
 func clear_chests():
-	"""Remove all spawned chests"""
+	"""Remove all spawned harvest baskets"""
 	for chest in spawned_chests:
 		if is_instance_valid(chest):
 			chest.queue_free()
 	spawned_chests.clear()
-	print("Cleared all spawned chests")
+	print("Cleared all spawned harvest baskets")
 
 func respawn_chests():
-	"""Clear existing chests and spawn new ones"""
+	"""Clear existing baskets and spawn new ones"""
 	clear_chests()
 	await get_tree().process_frame
 	spawn_random_chests()

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dijas1hyncwhd"
-path="res://.godot/imported/Mushroom-Hit.png-dbb86803daa870e697bc31164d794171.ctex"
+uid="uid://ch0tlq2sg0anc"
+path="res://.godot/imported/item_pumpkin.png-7726e8e5012549901c63ab32220c980d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Resources/Enemies/Mushroom/Animations/Mushroom-Hit.png"
-dest_files=["res://.godot/imported/Mushroom-Hit.png-dbb86803daa870e697bc31164d794171.ctex"]
+source_file="res://Resources/Inventory/Sprites/item_pumpkin.png"
+dest_files=["res://.godot/imported/item_pumpkin.png-7726e8e5012549901c63ab32220c980d.ctex"]
 
 [params]
 
