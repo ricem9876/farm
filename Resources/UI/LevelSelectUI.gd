@@ -1,5 +1,5 @@
-# LevelSelectUI.gd - FIXED: Deferred scene transition for exports + Unlock Dialogues
-# Handles level selection with mushroom-based unlocking system (shop style)
+# LevelSelectUI.gd - ORIGINAL VERSION (before scene transition complexity)
+# Simple level selection with completion-based progression
 extends CanvasLayer
 
 @onready var panel = $Panel
@@ -14,11 +14,10 @@ var levels = [
 		"difficulty": "easy",
 		"max_enemies": 10,
 		"spawn_interval": 2.0,
-		"total_enemies": 5,
+		"total_enemies": 8,  # 2 of each x 4 types
 		"description": "A peaceful farm with few enemies",
-		"mushrooms_required": 0,  # Always unlocked
 		"spawn_mode": "gradual",
-		"boss_enabled": false  # No boss in level 1
+		"boss_enabled": false
 	},
 	{
 		"name": "Farm - 2", 
@@ -26,55 +25,64 @@ var levels = [
 		"difficulty": "normal",
 		"max_enemies": 15,
 		"spawn_interval": 2.0,
-		"total_enemies": 25,
-		"description": "Standard difficulty with BOSS at halfway!",
-		"mushrooms_required": 10,
+		"total_enemies": 20,  # 5 of each x 4 types
+		"description": "Standard difficulty",
 		"spawn_mode": "gradual",
-		"boss_enabled": true,  # Boss spawns at halfway point
-		"boss_spawn_at_halfway": true
+		"boss_enabled": false
 	},
 	{
 		"name": "Farm - 3",
 		"scene": "res://Resources/Scenes/farm.tscn",
 		"difficulty": "hard",
 		"max_enemies": 25,
-		"spawn_interval": 1.0,
-		"total_enemies": 50,
-		"description": "Intense combat with BOSS at halfway!",
-		"mushrooms_required": 15,
-		"spawn_mode": "all_at_once",
-		"boss_enabled": true,  # Boss spawns at halfway point
-		"boss_spawn_at_halfway": true
+		"spawn_interval": 1.5,
+		"total_enemies": 32,  # 8 of each x 4 types
+		"description": "Intense combat",
+		"spawn_mode": "gradual",
+		"boss_enabled": false
 	},
 	{
 		"name": "Farm - 4",
 		"scene": "res://Resources/Scenes/farm.tscn",
-		"difficulty": "extremely hard",
-		"max_enemies": 40,
+		"difficulty": "very hard",
+		"max_enemies": 30,
 		"spawn_interval": 1.0,
-		"total_enemies": 150,
-		"description": "Wave after wave with BOSS at halfway!",
-		"mushrooms_required": 25,
+		"total_enemies": 44,  # 11 of each x 4 types
+		"description": "Challenging waves",
+		"spawn_mode": "gradual",
+		"boss_enabled": false
+	},
+	{
+		"name": "Farm - 5 (BOSS)",
+		"scene": "res://Resources/Scenes/farm.tscn",
+		"difficulty": "boss",
+		"max_enemies": 35,
+		"spawn_interval": 0.8,
+		"total_enemies": 56,  # 14 of each x 4 types
+		"description": "Face the Pea Boss!",
 		"spawn_mode": "all_at_once",
-		"boss_enabled": true,  # Boss spawns at halfway point
+		"boss_enabled": true,
 		"boss_spawn_at_halfway": true
 	}
 ]
 
-# Track which levels have been permanently unlocked
-var unlocked_levels: Array = [true, false, false, false]  # Level 1 is always unlocked
+# Track which levels have been completed
+var completed_levels: Array = [false, false, false, false, false]
 
-# Track which levels have shown their unlock dialogue (per session/save)
-var unlock_dialogues_shown: Array = [true, false, false, false]  # Level 1 doesn't need dialogue
+# Track which levels have shown their unlock dialogue
+var unlock_dialogues_shown: Array = [true, false, false, false, false]  # Level 1 doesn't need dialogue
 
 # Preload the lock texture
 var lock_texture: Texture2D = preload("res://Resources/Inventory/Sprites/lock.png")
 
 func _ready():
+	# Add to group so farm.gd can find it
+	add_to_group("level_select_ui")
+	
 	visible = false
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	
-	_load_unlocked_levels()
+	_load_completed_levels()
 	_load_unlock_dialogues_shown()
 	_setup_ui()
 	_create_level_buttons()
@@ -89,332 +97,71 @@ func _setup_ui():
 		title_label.text = "SELECT MISSION"
 		title_label.add_theme_font_override("font", pixel_font)
 		title_label.add_theme_font_size_override("font_size", 36)
-		# Tan/beige color
-		title_label.add_theme_color_override("font_color", Color(0.87058824, 0.72156864, 0.5294118))
-		# Add shadow with 0.5 opacity, offset (2,2), size 4
+		title_label.add_theme_color_override("font_color", Color(0.87, 0.72, 0.53))
 		title_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.5))
 		title_label.add_theme_constant_override("shadow_offset_x", 2)
 		title_label.add_theme_constant_override("shadow_offset_y", 2)
 		title_label.add_theme_constant_override("shadow_outline_size", 4)
-		# Center the title
 		title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	
 	# Center the level container
 	if level_container:
 		level_container.alignment = BoxContainer.ALIGNMENT_CENTER
-		level_container.custom_minimum_size = Vector2(500, 0)  # Minimum width for proper spacing
+		level_container.custom_minimum_size = Vector2(500, 0)
 	
 	if back_button:
-		back_button.text = "BACK TO SAFEHOUSE"
+		back_button.text = "BACK"
 		back_button.add_theme_font_override("font", pixel_font)
-
-func _get_mushroom_count() -> int:
-	"""Get the current mushroom count from the player's inventory"""
-	var player = get_tree().get_first_node_in_group("player")
-	if player and player.has_method("get_inventory_manager"):
-		var inv_mgr = player.get_inventory_manager()
-		if inv_mgr:
-			return inv_mgr.get_item_quantity_by_name("Mushroom")
-	return 0
-
-func _load_unlocked_levels():
-	"""Load unlocked levels from save data or pending load data"""
-	# First check if there's data in pending_load_data (from returning to safehouse)
-	if GameManager.pending_load_data.has("unlocked_levels"):
-		var loaded_data = GameManager.pending_load_data.unlocked_levels
-		if loaded_data is Array and loaded_data.size() == levels.size():
-			unlocked_levels = loaded_data.duplicate()
-			print("✓ Loaded unlocked levels from pending_load_data: ", unlocked_levels)
-			return
-	
-	# Otherwise load from save file
-	if GameManager.current_save_slot >= 0:
-		var save_data = SaveSystem.get_save_data(GameManager.current_save_slot)
-		if save_data.has("player") and save_data.player.has("unlocked_levels"):
-			var loaded_data = save_data.player.unlocked_levels
-			# Ensure we have the right number of levels
-			if loaded_data is Array and loaded_data.size() == levels.size():
-				unlocked_levels = loaded_data.duplicate()
-				print("✓ Loaded unlocked levels from save file: ", unlocked_levels)
-			else:
-				print("⚠ Saved unlocked levels invalid, using defaults: ", unlocked_levels)
-		else:
-			print("ℹ No saved unlocked levels found, using defaults: ", unlocked_levels)
-	else:
-		print("⚠ No save slot selected, using default unlocked levels: ", unlocked_levels)
-
-func _load_unlock_dialogues_shown():
-	"""Load which unlock dialogues have been shown from save data"""
-	if GameManager.current_save_slot >= 0:
-		var save_data = SaveSystem.get_save_data(GameManager.current_save_slot)
-		if save_data.has("player") and save_data.player.has("unlock_dialogues_shown"):
-			var loaded_data = save_data.player.unlock_dialogues_shown
-			if loaded_data is Array and loaded_data.size() == levels.size():
-				unlock_dialogues_shown = loaded_data.duplicate()
-				print("✓ Loaded unlock dialogues shown from save file: ", unlock_dialogues_shown)
-			else:
-				print("⚠ Saved unlock dialogues invalid, using defaults: ", unlock_dialogues_shown)
-		else:
-			print("ℹ No saved unlock dialogues found, using defaults: ", unlock_dialogues_shown)
-	else:
-		print("⚠ No save slot selected, using default unlock dialogues: ", unlock_dialogues_shown)
-
-func _save_unlocked_levels():
-	"""Save unlocked levels to save data immediately after purchase"""
-	var player = get_tree().get_first_node_in_group("player")
-	if not player:
-		print("✗ Cannot save unlocked levels - no player found")
-		return
-		
-	if GameManager.current_save_slot < 0:
-		print("✗ Cannot save unlocked levels - no save slot selected")
-		return
-	
-	print("\n=== SAVING UNLOCKED LEVELS ===")
-	print("Current unlocked_levels state: ", unlocked_levels)
-	print("Current unlock_dialogues_shown state: ", unlock_dialogues_shown)
-	
-	# Collect all player data
-	var player_data = SaveSystem.collect_player_data(player)
-	
-	# Add unlocked levels and dialogue tracking to the save data
-	player_data["unlocked_levels"] = unlocked_levels.duplicate()
-	player_data["unlock_dialogues_shown"] = unlock_dialogues_shown.duplicate()
-	
-	print("Player data unlocked_levels field: ", player_data["unlocked_levels"])
-	print("Player data unlock_dialogues_shown field: ", player_data["unlock_dialogues_shown"])
-	
-	# Save to file
-	var success = SaveSystem.save_game(GameManager.current_save_slot, player_data)
-	
-	if success:
-		print("✓ Successfully saved unlocked levels to slot ", GameManager.current_save_slot)
-		
-		# Verify the save by reading it back
-		var verify_data = SaveSystem.get_save_data(GameManager.current_save_slot)
-		if verify_data.has("player") and verify_data.player.has("unlocked_levels"):
-			print("✓ Verification: Save file contains unlocked_levels: ", verify_data.player.unlocked_levels)
-		else:
-			print("✗ Verification FAILED: unlocked_levels not found in save file!")
-	else:
-		print("✗ Failed to save unlocked levels!")
-	
-	print("=== SAVE COMPLETE ===\n")
-
-func _get_unlock_dialogue(level_index: int) -> Array:
-	"""Get the unlock dialogue for a specific level"""
-	match level_index:
-		1:  # Farm - 2
-			return [
-				{
-					"speaker": "Mysterious Voice",
-					"text": "Feel proud of yourself?."
-				},
-			
-			]
-		2:  # Farm - 3
-			return [
-				{
-					"speaker": "Mysterious Voice",
-					"text": "Impressive work, nerd."
-				}
-			]
-		3:  # Farm - 4
-			return [
-				{
-					"speaker": "Mysterious Voice",
-					"text": "Most people beat this level blindfolded with their monitor off. I bet you aren't one of them."
-				},
-			
-			]
-		_:
-			return []
-
-func _show_unlock_dialogue(level_index: int):
-	"""Show the unlock dialogue for a newly unlocked level"""
-	var dialogue_data = _get_unlock_dialogue(level_index)
-	
-	if dialogue_data.is_empty():
-		print("No dialogue for level ", level_index)
-		return
-	
-	print("Showing unlock dialogue for level ", level_index + 1)
-	
-	# Connect to dialogue ended signal
-	if not TutorialManager.dialogue_ended.is_connected(_on_unlock_dialogue_ended.bind(level_index)):
-		TutorialManager.dialogue_ended.connect(_on_unlock_dialogue_ended.bind(level_index))
-	
-	# Hide the level select UI while dialogue is showing
-	panel.visible = false
-	
-	# CRITICAL FIX: Unpause the game so dialogue can receive input
-	get_tree().paused = false
-	
-	# Start the dialogue
-	TutorialManager.start_dialogue(dialogue_data)
-
-func _on_unlock_dialogue_ended(level_index: int):
-	"""Called when unlock dialogue ends"""
-	print("Unlock dialogue ended for level ", level_index + 1)
-	
-	# Disconnect the signal
-	if TutorialManager.dialogue_ended.is_connected(_on_unlock_dialogue_ended):
-		TutorialManager.dialogue_ended.disconnect(_on_unlock_dialogue_ended)
-	
-	# Mark this dialogue as shown
-	unlock_dialogues_shown[level_index] = true
-	
-	# Save the state
-	_save_unlocked_levels()
-	
-	# CRITICAL FIX: Re-pause the game since level select should still be open
-	get_tree().paused = true
-	
-	# Show the level select UI again
-	panel.visible = true
-	
-	# Refresh buttons to show the newly unlocked level
-	_refresh_buttons()
-
-func _spend_mushrooms_to_unlock(level_index: int) -> bool:
-	"""Attempt to spend mushrooms to unlock a level"""
-	var level_data = levels[level_index]
-	var mushroom_count = _get_mushroom_count()
-	
-	print("\n=== ATTEMPTING TO UNLOCK LEVEL ", level_index + 1, " ===")
-	print("Required mushrooms: ", level_data.mushrooms_required)
-	print("Available mushrooms: ", mushroom_count)
-	
-	if mushroom_count >= level_data.mushrooms_required:
-		# Remove mushrooms from inventory
-		var player = get_tree().get_first_node_in_group("player")
-		if player and player.has_method("get_inventory_manager"):
-			var inv_mgr = player.get_inventory_manager()
-			if inv_mgr:
-				# Find and create a mushroom item to remove
-				var mushroom_item = _find_mushroom_item_in_inventory(inv_mgr)
-				if mushroom_item:
-					inv_mgr.remove_item(mushroom_item, level_data.mushrooms_required)
-					print("✓ Removed ", level_data.mushrooms_required, " mushrooms from inventory")
-					
-					# Mark level as unlocked
-					unlocked_levels[level_index] = true
-					print("✓ Level ", level_index + 1, " marked as unlocked")
-					
-					# Check if we should show the unlock dialogue
-					var should_show_dialogue = not unlock_dialogues_shown[level_index]
-					
-					# Save immediately (before showing dialogue)
-					_save_unlocked_levels()
-					
-					print("✓ Level ", level_index + 1, " unlocked! Spent ", level_data.mushrooms_required, " mushrooms")
-					
-					# Show unlock dialogue if this is the first time
-					if should_show_dialogue:
-						_show_unlock_dialogue(level_index)
-					else:
-						# Just refresh buttons if dialogue already shown
-						_refresh_buttons()
-					
-					return true
-				else:
-					print("✗ Could not find mushroom item in inventory")
-			else:
-				print("✗ No inventory manager found")
-		else:
-			print("✗ Player not found or doesn't have get_inventory_manager method")
-	else:
-		print("✗ Not enough mushrooms")
-	
-	return false
-
-func _find_mushroom_item_in_inventory(inv_mgr) -> Item:
-	"""Find the mushroom item in the inventory"""
-	for i in range(inv_mgr.max_slots):
-		if inv_mgr.items[i] != null and inv_mgr.items[i].name == "Mushroom":
-			return inv_mgr.items[i]
-	return null
+		back_button.add_theme_font_size_override("font_size", 24)
+		back_button.custom_minimum_size = Vector2(200, 50)
 
 func _create_level_buttons():
-	var mushroom_count = _get_mushroom_count()
+	var pixel_font = preload("res://Resources/Fonts/yoster.ttf")
 	
 	for i in range(levels.size()):
-		var level_data = levels[i]
-		var is_unlocked = unlocked_levels[i]
-		var can_afford = mushroom_count >= level_data.mushrooms_required
+		var level = levels[i]
+		var is_unlocked = _is_level_unlocked(i)
 		
-		# Create a container for the button and lock overlay
-		var button_container = CenterContainer.new()
-		button_container.custom_minimum_size = Vector2(300, 60)
+		# Container for button + lock icon
+		var button_container = Control.new()
+		button_container.custom_minimum_size = Vector2(300, 70)
 		
-		# Create the button
+		# Create the level button
 		var button = Button.new()
-		button.custom_minimum_size = Vector2(300, 60)
-		button.size = Vector2(300, 60)
-		button.position = Vector2(0, 0)
-		
-		# Set button text - add boss indicator for levels with bosses
-		var boss_indicator = " 👹" if level_data.get("boss_enabled", false) else ""
-		if is_unlocked:
-			button.text = level_data.name + boss_indicator
-		else:
-			var can_afford_text = " ✓" if can_afford else " ✗"
-			button.text = level_data.name + boss_indicator + "\n[" + str(level_data.mushrooms_required) + " Mushrooms" + can_afford_text + "]"
-		
-		var pixel_font = preload("res://Resources/Fonts/yoster.ttf")
+		button.text = level.name
 		button.add_theme_font_override("font", pixel_font)
-		button.add_theme_font_size_override("font_size", 18)
+		button.add_theme_font_size_override("font_size", 20)
+		button.custom_minimum_size = Vector2(300, 60)
+		button.disabled = not is_unlocked
 		
 		# Color based on difficulty
-		var color = Color(0.3, 0.7, 0.3)
-		match level_data.difficulty:
-			"normal": color = Color(0.7, 0.7, 0.3)
-			"hard": color = Color(0.7, 0.3, 0.3)
-			"extremely hard": color = Color(0.5, 0.1, 0.1)
-		
-		# If locked and can't afford, darken the button
-		if not is_unlocked and not can_afford:
-			color = color.darkened(0.5)
+		var color = Color.GREEN
+		match level.difficulty:
+			"easy": color = Color(0.4, 0.8, 0.4)
+			"normal": color = Color(0.4, 0.6, 0.8)
+			"hard": color = Color(0.8, 0.5, 0.2)
+			"very hard": color = Color(0.8, 0.2, 0.2)
+			"boss": color = Color(0.6, 0.0, 0.6)
 		
 		_style_button(button, color)
 		
-		# Connect button press
 		if is_unlocked:
-			button.pressed.connect(_on_level_selected.bind(level_data))
-		else:
-			# This is the "purchase" button
-			button.pressed.connect(_on_purchase_level.bind(i))
+			button.pressed.connect(_on_level_selected.bind(level))
 		
 		button_container.add_child(button)
 		
-		# Add lock icon overlay if level is locked
+		# Add lock icon if locked
 		if not is_unlocked:
 			var lock_icon = TextureRect.new()
 			lock_icon.texture = lock_texture
 			lock_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			lock_icon.custom_minimum_size = Vector2(50, 50)
-			# Anchor to the right side of the button
-			lock_icon.position = Vector2(240, 5)  # 300 - 50 - 10 = 240
+			lock_icon.position = Vector2(240, 5)
 			lock_icon.size = Vector2(50, 50)
-			lock_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE  # Allow clicks to pass through
+			lock_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			button_container.add_child(lock_icon)
 		
 		level_container.add_child(button_container)
-
-func _on_purchase_level(level_index: int):
-	"""Called when player clicks a locked level to purchase it"""
-	var level_data = levels[level_index]
-	var mushroom_count = _get_mushroom_count()
-	
-	if mushroom_count >= level_data.mushrooms_required:
-		if _spend_mushrooms_to_unlock(level_index):
-			print("✓ Successfully unlocked ", level_data.name)
-			# Don't refresh here if dialogue is being shown
-			# _refresh_buttons() is called after dialogue ends
-		else:
-			print("✗ Failed to unlock level")
-	else:
-		print("✗ Not enough mushrooms! Need ", level_data.mushrooms_required, " but only have ", mushroom_count)
 
 func _style_button(button: Button, color: Color):
 	var normal_style = StyleBoxFlat.new()
@@ -433,25 +180,27 @@ func _style_button(button: Button, color: Color):
 	var hover = normal_style.duplicate()
 	hover.bg_color = color.lightened(0.2)
 	button.add_theme_stylebox_override("hover", hover)
+	
+	var disabled = normal_style.duplicate()
+	disabled.bg_color = color.darkened(0.5)
+	button.add_theme_stylebox_override("disabled", disabled)
 
 func open():
 	visible = true
 	get_tree().paused = true
 	
-	# Reload unlocked levels when opening to get latest state
-	_load_unlocked_levels()
+	# CRITICAL: Reload from pending_load_data or save file when opening
+	_load_completed_levels()
 	_load_unlock_dialogues_shown()
 	
-	# Refresh the buttons when opening to show current unlock status
 	_refresh_buttons()
+	
+	print("DEBUG: Level Select opened with completed_levels: ", completed_levels)
 
 func _refresh_buttons():
-	"""Refresh button states based on current mushroom count and unlocked status"""
-	# Clear existing buttons
+	"""Refresh button states based on current completion status"""
 	for child in level_container.get_children():
 		child.queue_free()
-	
-	# Recreate buttons with updated unlock status
 	_create_level_buttons()
 
 func close():
@@ -461,24 +210,22 @@ func close():
 func _on_level_selected(level_data: Dictionary):
 	print("\n🎮 === LEVEL SELECTED ===")
 	print("Level name: ", level_data.name)
-	print("Level data: ", level_data)
 	
-	# CRITICAL FIX: Store level settings FIRST, before anything else
+	# Store level settings
 	GameManager.current_level_settings = level_data.duplicate()
-	print("✓ GameManager.current_level_settings set: ", GameManager.current_level_settings)
 	
-	# Extract level number from name ("Farm - 1" -> 1)
+	# Extract level number
 	var level_name = level_data.name
 	var parts = level_name.split(" - ")
 	if parts.size() >= 2:
-		GameManager.current_level = int(parts[1])
+		GameManager.current_level = int(parts[1].split(" ")[0])  # Handle "5 (BOSS)"
 	else:
 		GameManager.current_level = 1
 	
 	print("✓ Level number: ", GameManager.current_level)
 	print("✓ Boss enabled: ", level_data.get("boss_enabled", false))
 	
-	# Notify tutorial if it exists
+	# Notify tutorial if it exists (for Level 1 tracking)
 	var intro_tutorial = get_tree().root.get_node_or_null("Safehouse/IntroTutorial")
 	if intro_tutorial and intro_tutorial.has_method("on_level_started"):
 		intro_tutorial.on_level_started(GameManager.current_level)
@@ -488,12 +235,12 @@ func _on_level_selected(level_data: Dictionary):
 	if player and GameManager.current_save_slot >= 0:
 		print("💾 Auto-saving before farm transition...")
 		var player_data = SaveSystem.collect_player_data(player)
-		player_data["unlocked_levels"] = unlocked_levels.duplicate()
+		player_data["completed_levels"] = completed_levels.duplicate()
 		player_data["unlock_dialogues_shown"] = unlock_dialogues_shown.duplicate()
 		SaveSystem.save_game(GameManager.current_save_slot, player_data)
 		print("✓ Auto-save complete")
 		
-		# Load the save back into pending_load_data
+		# Load the save back
 		var save_data = SaveSystem.load_game(GameManager.current_save_slot)
 		if not save_data.is_empty():
 			GameManager.pending_load_data = save_data
@@ -501,17 +248,83 @@ func _on_level_selected(level_data: Dictionary):
 	
 	close()
 	
-	# CRITICAL FIX: Wait a frame before scene transition
-	# This ensures GameManager.current_level_settings is fully propagated
-	print("⏳ Waiting one frame before scene transition...")
-	await get_tree().process_frame
-	
-	print("🚀 Transitioning to farm scene...")
-	print("Final check - GameManager.current_level_settings: ", GameManager.current_level_settings)
-	
+	# Simple scene transition
 	get_tree().change_scene_to_file(level_data.scene)
-	
-	print("=== LEVEL TRANSITION INITIATED ===\n")
 
 func _on_back_pressed():
 	close()
+
+func _load_completed_levels():
+	"""Load completed levels from save file"""
+	# First try pending_load_data
+	if GameManager.pending_load_data.has("completed_levels"):
+		completed_levels = GameManager.pending_load_data.completed_levels.duplicate()
+		print("✓ Restored completed levels from pending_load_data: ", completed_levels)
+		return
+	
+	# If no pending data, try loading directly from save file
+	if GameManager.current_save_slot >= 0:
+		var save_data = SaveSystem.load_game(GameManager.current_save_slot)
+		if not save_data.is_empty() and save_data.has("player"):
+			if save_data.player.has("completed_levels"):
+				completed_levels = save_data.player.completed_levels.duplicate()
+				print("✓ Restored completed levels from save file: ", completed_levels)
+				return
+	
+	# Default fallback
+	print("ℹ No saved completed levels found, using defaults: ", completed_levels)
+
+func _load_unlock_dialogues_shown():
+	"""Load unlock dialogue shown status from save file"""
+	# First try pending_load_data
+	if GameManager.pending_load_data.has("unlock_dialogues_shown"):
+		unlock_dialogues_shown = GameManager.pending_load_data.unlock_dialogues_shown.duplicate()
+		print("✓ Restored unlock dialogues shown from pending_load_data: ", unlock_dialogues_shown)
+		return
+	
+	# If no pending data, try loading directly from save file
+	if GameManager.current_save_slot >= 0:
+		var save_data = SaveSystem.load_game(GameManager.current_save_slot)
+		if not save_data.is_empty() and save_data.has("player"):
+			if save_data.player.has("unlock_dialogues_shown"):
+				unlock_dialogues_shown = save_data.player.unlock_dialogues_shown.duplicate()
+				print("✓ Restored unlock dialogues shown from save file: ", unlock_dialogues_shown)
+				return
+	
+	# Default fallback
+	print("ℹ No saved unlock dialogues found, using defaults: ", unlock_dialogues_shown)
+
+func _save_level_progress():
+	"""Save level completion progress"""
+	if GameManager.current_save_slot >= 0:
+		var player = get_tree().get_first_node_in_group("player")
+		if player:
+			var player_data = SaveSystem.collect_player_data(player)
+			player_data["completed_levels"] = completed_levels.duplicate()
+			player_data["unlock_dialogues_shown"] = unlock_dialogues_shown.duplicate()
+			SaveSystem.save_game(GameManager.current_save_slot, player_data)
+			print("✓ Level progress saved")
+
+func _is_level_unlocked(level_index: int) -> bool:
+	"""Check if a level is unlocked"""
+	if level_index == 0:
+		return true  # Level 1 always unlocked
+	return completed_levels[level_index - 1]
+
+func mark_level_complete(level_number: int):
+	"""Mark a level as completed (called from farm.gd)"""
+	var level_index = level_number - 1
+	if level_index >= 0 and level_index < completed_levels.size():
+		if not completed_levels[level_index]:
+			completed_levels[level_index] = true
+			print("✓ Level ", level_number, " marked as complete!")
+			
+			# Save progress
+			_save_level_progress()
+			
+			# Check if next level should show dialogue
+			if level_index + 1 < levels.size():
+				if not unlock_dialogues_shown[level_index + 1]:
+					print("🎬 Next level unlocked, would show dialogue here")
+					unlock_dialogues_shown[level_index + 1] = true
+					_save_level_progress()

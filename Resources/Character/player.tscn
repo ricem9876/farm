@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=3 uid="uid://rhebvs8qauqd"]
+[gd_scene load_steps=36 format=3 uid="uid://rhebvs8qauqd"]
 
 [ext_resource type="Script" uid="uid://banmwipl3lkhs" path="res://Resources/Character/scripts/player.gd" id="1_13ehe"]
 [ext_resource type="Script" uid="uid://dmrce6nni3voo" path="res://Resources/Character/scripts/CameraShake.gd" id="2_csx37"]
@@ -54,7 +54,7 @@ tracks/0/keys = {
 
 [sub_resource type="Animation" id="Animation_jv3sx"]
 resource_name = "rundown"
-length = 1.2
+length = 0.8
 loop_mode = 1
 step = 0.2
 tracks/0/type = "value"
@@ -143,6 +143,50 @@ gravity = Vector3(0, 98, 0)
 scale_min = 0.2
 scale_max = 0.2
 
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_xtobt"]
+animation = &"idle"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_523yf"]
+animation = &"runleft"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_krhvg"]
+animation = &"rundown"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_odep1"]
+animation = &"runright"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_q5oyg"]
+animation = &"runup"
+
+[sub_resource type="AnimationNodeBlendSpace2D" id="AnimationNodeBlendSpace2D_xtobt"]
+blend_point_0/node = SubResource("AnimationNodeAnimation_523yf")
+blend_point_0/pos = Vector2(-0.9, 0)
+blend_point_1/node = SubResource("AnimationNodeAnimation_krhvg")
+blend_point_1/pos = Vector2(0, 0.9)
+blend_point_2/node = SubResource("AnimationNodeAnimation_odep1")
+blend_point_2/pos = Vector2(0.9, 0)
+blend_point_3/node = SubResource("AnimationNodeAnimation_q5oyg")
+blend_point_3/pos = Vector2(0, -0.9)
+blend_mode = 1
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_47orn"]
+advance_mode = 2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_huwiq"]
+advance_mode = 0
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_gott7"]
+advance_mode = 0
+
+[sub_resource type="AnimationNodeStateMachine" id="AnimationNodeStateMachine_a73xw"]
+states/Idle/node = SubResource("AnimationNodeAnimation_xtobt")
+states/Idle/position = Vector2(348, 171)
+states/Start/position = Vector2(140, 73)
+states/Walk/node = SubResource("AnimationNodeBlendSpace2D_xtobt")
+states/Walk/position = Vector2(377, 73)
+transitions = ["Start", "Walk", SubResource("AnimationNodeStateMachineTransition_47orn"), "Walk", "Idle", SubResource("AnimationNodeStateMachineTransition_huwiq"), "Idle", "Walk", SubResource("AnimationNodeStateMachineTransition_gott7")]
+graph_offset = Vector2(-274, -31)
+
 [node name="player" type="CharacterBody2D"]
 script = ExtResource("1_13ehe")
 
@@ -155,6 +199,7 @@ shape = SubResource("CircleShape2D_paeun")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 y_sort_enabled = true
+scale = Vector2(1.3, 1.3)
 texture = ExtResource("3_paeun")
 hframes = 4
 vframes = 4
@@ -199,6 +244,14 @@ script = ExtResource("7_3s00l")
 [node name="PlayerHUD" parent="." instance=ExtResource("14_paeun")]
 
 [node name="ParticleBeam" type="GPUParticles2D" parent="."]
+visible = false
 texture = ExtResource("15_523yf")
 process_material = SubResource("ParticleProcessMaterial_csx37")
 script = ExtResource("15_csx37")
+
+[node name="AnimationTree" type="AnimationTree" parent="."]
+unique_name_in_owner = true
+root_node = NodePath("%AnimationTree/..")
+tree_root = SubResource("AnimationNodeStateMachine_a73xw")
+anim_player = NodePath("../AnimationPlayer")
+parameters/Walk/blend_position = Vector2(-0.00105596, -0.0342206)

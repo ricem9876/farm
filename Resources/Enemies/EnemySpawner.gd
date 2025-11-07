@@ -1,4 +1,4 @@
-# EnemySpawner.gd
+# EnemySpawner.gd - UPDATED: Added Pea and Pea Boss support
 extends Node2D
 
 @export var spawn_enabled: bool = true
@@ -13,17 +13,21 @@ extends Node2D
 signal enemy_spawned
 signal enemy_died
 signal wave_completed
-signal boss_spawned_now  # NEW: Signal when boss spawns
+signal boss_spawned_now  # Signal when boss spawns
 
 var enemy_scenes = {
 	"mushroom": preload("res://Resources/Enemies/Mushroom/Mushroom.tscn"),
 	"tomato": preload("res://Resources/Enemies/Tomato/Tomato.tscn"),
 	"pumpkin": preload("res://Resources/Enemies/Pumpkin/Pumpkin.tscn"),
-	"corn": preload("res://Resources/Enemies/Corn/Corn.tscn")
+	"corn": preload("res://Resources/Enemies/Corn/Corn.tscn"),
+	"pea": preload("res://Resources/Enemies/Pea/Pea.tscn")  # NEW: Pea enemy added
 }
 
-var boss_scene = preload("res://Resources/Enemies/Orc/orc.tscn")  # Path to your orc boss scene
+# Boss scene - now using Pea Boss!
+var boss_scene = preload("res://Resources/Enemies/Pea/PeaBoss.gd")
 
+# Default spawn weights - can be overridden via set_spawn_weights()
+# NOTE: Pea is NOT in default weights - it's only spawned if explicitly set
 var spawn_weights = {
 	"mushroom": 50,
 	"tomato": 40,
@@ -47,8 +51,17 @@ func _ready():
 	print("Total enemies: ", total_enemies)
 	print("Boss enabled: ", boss_enabled)
 	print("Boss at halfway: ", boss_spawn_at_halfway)
-	print("Enemy types: Mushroom, Tomato, Pumpkin, Corn")
+	print("Enemy types available: Mushroom, Tomato, Pumpkin, Corn, Pea")
+	print("Spawn weights: ", spawn_weights)
+	if boss_enabled:
+		print("👹 PEA BOSS will spawn at halfway point!")
 	print("=================================\n")
+
+# NEW: Method to set spawn weights from external configuration
+func set_spawn_weights(new_weights: Dictionary):
+	"""Set custom spawn weights for this level"""
+	spawn_weights = new_weights
+	print("✓ Spawn weights updated: ", spawn_weights)
 
 func _process(delta):
 	if not spawn_enabled:
@@ -79,6 +92,12 @@ func _spawn_all_enemies_immediately():
 func _spawn_random_enemy():
 	var enemy_type = _weighted_random_choice()
 	var spawn_pos = _get_random_spawn_position()
+	
+	# Validate enemy type exists
+	if not enemy_scenes.has(enemy_type):
+		print("ERROR: Unknown enemy type '", enemy_type, "' - falling back to mushroom")
+		enemy_type = "mushroom"
+	
 	var enemy_scene = enemy_scenes[enemy_type]
 	var enemy = enemy_scene.instantiate()
 	
@@ -116,7 +135,7 @@ func _check_boss_spawn():
 		_spawn_boss()
 
 func _spawn_boss():
-	"""Spawn the orc boss"""
+	"""Spawn the Pea Boss"""
 	if boss_spawned:
 		print("⚠ Boss already spawned!")
 		return
@@ -125,7 +144,7 @@ func _spawn_boss():
 		print("✗ ERROR: Boss scene not loaded!")
 		return
 	
-	print("\n🎺 BOSS SPAWNING! 🎺")
+	print("\n🎺 PEA BOSS SPAWNING! 🎺")
 	print("Enemies killed: ", enemies_killed, "/", total_enemies)
 	
 	var spawn_pos = _get_boss_spawn_position()
@@ -142,7 +161,7 @@ func _spawn_boss():
 	current_enemy_count += 1  # Count boss as an enemy
 	
 	boss_spawned_now.emit()
-	print("👹 BOSS SPAWNED at ", spawn_pos, "!")
+	print("👹 PEA BOSS SPAWNED at ", spawn_pos, "!")
 	print("=================\n")
 
 func _get_boss_spawn_position() -> Vector2:
@@ -218,10 +237,6 @@ func _on_enemy_died(experience_points: int, enemy_type: String):
 	if player and player.has_method("gain_experience"):
 		player.gain_experience(experience_points)
 	
-	# Drop the vegetable item at enemy's last position (passed via binding)
-	# Note: We need to get the enemy's position before it's freed
-	# This is handled by connecting with the enemy's global_position
-	
 	enemy_died.emit()
 	
 	# Check boss spawn after each death
@@ -236,15 +251,15 @@ func _on_enemy_died(experience_points: int, enemy_type: String):
 		wave_completed.emit()
 
 func _on_boss_died(experience_points: int):
-	"""Called when the boss dies"""
-	print("\n💀 BOSS DEFEATED! 💀")
+	"""Called when the Pea Boss dies"""
+	print("\n💀 PEA BOSS DEFEATED! 💀")
 	print("Boss XP awarded: ", experience_points)
 	
 	current_enemy_count -= 1
 	current_enemy_count = max(0, current_enemy_count)
 	
 	# Track boss kill
-	StatsTracker.record_kill("orc_boss")
+	StatsTracker.record_kill("pea_boss")
 	StatsTracker.record_experience_gained(experience_points)
 	
 	# Give experience to the player
@@ -259,7 +274,7 @@ func _on_boss_died(experience_points: int):
 	
 	# Check if wave is complete
 	if total_spawned >= total_enemies and current_enemy_count == 0:
-		print("🎉 WAVE COMPLETED! All enemies and boss defeated!")
+		print("🎉 WAVE COMPLETED! All enemies and Pea Boss defeated!")
 		wave_completed.emit()
 
 func set_spawn_enabled(enabled: bool):

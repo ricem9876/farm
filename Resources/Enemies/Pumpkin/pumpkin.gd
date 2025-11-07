@@ -209,6 +209,7 @@ func _spawn_damage_number(damage: float, is_crit: bool = false):
 	damage_num.setup(damage, is_crit)
 
 func _die():
+	StatsTracker.record_kill("pumpkin")  # Add this line
 	if is_dead:
 		return
 	

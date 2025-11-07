@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://c8k8e427fym8x" path="res://Resources/Enemies/Tomato/tomato.png" id="1_yop5b"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_x46e7"]
-radius = 5.0
+radius = 8.16079
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_yop5b"]
 radius = 342.072
@@ -152,21 +152,23 @@ collision_layer = 5
 script = ExtResource("1_y4uyj")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0.0879173, 2.45606)
+position = Vector2(4.85837, -1.44114)
 shape = SubResource("CircleShape2D_x46e7")
 
 [node name="DetectionArea" type="Area2D" parent="."]
+visible = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea"]
 shape = SubResource("CircleShape2D_yop5b")
 
 [node name="AttackArea" type="Area2D" parent="."]
+visible = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AttackArea"]
 shape = SubResource("CircleShape2D_y4uyj")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-position = Vector2(0.741956, 0.70988)
-scale = Vector2(0.273186, 0.303434)
+position = Vector2(5, -4)
+scale = Vector2(0.45, 0.45)
 sprite_frames = SubResource("SpriteFrames_dfrsa")
 animation = &"walk_up"

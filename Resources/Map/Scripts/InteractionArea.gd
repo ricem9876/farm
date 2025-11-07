@@ -64,7 +64,7 @@ func _process(_delta):
 func get_prompt_text() -> String:
 	match interaction_type:
 		"house":
-			return "Press E to enter house"
+			return "Press E to leave"
 		"farm_exit":
 			return "Press E to go outside"
 		"crafting_station":

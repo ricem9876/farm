@@ -1,5 +1,5 @@
-# farm.gd - FIXED: Better spawner configuration for exports
-# Clean version - mirrors safehouse logic, loads from save when needed
+# farm.gd - ORIGINAL VERSION (before scene transition timing changes)
+# This is from before we added fade-in/fade-out and spawn delays
 extends Node2D
 
 @onready var inventory_ui = $InventoryUI
@@ -32,6 +32,13 @@ func _ready():
 			# Continue anyway but log the error
 	else:
 		print("✓ EnemySpawner found: ", enemy_spawner.name)
+	
+	# CRITICAL: Connect to TutorialManager for Level 1 completion
+	if GameManager.current_level == 1:
+		if TutorialManager and TutorialManager.has_signal("tutorial_completed"):
+			if not TutorialManager.tutorial_completed.is_connected(_on_tutorial_completed):
+				TutorialManager.tutorial_completed.connect(_on_tutorial_completed)
+				print("✓ Connected to TutorialManager.tutorial_completed for Level 1")
 	
 	# Set custom crosshair cursor for farm
 	_set_custom_cursor()
@@ -207,7 +214,7 @@ func _configure_enemy_spawner():
 			"difficulty": "easy",
 			"max_enemies": 10,
 			"spawn_interval": 2.0,
-			"total_enemies": 5,
+			"total_enemies": 16,  # 2 of each x 4 types = 8 enemies
 			"spawn_mode": "gradual",
 			"boss_enabled": false
 		}
@@ -220,6 +227,12 @@ func _configure_enemy_spawner():
 	if "spawn_boundary" in enemy_spawner:
 		enemy_spawner.spawn_boundary = spawn_rect
 		print("  ✓ Set spawn_boundary for Level ", level_num, ": ", spawn_rect)
+	
+	# NEW: Configure enemy composition based on level
+	var spawn_weights = _calculate_enemy_composition(level_num)
+	if enemy_spawner.has_method("set_spawn_weights"):
+		enemy_spawner.set_spawn_weights(spawn_weights)
+		print("  ✓ Set spawn_weights for Level ", level_num, ": ", spawn_weights)
 	
 	# Configure max enemies
 	if enemy_spawner.has_method("set_max_enemies"):
@@ -270,6 +283,7 @@ func _configure_enemy_spawner():
 	print("✓ Spawner configuration complete")
 	print("Configuration summary:")
 	print("  - spawn_boundary: ", spawn_rect)
+	print("  - spawn_weights: ", spawn_weights)
 	print("  - max_enemies: ", settings.get("max_enemies", "N/A"))
 	print("  - spawn_interval: ", settings.get("spawn_interval", "N/A"))
 	print("  - total_enemies: ", settings.get("total_enemies", "N/A"))
@@ -290,49 +304,48 @@ func _configure_enemy_spawner():
 	
 	print("=== SPAWNER CONFIGURATION COMPLETE ===\n")
 
-func _calculate_spawn_boundary_for_level(level: int) -> Rect2:
-	"""Calculate spawn boundary that expands with each level
-	Map size: 2555 x 1600
-	Level 1: Small area around spawn
-	Level 2: Medium area (50% of map)
-	Level 3: Large area (75% of map)  
-	Level 4: Full map coverage
+func _calculate_enemy_composition(level: int) -> Dictionary:
+	"""Calculate spawn weights based on level
+	Level 1: 2 of each (mushroom, corn, pumpkin, tomato) = 8 total
+	Level 2: 5 of each (2+3) = 20 total
+	Level 3: 8 of each (2+3+3) = 32 total
+	Level 4: 11 of each (2+3+3+3) = 44 total
+	Future: Can expand with formula
 	"""
-	const MAP_WIDTH = 2555.0
-	const MAP_HEIGHT = 1600.0
 	
-	# Center spawn area around middle of map
-	var center_x = MAP_WIDTH / 2.0
-	var center_y = MAP_HEIGHT / 2.0
+	# Base composition: 2 of each enemy type
+	var base_per_type = 2
 	
-	var width: float
-	var height: float
+	# Each level after 1 adds 3 more of each type
+	var additional_per_level = 3
+	var additions = max(0, level - 1)
+	var count_per_type = base_per_type + (additions * additional_per_level)
 	
-	match level:
-		1:
-			# Level 1: 40% of map (small starter area)
-			width = MAP_WIDTH * 0.4
-			height = MAP_HEIGHT * 0.4
-		2:
-			# Level 2: 60% of map
-			width = MAP_WIDTH * 0.6
-			height = MAP_HEIGHT * 0.6
-		3:
-			# Level 3: 80% of map
-			width = MAP_WIDTH * 0.8
-			height = MAP_HEIGHT * 0.8
-		4, _:
-			# Level 4+: Full map
-			width = MAP_WIDTH
-			height = MAP_HEIGHT
+	# Equal weights = equal distribution
+	# Since we want exactly X of each type, we use equal weights
+	var weights = {
+		"mushroom": 25,  # 25% each = equal distribution
+		"corn": 25,
+		"pumpkin": 25,
+		"tomato": 25
+	}
 	
-	# Calculate top-left corner to center the spawn area
-	var x = center_x - (width / 2.0)
-	var y = center_y - (height / 2.0)
+	print("Level ", level, " composition: ", count_per_type, " of each enemy type")
 	
-	# Clamp to map boundaries
-	x = max(0, x)
-	y = max(0, y)
+	return weights
+
+func _calculate_spawn_boundary_for_level(level: int) -> Rect2:
+	"""Calculate spawn boundary - FIXED coordinates for all levels
+	Spawn area: X: 100-1900, Y: 100-1200
+	This gives a 1800x1100 spawn area with proper margins
+	"""
+	# Fixed spawn boundaries for all levels
+	var x = 100.0
+	var y = 100.0
+	var width = 1800.0  # 1900 - 100
+	var height = 1100.0  # 1200 - 100
+	
+	print("Level ", level, " spawn boundary: X(100-1900) Y(100-1200)")
 	
 	return Rect2(x, y, width, height)
 
@@ -421,6 +434,56 @@ func _on_wave_completed():
 	# Optional: Show victory message
 	if player and player.has_method("show_message"):
 		player.show_message("🎉 VICTORY! 🎉")
+	
+	# CRITICAL: Mark the level as complete to unlock the next one
+	_mark_current_level_complete()
+
+func _on_tutorial_completed():
+	"""Called when Level 1 tutorial completes"""
+	print("[FARM] 🎓 TUTORIAL COMPLETE!")
+	_mark_current_level_complete()
+
+func _mark_current_level_complete():
+	"""Mark the current level as complete"""
+	var current_level = GameManager.current_level
+	print("[FARM] Marking Level ", current_level, " as complete...")
+	
+	# Save directly to the save file
+	if GameManager.current_save_slot >= 0:
+		var save_data = SaveSystem.load_game(GameManager.current_save_slot)
+		if save_data.is_empty():
+			save_data = {}
+		
+		# Get or create the player data section
+		if not save_data.has("player"):
+			save_data["player"] = {}
+		
+		# Get or create completed_levels array
+		var completed_levels = save_data.player.get("completed_levels", [false, false, false, false, false])
+		
+		# Mark this level as complete
+		var level_index = current_level - 1
+		if level_index >= 0 and level_index < completed_levels.size():
+			completed_levels[level_index] = true
+			save_data.player["completed_levels"] = completed_levels
+			
+			# Get the player node to pass to save_game
+			var player = get_tree().get_first_node_in_group("player")
+			if player:
+				# Collect full player data and merge with our updated completed_levels
+				var player_data = SaveSystem.collect_player_data(player)
+				player_data["completed_levels"] = completed_levels
+				
+				# Save it
+				SaveSystem.save_game(GameManager.current_save_slot, player_data)
+				print("✓ Level ", current_level, " completion saved to slot ", GameManager.current_save_slot)
+				print("✓ Completed levels: ", completed_levels)
+			else:
+				print("❌ Could not find player to save data")
+		else:
+			print("❌ Invalid level index: ", level_index)
+	else:
+		print("⚠️ No save slot active - cannot save completion")
 
 func _set_farm_state():
 	"""Set player location state to farm (enables guns)"""

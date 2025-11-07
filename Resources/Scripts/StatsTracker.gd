@@ -3,10 +3,11 @@ extends Node
 
 # Kill tracking by enemy type
 var kills: Dictionary = {
-	"plant": 0,
-	"wolf": 0,
-	"tree": 0,
-	"mushroom": 0
+	"mushroom": 0,
+	"corn": 0,
+	"pumpkin": 0,
+	"tomato": 0,
+	"pea": 0
 }
 
 # Other statistics
@@ -30,7 +31,6 @@ func _process(delta):
 	total_playtime += delta
 
 # === KILL TRACKING ===
-
 func record_kill(enemy_type: String):
 	"""Record a kill for a specific enemy type"""
 	if kills.has(enemy_type):
@@ -51,7 +51,6 @@ func get_kills_for_type(enemy_type: String) -> int:
 	return kills.get(enemy_type, 0)
 
 # === DAMAGE TRACKING ===
-
 func record_damage_dealt(amount: float):
 	total_damage_dealt += amount
 
@@ -59,12 +58,10 @@ func record_damage_taken(amount: float):
 	total_damage_taken += amount
 
 # === EXPERIENCE TRACKING ===
-
 func record_experience_gained(amount: int):
 	total_experience_gained += amount
 
 # === COMBAT TRACKING ===
-
 func record_shot_fired():
 	shots_fired += 1
 
@@ -77,17 +74,14 @@ func get_critical_hit_rate() -> float:
 	return (float(critical_hits) / float(shots_fired)) * 100.0
 
 # === DEATH TRACKING ===
-
 func record_death():
 	times_died += 1
 
 # === ITEM TRACKING ===
-
 func record_item_collected():
 	items_collected += 1
 
 # === PLAYTIME ===
-
 func get_playtime_formatted() -> String:
 	"""Return playtime as HH:MM:SS"""
 	var hours = int(total_playtime) / 3600
@@ -97,7 +91,6 @@ func get_playtime_formatted() -> String:
 	return "%02d:%02d:%02d" % [hours, minutes, seconds]
 
 # === SAVE/LOAD ===
-
 func get_stats_data() -> Dictionary:
 	"""Get all stats as a dictionary for saving"""
 	return {
@@ -138,10 +131,11 @@ func load_stats_data(data: Dictionary):
 func reset_stats():
 	"""Reset all statistics to zero"""
 	kills = {
-		"plant": 0,
-		"wolf": 0,
-		"tree": 0,
-		"mushroom": 0
+		"mushroom": 0,
+		"corn": 0,
+		"pumpkin": 0,
+		"tomato": 0,
+		"pea": 0
 	}
 	total_damage_dealt = 0.0
 	total_damage_taken = 0.0

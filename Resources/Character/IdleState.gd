@@ -1,12 +1,17 @@
 extends state
-
 var player: CharacterBody2D
+var animation_tree: AnimationTree
 
 func enter(msg := {}):
 	player = state_machine.get_parent()
+	animation_tree = player.get_node("%AnimationTree")
 	player.velocity = Vector2.ZERO
 	
-	%AnimationPlayer.play("idle")
+	
+	
+	animation_tree["parameters/playback"].travel("Idle")
+	
+
 
 func physics_update(delta: float):
 	if Input.is_action_pressed("move_up") \

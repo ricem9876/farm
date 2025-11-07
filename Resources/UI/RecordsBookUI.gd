@@ -60,35 +60,58 @@ func _update_records_display():
 	for child in records_container.get_children():
 		child.queue_free()
 	
-	# Create section headers and records
+	# COMBAT STATISTICS
 	_create_section_header("COMBAT STATISTICS")
 	
 	if StatsTracker:
-		_create_record_entry("Enemies Killed", str(StatsTracker.enemies_killed))
+		_create_record_entry("Total Enemies Killed", str(StatsTracker.get_total_kills()))
 		_create_record_entry("Damage Dealt", "%.0f" % StatsTracker.total_damage_dealt)
+		_create_record_entry("Damage Taken", "%.0f" % StatsTracker.total_damage_taken)
 		_create_record_entry("Shots Fired", str(StatsTracker.shots_fired))
-		_create_record_entry("Shots Hit", str(StatsTracker.shots_hit))
+		_create_record_entry("Critical Hits", str(StatsTracker.critical_hits))
 		
-		var accuracy = 0.0
-		if StatsTracker.shots_fired > 0:
-			accuracy = (float(StatsTracker.shots_hit) / float(StatsTracker.shots_fired)) * 100.0
-		_create_record_entry("Accuracy", "%.1f%%" % accuracy)
+		var crit_rate = StatsTracker.get_critical_hit_rate()
+		_create_record_entry("Critical Hit Rate", "%.1f%%" % crit_rate)
 	
+	# VEGETABLES DEFEATED
+	_create_section_header("VEGETABLES DEFEATED")
+	
+	if StatsTracker:
+		var veggie_names = {
+			"mushroom": "Mushrooms",
+			"corn": "Corn",
+			"pumpkin": "Pumpkins",
+			"tomato": "Tomatoes",
+			"pea": "Peas"
+		}
+		
+		for veggie_key in ["mushroom", "corn", "pumpkin", "tomato", "pea"]:
+			var kill_count = StatsTracker.get_kills_for_type(veggie_key)
+			var display_name = veggie_names.get(veggie_key, veggie_key.capitalize())
+			_create_record_entry(display_name, str(kill_count))
+	
+	# EXPLORATION
 	_create_section_header("EXPLORATION")
 	
 	if StatsTracker:
-		_create_record_entry("Levels Completed", str(StatsTracker.levels_completed))
-		_create_record_entry("Deaths", str(StatsTracker.deaths))
-		_create_record_entry("Play Time", _format_time(StatsTracker.play_time))
+		_create_record_entry("Deaths", str(StatsTracker.times_died))
+		_create_record_entry("Play Time", StatsTracker.get_playtime_formatted())
+		_create_record_entry("Experience Gained", str(StatsTracker.total_experience_gained))
 	
+	# COLLECTION
 	_create_section_header("COLLECTION")
+	
+	if StatsTracker:
+		_create_record_entry("Items Collected", str(StatsTracker.items_collected))
 	
 	if player and player.has_node("InventoryManager"):
 		var inv = player.get_node("InventoryManager")
-		_create_record_entry("Items Collected", str(inv.get_total_items()))
-		_create_record_entry("Wolf Fur", str(inv.get_item_quantity_by_name("Wolf Fur")))
-		_create_record_entry("Plant Fiber", str(inv.get_item_quantity_by_name("Plant Fiber")))
-		_create_record_entry("Wood", str(inv.get_item_quantity_by_name("Wood")))
+		# Update these item names to match what your vegetables actually drop
+		_create_record_entry("Mushrooms", str(inv.get_item_quantity_by_name("Mushroom")))
+		_create_record_entry("Corn", str(inv.get_item_quantity_by_name("Corn")))
+		_create_record_entry("Pumpkins", str(inv.get_item_quantity_by_name("Pumpkin")))
+		_create_record_entry("Tomatoes", str(inv.get_item_quantity_by_name("Tomato")))
+		_create_record_entry("Peas", str(inv.get_item_quantity_by_name("Pea")))
 
 func _create_section_header(text: String):
 	var label = Label.new()

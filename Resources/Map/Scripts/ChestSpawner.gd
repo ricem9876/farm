@@ -69,11 +69,9 @@ func spawn_chest_at(position: Vector2):
 	chest.locked_texture = basket_texture
 	chest.unlocked_texture = basket_texture
 	
-	# Set loot - generous rewards for collecting all vegetables
+	# Set tech points only (no coins)
 	chest.tech_points_min = 50
 	chest.tech_points_max = 100
-	chest.coins_min = 200
-	chest.coins_max = 500
 	
 	# Add to scene
 	get_parent().add_child(chest)

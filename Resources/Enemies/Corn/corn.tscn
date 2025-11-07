@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://betn60acw5460" path="res://Resources/Enemies/Corn/corn.png" id="1_qr4g8"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_e2h11"]
-radius = 5.0
+radius = 6.00521
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_q7fs7"]
 radius = 342.072
@@ -72,7 +72,7 @@ animations = [{
 "texture": SubResource("AtlasTexture_rbx2v")
 }],
 "loop": true,
-"name": &"default",
+"name": &"tornado",
 "speed": 15.0
 }]
 
@@ -99,6 +99,7 @@ shape = SubResource("CircleShape2D_bx4ms")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 position = Vector2(3.50804, 0.790121)
-scale = Vector2(0.390374, 0.412809)
+scale = Vector2(0.6, 0.6)
 sprite_frames = SubResource("SpriteFrames_sc54h")
-frame_progress = 0.243849
+animation = &"tornado"
+frame_progress = 0.410432

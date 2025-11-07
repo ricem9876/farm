@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://dpht2wfqk2rkc" path="res://Resources/Enemies/Mushroom/mushroom.gd" id="1_p0e78"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_x46e7"]
-radius = 5.0
+radius = 7.00446
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_yop5b"]
 radius = 342.072
@@ -170,7 +170,7 @@ shape = SubResource("CircleShape2D_y4uyj")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 position = Vector2(2, 2)
-scale = Vector2(0.374497, 0.388117)
+scale = Vector2(0.5, 0.5)
 sprite_frames = SubResource("SpriteFrames_ljvkd")
 animation = &"walk_up"
-frame_progress = 0.153447
+frame_progress = 0.39019

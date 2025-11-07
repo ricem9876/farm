@@ -118,19 +118,20 @@ func _update_stats():
 	
 	var pixel_font = preload("res://Resources/Fonts/yoster.ttf")
 	
-	# === KILLS SECTION ===
-	_add_section_header("ENEMIES SLAIN", pixel_font)
+	# === VEGETABLES DEFEATED SECTION ===
+	_add_section_header("VEGETABLES Harvested", pixel_font)
 	
 	var total_kills = StatsTracker.get_total_kills()
 	_add_stat_line("Total Kills:", str(total_kills), pixel_font, Color(0.2, 0.6, 0.2))
 	
 	_add_spacer(10)
 	
-	# Individual enemy kills
-	_add_stat_line("  Plants:", str(StatsTracker.get_kills_for_type("plant")), pixel_font)
-	_add_stat_line("  Wolves:", str(StatsTracker.get_kills_for_type("wolf")), pixel_font)
-	_add_stat_line("  Trees:", str(StatsTracker.get_kills_for_type("tree")), pixel_font)
+	# Individual vegetable kills
 	_add_stat_line("  Mushrooms:", str(StatsTracker.get_kills_for_type("mushroom")), pixel_font)
+	_add_stat_line("  Corn:", str(StatsTracker.get_kills_for_type("corn")), pixel_font)
+	_add_stat_line("  Pumpkins:", str(StatsTracker.get_kills_for_type("pumpkin")), pixel_font)
+	_add_stat_line("  Tomatoes:", str(StatsTracker.get_kills_for_type("tomato")), pixel_font)
+	_add_stat_line("  Peas:", str(StatsTracker.get_kills_for_type("pea")), pixel_font)
 	
 	_add_spacer(20)
 	

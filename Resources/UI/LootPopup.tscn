@@ -1,0 +1,24 @@
+[gd_scene load_steps=2 format=3 uid="uid://h7gvo7d1skm6"]
+
+[ext_resource type="Script" uid="uid://byb6pvnexofcr" path="res://Resources/UI/LootPopup.gd" id="1_f1y46"]
+
+[node name="LootPopup" type="CanvasLayer"]
+script = ExtResource("1_f1y46")
+
+[node name="Panel" type="Panel" parent="."]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="VBox" type="VBoxContainer" parent="Panel/MarginContainer"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="Panel/MarginContainer/VBox"]
+layout_mode = 2
+
+[node name="LootContainer" type="VBoxContainer" parent="Panel/MarginContainer/VBox"]
+layout_mode = 2
