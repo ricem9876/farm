@@ -4,7 +4,7 @@ class_name PeaBoss
 
 signal died(experience_points: int)
 
-@export var max_health: float = 450.0  # Boss has much more HP
+@export var max_health: float = 1000.0  # Boss has much more HP
 @export var experience_value: int = 100  # More XP reward
 @export var move_speed: float = 60.0  # Slower than other enemies (boss is tanky)
 @export var chase_speed: float = 80.0
@@ -51,7 +51,11 @@ func _ready():
 	add_to_group("bosses")  # Special boss group
 	_apply_level_scaling()
 	current_health = max_health
+	
+	# Defer spawn position setup to ensure global_position is valid
+	await get_tree().process_frame
 	spawn_position = global_position
+	patrol_target = spawn_position  # Start at spawn position
 	_set_new_patrol_target()
 	
 	# Setup hit area for taking damage

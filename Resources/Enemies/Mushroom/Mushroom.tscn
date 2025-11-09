@@ -1,7 +1,7 @@
 [gd_scene load_steps=23 format=3 uid="uid://byy3ptektiasr"]
 
 [ext_resource type="Texture2D" uid="uid://ewmpsyfw2s1s" path="res://Resources/Enemies/Mushroom/mushroom.png" id="1_mmih8"]
-[ext_resource type="Script" uid="uid://dpht2wfqk2rkc" path="res://Resources/Enemies/Mushroom/mushroom.gd" id="1_p0e78"]
+[ext_resource type="Script" uid="uid://dpht2wfqk2rkc" path="res://Resources/Enemies/Mushroom/Mushroom.gd" id="1_p0e78"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_x46e7"]
 radius = 7.00446

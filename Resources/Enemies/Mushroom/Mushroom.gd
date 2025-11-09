@@ -47,7 +47,11 @@ func _ready():
 	add_to_group("enemies")
 	_apply_level_scaling()
 	current_health = max_health
+	
+	# Defer spawn position setup to ensure global_position is valid
+	await get_tree().process_frame
 	spawn_position = global_position
+	patrol_target = spawn_position  # Start at spawn position
 	_set_new_patrol_target()
 	
 	player = get_tree().get_first_node_in_group("player")

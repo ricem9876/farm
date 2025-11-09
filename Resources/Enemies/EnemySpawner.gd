@@ -1,4 +1,4 @@
-# EnemySpawner.gd - UPDATED: Added Pea and Pea Boss support
+# EnemySpawner.gd - FIXED: Corrected boss scene path
 extends Node2D
 
 @export var spawn_enabled: bool = true
@@ -23,8 +23,8 @@ var enemy_scenes = {
 	"pea": preload("res://Resources/Enemies/Pea/Pea.tscn")  # NEW: Pea enemy added
 }
 
-# Boss scene - now using Pea Boss!
-var boss_scene = preload("res://Resources/Enemies/Pea/PeaBoss.gd")
+# Boss scene - FIXED: Changed from .gd to .tscn
+var boss_scene = preload("res://Resources/Enemies/Pea/PeaBoss.tscn")
 
 # Default spawn weights - can be overridden via set_spawn_weights()
 # NOTE: Pea is NOT in default weights - it's only spawned if explicitly set

@@ -200,6 +200,7 @@ hframes = 4
 vframes = 2
 
 [node name="HitArea" type="Area2D" parent="."]
+collision_layer = 5
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HitArea"]
 position = Vector2(2, -2)
