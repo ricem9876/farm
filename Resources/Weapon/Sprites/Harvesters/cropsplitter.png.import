@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cgbx0lkondcow"
-path="res://.godot/imported/MushroomChest.png-3b896b8b25a71de8e9f5e9e2e707c729.ctex"
+uid="uid://4wdiuvgsel7p"
+path="res://.godot/imported/cropsplitter.png-2fc1c411ca074a5c0dfcc81d762d4bf3.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Resources/Map/Objects/MushroomChest.png"
-dest_files=["res://.godot/imported/MushroomChest.png-3b896b8b25a71de8e9f5e9e2e707c729.ctex"]
+source_file="res://Resources/Weapon/Sprites/Harvesters/cropsplitter.png"
+dest_files=["res://.godot/imported/cropsplitter.png-2fc1c411ca074a5c0dfcc81d762d4bf3.ctex"]
 
 [params]
 

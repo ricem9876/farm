@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://n7dbt4apk2qi"
-path="res://.godot/imported/WoolChest.png-e7ef9cc5a1b99a2efd8719d0ce475c8d.ctex"
+uid="uid://bvmigjvmgkpyk"
+path="res://.godot/imported/NOsign.png-f84ca23f254aa3da63dcdc244182b9d3.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Resources/Map/Objects/WoolChest.png"
-dest_files=["res://.godot/imported/WoolChest.png-e7ef9cc5a1b99a2efd8719d0ce475c8d.ctex"]
+source_file="res://Resources/Map/Objects/NOsign.png"
+dest_files=["res://.godot/imported/NOsign.png-f84ca23f254aa3da63dcdc244182b9d3.ctex"]
 
 [params]
 

@@ -5,7 +5,7 @@ class_name Corn
 signal died(experience_points: int)
 
 @export var max_health: float = 80.0
-@export var experience_value: int = 50
+@export var experience_value: int = 15
 @export var move_speed: float = 100.0
 @export var chase_speed: float = 150.0
 @export var contact_damage: float = 20.0

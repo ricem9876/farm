@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bcedbmlqm2f4r"
-path="res://.godot/imported/WoodKey.png-f091f3218cc137664d946cd4cd33f8e4.ctex"
+uid="uid://bqvai1jflmq52"
+path="res://.godot/imported/PowerHarvester.png-ba329ec52a75744b16f306bd8d622904.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Resources/Map/Objects/WoodKey.png"
-dest_files=["res://.godot/imported/WoodKey.png-f091f3218cc137664d946cd4cd33f8e4.ctex"]
+source_file="res://Resources/Weapon/Sprites/Harvesters/PowerHarvester.png"
+dest_files=["res://.godot/imported/PowerHarvester.png-ba329ec52a75744b16f306bd8d622904.ctex"]
 
 [params]
 

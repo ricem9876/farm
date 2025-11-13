@@ -1,33 +1,30 @@
-# EnemySpawner.gd - FIXED: Corrected boss scene path
+# EnemySpawner.gd - FIXED: Validates spawn positions to avoid physics-blocked zones
 extends Node2D
 
 @export var spawn_enabled: bool = true
 @export var max_enemies: int = 15
 @export var spawn_interval: float = 5.0
-@export var total_enemies: int = 15  # Total enemies for this wave
-@export var spawn_mode: String = "gradual"  # "gradual" or "all_at_once"
+@export var total_enemies: int = 15
+@export var spawn_mode: String = "gradual"
 @export var spawn_boundary: Rect2 = Rect2(0, 0, 1000, 1000)
-@export var boss_enabled: bool = false  # Whether this level has a boss
-@export var boss_spawn_at_halfway: bool = true  # Spawn boss at halfway point
+@export var boss_enabled: bool = false
+@export var boss_spawn_at_halfway: bool = true
 
 signal enemy_spawned
 signal enemy_died
 signal wave_completed
-signal boss_spawned_now  # Signal when boss spawns
+signal boss_spawned_now
 
 var enemy_scenes = {
 	"mushroom": preload("res://Resources/Enemies/Mushroom/Mushroom.tscn"),
-	"tomato": preload("res://Resources/Enemies/Tomato/Tomato.tscn"),
-	"pumpkin": preload("res://Resources/Enemies/Pumpkin/Pumpkin.tscn"),
-	"corn": preload("res://Resources/Enemies/Corn/Corn.tscn"),
-	"pea": preload("res://Resources/Enemies/Pea/Pea.tscn")  # NEW: Pea enemy added
+	"tomato": preload("res://Resources/Enemies/Tomato/tomato.tscn"),
+	"pumpkin": preload("res://Resources/Enemies/Pumpkin/pumpkin.tscn"),
+	"corn": preload("res://Resources/Enemies/Corn/corn.tscn"),
+	"pea": preload("res://Resources/Enemies/Pea/pea.tscn")
 }
 
-# Boss scene - FIXED: Changed from .gd to .tscn
 var boss_scene = preload("res://Resources/Enemies/Pea/PeaBoss.tscn")
 
-# Default spawn weights - can be overridden via set_spawn_weights()
-# NOTE: Pea is NOT in default weights - it's only spawned if explicitly set
 var spawn_weights = {
 	"mushroom": 50,
 	"tomato": 40,
@@ -36,15 +33,25 @@ var spawn_weights = {
 }
 
 var current_enemy_count: int = 0
-var total_spawned: int = 0  # Track how many enemies have been spawned
-var enemies_killed: int = 0  # Track enemies killed
+var total_spawned: int = 0
+var enemies_killed: int = 0
 var spawn_timer: float = 0.0
 var player: Node2D
-var boss_spawned: bool = false  # Track if boss has been spawned
-var boss_instance: Node2D = null  # Reference to the boss
+var boss_spawned: bool = false
+var boss_instance: Node2D = null
+
+# Physics validation
+var world_2d: World2D
+var space_state: PhysicsDirectSpaceState2D
 
 func _ready():
 	player = get_tree().get_first_node_in_group("player")
+	
+	# Get physics space for spawn validation
+	world_2d = get_world_2d()
+	if world_2d:
+		space_state = world_2d.direct_space_state
+	
 	print("\n=== ENEMY SPAWNER INITIALIZED ===")
 	print("Spawn boundary: ", spawn_boundary)
 	print("Spawn mode: ", spawn_mode)
@@ -57,9 +64,7 @@ func _ready():
 		print("👹 PEA BOSS will spawn at halfway point!")
 	print("=================================\n")
 
-# NEW: Method to set spawn weights from external configuration
 func set_spawn_weights(new_weights: Dictionary):
-	"""Set custom spawn weights for this level"""
 	spawn_weights = new_weights
 	print("✓ Spawn weights updated: ", spawn_weights)
 
@@ -67,11 +72,9 @@ func _process(delta):
 	if not spawn_enabled:
 		return
 	
-	# Only use timer spawning for gradual mode
 	if spawn_mode != "gradual":
 		return
 	
-	# Stop spawning if we've reached the total
 	if total_spawned >= total_enemies:
 		return
 	
@@ -81,19 +84,22 @@ func _process(delta):
 		_spawn_random_enemy()
 		spawn_timer = spawn_interval
 
-# Spawn all enemies at once
 func _spawn_all_enemies_immediately():
 	print("🚀 Spawning all ", total_enemies, " enemies at once!")
 	for i in range(total_enemies):
 		_spawn_random_enemy()
-		await get_tree().create_timer(0.05).timeout  # Tiny delay to prevent overlap
+		await get_tree().create_timer(0.05).timeout
 	print("✓ All ", total_enemies, " enemies spawned!")
 
 func _spawn_random_enemy():
 	var enemy_type = _weighted_random_choice()
-	var spawn_pos = _get_random_spawn_position()
+	var spawn_pos = _get_valid_spawn_position()
 	
-	# Validate enemy type exists
+	# If we couldn't find a valid position after many tries, skip this spawn
+	if spawn_pos == Vector2.ZERO:
+		print("⚠ Could not find valid spawn position, skipping this enemy")
+		return
+	
 	if not enemy_scenes.has(enemy_type):
 		print("ERROR: Unknown enemy type '", enemy_type, "' - falling back to mushroom")
 		enemy_type = "mushroom"
@@ -105,7 +111,6 @@ func _spawn_random_enemy():
 	enemy.global_position = spawn_pos
 	enemy_spawned.emit()
 	
-	# Connect to death signal with enemy type
 	if enemy.has_signal("died"):
 		enemy.died.connect(_on_enemy_died.bind(enemy_type))
 	
@@ -113,11 +118,9 @@ func _spawn_random_enemy():
 	total_spawned += 1
 	print("Spawned ", enemy_type, " at ", spawn_pos, " (", current_enemy_count, "/", max_enemies, ") [Total: ", total_spawned, "/", total_enemies, "]")
 	
-	# Check if we should spawn the boss
 	_check_boss_spawn()
 
 func _check_boss_spawn():
-	"""Check if conditions are met to spawn the boss"""
 	if not boss_enabled:
 		return
 	
@@ -127,15 +130,12 @@ func _check_boss_spawn():
 	if not boss_spawn_at_halfway:
 		return
 	
-	# Calculate halfway point
 	var halfway_kills = int(total_enemies / 2.0)
 	
-	# Spawn boss when we've killed half the enemies
 	if enemies_killed >= halfway_kills:
 		_spawn_boss()
 
 func _spawn_boss():
-	"""Spawn the Pea Boss"""
 	if boss_spawned:
 		print("⚠ Boss already spawned!")
 		return
@@ -153,38 +153,116 @@ func _spawn_boss():
 	get_parent().add_child(boss_instance)
 	boss_instance.global_position = spawn_pos
 	
-	# Connect to boss death signal
 	if boss_instance.has_signal("died"):
 		boss_instance.died.connect(_on_boss_died)
 	
 	boss_spawned = true
-	current_enemy_count += 1  # Count boss as an enemy
+	current_enemy_count += 1
 	
 	boss_spawned_now.emit()
 	print("👹 PEA BOSS SPAWNED at ", spawn_pos, "!")
 	print("=================\n")
 
 func _get_boss_spawn_position() -> Vector2:
-	"""Get a spawn position for the boss - tries to spawn far from player"""
+	"""Get a spawn position for the boss - tries to spawn far from player AND not in physics-blocked areas"""
 	if not player:
-		# Fallback to center of spawn boundary
 		return spawn_boundary.position + spawn_boundary.size / 2
 	
 	var best_position = Vector2.ZERO
 	var best_distance = 0.0
 	
-	# Try 10 random positions and pick the one farthest from player
-	for i in range(10):
-		var x = spawn_boundary.position.x + randf() * spawn_boundary.size.x
-		var y = spawn_boundary.position.y + randf() * spawn_boundary.size.y
-		var test_pos = Vector2(x, y)
+	# Try 20 positions for boss (more attempts than regular enemies)
+	for i in range(20):
+		var test_pos = _get_random_position_in_boundary()
+		
+		# Check if position is valid (not blocked by physics)
+		if not _is_position_valid(test_pos):
+			continue
+		
 		var distance = test_pos.distance_to(player.global_position)
 		
 		if distance > best_distance:
 			best_distance = distance
 			best_position = test_pos
 	
+	# If no valid position found, fallback to center
+	if best_position == Vector2.ZERO:
+		print("⚠ Could not find ideal boss spawn, using center")
+		return spawn_boundary.position + spawn_boundary.size / 2
+	
 	return best_position
+
+func _get_valid_spawn_position() -> Vector2:
+	"""Get a valid spawn position that's not blocked by physics and not too close to player"""
+	var max_attempts = 20  # Try 20 times to find a good spot
+	
+	for attempt in range(max_attempts):
+		var test_pos = _get_random_position_in_boundary()
+		
+		# Check if position is valid (not blocked by physics)
+		if not _is_position_valid(test_pos):
+			continue
+		
+		# Check minimum distance from player
+		if player:
+			var min_distance = 150.0
+			if test_pos.distance_to(player.global_position) < min_distance:
+				continue  # Too close to player, try again
+		
+		# This position is good!
+		return test_pos
+	
+	# Couldn't find a valid position after all attempts
+	print("⚠ Failed to find valid spawn position after ", max_attempts, " attempts")
+	return Vector2.ZERO
+
+func _get_random_position_in_boundary() -> Vector2:
+	"""Get a random position within the spawn boundary"""
+	var x = spawn_boundary.position.x + randf() * spawn_boundary.size.x
+	var y = spawn_boundary.position.y + randf() * spawn_boundary.size.y
+	return Vector2(x, y)
+
+func _is_position_valid(position: Vector2) -> bool:
+	"""Check if a position is valid for spawning (not blocked by physics)"""
+	if not space_state:
+		return true  # If we can't check, assume it's valid
+	
+	# Perform a point raycast in multiple directions to check for obstacles
+	# We check 4 directions: up, down, left, right
+	var check_distance = 50.0  # How far to check in each direction
+	var directions = [
+		Vector2(check_distance, 0),    # Right
+		Vector2(-check_distance, 0),   # Left
+		Vector2(0, check_distance),    # Down
+		Vector2(0, -check_distance)    # Up
+	]
+	
+	# If ANY direction is blocked, this position is probably bad
+	var blocked_count = 0
+	for direction in directions:
+		var query = PhysicsRayQueryParameters2D.create(position, position + direction)
+		# Check against world layer (layer 1) - walls and obstacles
+		query.collision_mask = 1  # Layer 1 is typically the world/walls layer
+		
+		var result = space_state.intersect_ray(query)
+		if result:
+			blocked_count += 1
+	
+	# If 3 or more directions are blocked, this is probably inside a wall/house
+	if blocked_count >= 3:
+		return false
+	
+	# Also check if there's a collision right at the spawn point
+	var point_query = PhysicsPointQueryParameters2D.new()
+	point_query.position = position
+	point_query.collision_mask = 1  # Check against world layer
+	
+	var point_results = space_state.intersect_point(point_query, 1)  # Max 1 result
+	if point_results.size() > 0:
+		return false  # Something is already at this point
+	
+	# Position is valid!
+	return true
 
 func _weighted_random_choice() -> String:
 	var total_weight = 0
@@ -199,50 +277,25 @@ func _weighted_random_choice() -> String:
 		if random_value <= cumulative_weight:
 			return enemy_type
 	
-	return "mushroom"  # Default fallback
-
-func _get_random_spawn_position() -> Vector2:
-	var x = spawn_boundary.position.x + randf() * spawn_boundary.size.x
-	var y = spawn_boundary.position.y + randf() * spawn_boundary.size.y
-	var spawn_pos = Vector2(x, y)
-	
-	if player:
-		var min_distance = 150.0
-		var distance_to_player = spawn_pos.distance_to(player.global_position)
-		
-		if distance_to_player < min_distance:
-			for i in range(5):
-				x = spawn_boundary.position.x + randf() * spawn_boundary.size.x
-				y = spawn_boundary.position.y + randf() * spawn_boundary.size.y
-				spawn_pos = Vector2(x, y)
-				
-				if spawn_pos.distance_to(player.global_position) >= min_distance:
-					break
-	
-	return spawn_pos
+	return "mushroom"
 
 func _on_enemy_died(experience_points: int, enemy_type: String):
 	current_enemy_count -= 1
 	current_enemy_count = max(0, current_enemy_count)
 	enemies_killed += 1
 	
-	var enemies_left = total_enemies - total_spawned + current_enemy_count
 	print("Enemy died: ", enemy_type, " | XP: ", experience_points, " | Alive: ", current_enemy_count, " | Killed: ", enemies_killed, "/", total_enemies)
 	
-	# Track the kill in StatsTracker
 	StatsTracker.record_kill(enemy_type)
 	StatsTracker.record_experience_gained(experience_points)
 	
-	# Give experience to the player
 	if player and player.has_method("gain_experience"):
 		player.gain_experience(experience_points)
 	
 	enemy_died.emit()
 	
-	# Check boss spawn after each death
 	_check_boss_spawn()
 	
-	# Check if wave is complete (including boss if applicable)
 	var all_enemies_spawned = total_spawned >= total_enemies
 	var boss_condition_met = (not boss_enabled) or (boss_enabled and boss_spawned and not is_instance_valid(boss_instance))
 	
@@ -251,18 +304,15 @@ func _on_enemy_died(experience_points: int, enemy_type: String):
 		wave_completed.emit()
 
 func _on_boss_died(experience_points: int):
-	"""Called when the Pea Boss dies"""
 	print("\n💀 PEA BOSS DEFEATED! 💀")
 	print("Boss XP awarded: ", experience_points)
 	
 	current_enemy_count -= 1
 	current_enemy_count = max(0, current_enemy_count)
 	
-	# Track boss kill
 	StatsTracker.record_kill("pea_boss")
 	StatsTracker.record_experience_gained(experience_points)
 	
-	# Give experience to the player
 	if player and player.has_method("gain_experience"):
 		player.gain_experience(experience_points)
 	
@@ -272,7 +322,6 @@ func _on_boss_died(experience_points: int):
 	
 	print("==================\n")
 	
-	# Check if wave is complete
 	if total_spawned >= total_enemies and current_enemy_count == 0:
 		print("🎉 WAVE COMPLETED! All enemies and Pea Boss defeated!")
 		wave_completed.emit()
@@ -282,11 +331,9 @@ func set_spawn_enabled(enabled: bool):
 	print("Enemy spawning: ", "ENABLED" if enabled else "DISABLED")
 
 func start_spawning():
-	"""Called by farm.gd after configuration is complete"""
 	print("start_spawning() called - mode: ", spawn_mode, " | total: ", total_enemies)
 	if spawn_mode == "all_at_once":
 		_spawn_all_enemies_immediately()
-	# Gradual spawning will happen automatically in _process()
 
 func clear_all_enemies():
 	var enemies = get_tree().get_nodes_in_group("enemies")

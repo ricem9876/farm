@@ -39,9 +39,9 @@ func spawn_random_chests():
 	print("Spawning ", num_chests, " harvest baskets on the farm")
 	
 	# Get shuffled list of spawn positions
-	var available_positions = spawn_markers.duplicate()
+	var available_positions: Array[Marker2D] = []
+	available_positions.assign(spawn_markers)
 	available_positions.shuffle()
-	
 	# Spawn baskets
 	for i in range(min(num_chests, available_positions.size())):
 		var marker = available_positions[i]
@@ -69,9 +69,9 @@ func spawn_chest_at(position: Vector2):
 	chest.locked_texture = basket_texture
 	chest.unlocked_texture = basket_texture
 	
-	# Set tech points only (no coins)
-	chest.tech_points_min = 50
-	chest.tech_points_max = 100
+	# ← CHANGED: Set harvest tokens instead of tech points
+	chest.harvest_tokens_min = 50
+	chest.harvest_tokens_max = 100
 	
 	# Add to scene
 	get_parent().add_child(chest)

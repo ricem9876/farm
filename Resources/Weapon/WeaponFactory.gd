@@ -16,11 +16,11 @@ static func _create_base_weapon() -> WeaponItem:
 # Create a pistol
 static func create_pistol() -> WeaponItem:
 	var pistol = _create_base_weapon()
-	pistol.name = "Pistol"
+	pistol.name = "Handheld Harvester"
 	pistol.description = "Reliable sidearm with balanced stats"
 	pistol.weapon_type = "Pistol"
-	pistol.weapon_sprite = preload("res://Resources/Weapon/Sprites/pistol.png")
-	pistol.icon = preload("res://Resources/Weapon/Sprites/pistol.png")
+	pistol.weapon_sprite = preload("res://Resources/Weapon/Sprites/Harvesters/handheldharvester.png")
+	pistol.icon = preload("res://Resources/Weapon/Sprites/Harvesters/handheldharvester.png")
 	pistol.base_damage = 18.0
 	pistol.base_fire_rate = 3.0
 	pistol.base_bullet_count = 1
@@ -31,11 +31,11 @@ static func create_pistol() -> WeaponItem:
 # Create a shotgun
 static func create_shotgun() -> WeaponItem:
 	var shotgun = _create_base_weapon()
-	shotgun.name = "Shotgun"
+	shotgun.name = "Thresher"
 	shotgun.description = "Devastating at close range"
 	shotgun.weapon_type = "Shotgun"
-	shotgun.weapon_sprite = preload("res://Resources/Weapon/Sprites/shotgun.png")
-	shotgun.icon = preload("res://Resources/Weapon/Sprites/shotgun.png")
+	shotgun.weapon_sprite = preload("res://Resources/Weapon/Sprites/Harvesters/thresher.png")
+	shotgun.icon = preload("res://Resources/Weapon/Sprites/Harvesters/thresher.png")
 	shotgun.base_damage = 10.0
 	shotgun.base_fire_rate = 1.2
 	shotgun.base_bullet_count = 6
@@ -46,11 +46,11 @@ static func create_shotgun() -> WeaponItem:
 # Create a rifle
 static func create_rifle() -> WeaponItem:
 	var rifle = _create_base_weapon()
-	rifle.name = "Assault Rifle"
+	rifle.name = "Crop Cutter"
 	rifle.description = "Balanced automatic weapon"
 	rifle.weapon_type = "Rifle"
-	rifle.weapon_sprite = DEFAULT_SPRITE
-	rifle.icon = DEFAULT_ICON
+	rifle.weapon_sprite = preload("res://Resources/Weapon/Sprites/Harvesters/cropsplitter.png")
+	rifle.icon = preload("res://Resources/Weapon/Sprites/Harvesters/cropsplitter.png")
 	rifle.base_damage = 12.0
 	rifle.base_fire_rate = 5.0
 	rifle.base_bullet_count = 1
@@ -61,11 +61,11 @@ static func create_rifle() -> WeaponItem:
 # Create a sniper rifle
 static func create_sniper() -> WeaponItem:
 	var sniper = _create_base_weapon()
-	sniper.name = "Sniper Rifle"
+	sniper.name = "Power Harvester"
 	sniper.description = "High damage, precision weapon"
 	sniper.weapon_type = "Sniper"
-	sniper.weapon_sprite = preload("res://Resources/Weapon/Sprites/sniper.png")
-	sniper.icon = preload("res://Resources/Weapon/Sprites/sniper.png")
+	sniper.weapon_sprite = preload("res://Resources/Weapon/Sprites/Harvesters/PowerHarvester.png")
+	sniper.icon = preload("res://Resources/Weapon/Sprites/Harvesters/PowerHarvester.png")
 	sniper.base_damage = 42.0
 	sniper.base_fire_rate = 0.7
 	sniper.base_bullet_count = 1
@@ -76,11 +76,11 @@ static func create_sniper() -> WeaponItem:
 # Create a machine gun
 static func create_machine_gun() -> WeaponItem:
 	var mg = _create_base_weapon()
-	mg.name = "Machine Gun"
+	mg.name = "Auto-Harvester"
 	mg.description = "Rapid fire suppression"
 	mg.weapon_type = "MachineGun"
-	mg.weapon_sprite = preload("res://Resources/Weapon/Sprites/machinegun.png")
-	mg.icon = preload("res://Resources/Weapon/Sprites/machinegun.png")
+	mg.weapon_sprite = preload("res://Resources/Weapon/Sprites/Harvesters/autoharvester.png")
+	mg.icon = preload("res://Resources/Weapon/Sprites/Harvesters/autoharvester.png")
 	mg.base_damage = 5.0
 	mg.base_fire_rate = 12.0
 	mg.base_bullet_count = 1
@@ -91,11 +91,11 @@ static func create_machine_gun() -> WeaponItem:
 # Create a burst rifle
 static func create_burst_rifle() -> WeaponItem:
 	var burst = _create_base_weapon()
-	burst.name = "Burst Rifle"
+	burst.name = "Crop Splitter"
 	burst.description = "Fires 3-round bursts"
 	burst.weapon_type = "BurstRifle"  # FIXED: Use separate type to avoid sharing Rifle upgrades
-	burst.weapon_sprite = preload("res://Resources/Weapon/Sprites/rifle.png")
-	burst.icon = preload("res://Resources/Weapon/Sprites/rifle.png")
+	burst.weapon_sprite = preload("res://Resources/Weapon/Sprites/Harvesters/cropcutter_0005.png")
+	burst.icon = preload("res://Resources/Weapon/Sprites/Harvesters/cropcutter_0005.png")
 	burst.base_damage = 14.0
 	burst.base_fire_rate = 3.0
 	burst.base_bullet_count = 3

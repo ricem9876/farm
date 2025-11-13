@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://brswyxdpghyxn"
-path="res://.godot/imported/WoodChest.png-f254f62a1fe14dfebc8d898f8da8f8d5.ctex"
+uid="uid://bq8h3kr86lcqr"
+path="res://.godot/imported/mist.png-fe6faf94440412f98e9874691ce83358.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Resources/Map/Objects/WoodChest.png"
-dest_files=["res://.godot/imported/WoodChest.png-f254f62a1fe14dfebc8d898f8da8f8d5.ctex"]
+source_file="res://Resources/Map/Objects/mist.png"
+dest_files=["res://.godot/imported/mist.png-fe6faf94440412f98e9874691ce83358.ctex"]
 
 [params]
 

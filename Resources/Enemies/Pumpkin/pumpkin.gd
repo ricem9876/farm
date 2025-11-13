@@ -5,7 +5,7 @@ class_name Pumpkin
 signal died(experience_points: int)
 
 @export var max_health: float = 70.0
-@export var experience_value: int = 45
+@export var experience_value: int = 13
 @export var move_speed: float = 90.0
 @export var chase_speed: float = 110.0
 @export var contact_damage: float = 18.0

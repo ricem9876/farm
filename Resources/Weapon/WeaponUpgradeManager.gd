@@ -20,8 +20,8 @@ func _initialize_upgrades():
 		"pistol_dual_wield",
 		"Pistol",
 		"Dual Wield",
-		"Equips 2 pistols - doubles fire rate",
-		10
+		"Equips 2 harvesters - doubles fire rate",
+		10  # ← Harvest Token cost
 	)
 	pistol_dual.dual_wield = true
 	pistol_dual.fire_rate_multiplier = 2.0
@@ -32,8 +32,8 @@ func _initialize_upgrades():
 		"machinegun_lil_friend",
 		"MachineGun",
 		"Say hello to my lil' friend",
-		"Shoots 10 bullets every 5 seconds",
-		15
+		"Rapdily fires 10 harvest attempts",
+		15  # ← Harvest Token cost
 	)
 	mg_lil_friend.special_timer = 5.0
 	mg_lil_friend.special_bullet_count = 10
@@ -44,8 +44,8 @@ func _initialize_upgrades():
 		"rifle_penetrating",
 		"Rifle",
 		"Penetrating Rounds",
-		"Every 4th shot pierces enemies and grows in size",
-		15
+		"Every 4th harvest attempt pierces a row of crops",
+		15  # ← Harvest Token cost
 	)
 	rifle_pierce.penetrating_shots = true
 	_add_upgrade(rifle_pierce)
@@ -53,10 +53,10 @@ func _initialize_upgrades():
 	# === BURST RIFLE UPGRADES ===
 	var burst_double = WeaponUpgrade.create(
 		"burst_double",
-		"BurstRifle",  # FIXED: Use separate type for Burst Rifle
+		"BurstRifle",
 		"Double Up",
-		"Fires 2 bursts instead of 1 (6 bullets total)",
-		20
+		"Doubles each harvest attempt",
+		20  # ← Harvest Token cost
 	)
 	burst_double.burst_mode = true
 	burst_double.burst_count = 2  # Fire 2 bursts
@@ -67,9 +67,9 @@ func _initialize_upgrades():
 	var sniper_oneshot = WeaponUpgrade.create(
 		"sniper_oneshot",
 		"Sniper",
-		"Lucky Shot",
-		"40% chance to one-shot any enemy",
-		25
+		"Lucky Harvest",
+		"40% chance to harvest in one attempt",
+		25  # ← Harvest Token cost
 	)
 	sniper_oneshot.headshot_chance = 0.4
 	_add_upgrade(sniper_oneshot)
@@ -80,7 +80,7 @@ func _initialize_upgrades():
 		"Shotgun",
 		"360 Degree Blast",
 		"Shoots all around the player every 3 seconds",
-		15
+		15  # ← Harvest Token cost
 	)
 	shotgun_360.special_timer = 3.0
 	shotgun_360.special_bullet_count = 12  # Shoot in all directions
@@ -111,9 +111,9 @@ func can_purchase_upgrade(upgrade: WeaponUpgrade, player: Node2D) -> bool:
 	if not inv:
 		return false
 	
-	# Check if player has enough wood
-	var wood_amount = inv.get_item_quantity_by_name("Wood")
-	return wood_amount >= upgrade.wood_cost
+	# ← CHANGED: Check for Harvest Tokens instead of Wood
+	var harvest_token_amount = inv.get_item_quantity_by_name("Harvest Token")
+	return harvest_token_amount >= upgrade.harvest_token_cost
 
 func purchase_upgrade(upgrade: WeaponUpgrade, player: Node2D) -> bool:
 	"""Purchase an upgrade if possible"""
@@ -123,21 +123,18 @@ func purchase_upgrade(upgrade: WeaponUpgrade, player: Node2D) -> bool:
 	
 	var inv = player.get_inventory_manager()
 	
-	# Create a wood item to remove
-	var wood_item = Item.new()
-	wood_item.name = "Wood"
-	
-	# Remove wood from inventory
-	var removed = inv.remove_item(wood_item, upgrade.wood_cost)
-	if removed < upgrade.wood_cost:
-		print("Failed to remove wood from inventory")
+	# ← CHANGED: Remove Harvest Tokens instead of Wood
+	var removed = inv.remove_item_by_name("Harvest Token", upgrade.harvest_token_cost)
+	if not removed:
+		print("Failed to remove Harvest Tokens from inventory")
 		return false
 	
 	# Mark as purchased
 	upgrade.is_purchased = true
 	purchased_upgrades[upgrade.upgrade_id] = upgrade
 	
-	print("✓ Purchased upgrade: ", upgrade.upgrade_name, " for ", upgrade.wood_cost, " wood")
+	# ← CHANGED: Updated print message
+	print("✓ Purchased upgrade: ", upgrade.upgrade_name, " for ", upgrade.harvest_token_cost, " Harvest Tokens")
 	upgrade_purchased.emit(upgrade)
 	
 	return true

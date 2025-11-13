@@ -1,4 +1,4 @@
-# WeaponStorageUI.gd - REFACTORED with Unlocks & Upgrades
+# WeaponStorageUI.gd - REFACTORED with Harvest Tokens
 extends Control
 class_name WeaponStorageUI
 
@@ -26,18 +26,17 @@ var player: Node2D
 var slot_scene = preload("res://Resources/Inventory/InventorySlot.tscn")
 var slots: Array[InventorySlot] = []
 var selected_slot: int = -1
-# REMOVED: local unlocked_weapons - now using GlobalWeaponStorage
 
 const UI_SCALE = 0.5  # 250% of original 0.2 scale (50% larger than 0.3)
 
-# Weapon unlock costs
+# Weapon unlock costs - COINS ONLY
 const UNLOCK_COSTS = {
-	"Pistol": {"coins": 0, "tech": 0},  # Free
-	"Shotgun": {"coins": 100, "tech": 25},
-	"Assault Rifle": {"coins": 150, "tech": 50},
-	"Sniper Rifle": {"coins": 200, "tech": 75},
-	"Machine Gun": {"coins": 250, "tech": 100},
-	"Burst Rifle": {"coins": 300, "tech": 125}
+	"Handheld Harvester": {"coins": 0},  # Free
+	"Thresher": {"coins": 150},
+	"Crop Cutter": {"coins": 300},
+	"Power Harvester": {"coins": 500},
+	"Auto-Harvester": {"coins": 750},
+	"Crop Splitter": {"coins": 1000}
 }
 
 func _ready():
@@ -357,10 +356,10 @@ func _get_weapon_stats_text(weapon: WeaponItem) -> String:
 
 func _create_unlock_button(weapon: WeaponItem):
 	var pixel_font = preload("res://Resources/Fonts/yoster.ttf")
-	var costs = UNLOCK_COSTS.get(weapon.name, {"coins": 100, "tech": 25})
+	var costs = UNLOCK_COSTS.get(weapon.name, {"coins": 100})
 	
 	var unlock_btn = Button.new()
-	unlock_btn.text = "UNLOCK\n%d Coins + %d Tech Points" % [costs.coins, costs.tech]
+	unlock_btn.text = "UNLOCK\n%d Coins" % costs.coins
 	unlock_btn.custom_minimum_size = Vector2(400, 100)
 	unlock_btn.add_theme_font_override("font", pixel_font)
 	unlock_btn.add_theme_font_size_override("font_size", 32)
@@ -474,7 +473,7 @@ func _create_upgrade_card(upgrade: WeaponUpgrade):
 		vbox.add_child(hbox)
 		
 		var cost_label = Label.new()
-		cost_label.text = "🪵 %d Wood" % upgrade.wood_cost
+		cost_label.text = "🌾 %d Harvest Tokens" % upgrade.harvest_token_cost
 		cost_label.add_theme_font_override("font", pixel_font)
 		cost_label.add_theme_font_size_override("font_size", 28)
 		hbox.add_child(cost_label)
@@ -530,20 +529,12 @@ func _on_unlock_weapon(weapon: WeaponItem, costs: Dictionary):
 		print("Cannot afford to unlock!")
 		return
 	
-	# Deduct resources
+	# Deduct resources - COINS ONLY
 	var inv = player.get_inventory_manager()
 	
 	# Remove coins
 	if not inv.remove_item_by_name("Coin", costs.coins):
 		print("Failed to remove coins!")
-		return
-	
-	# Remove tech points
-	if not inv.remove_item_by_name("Tech Point", costs.tech):
-		print("Failed to remove tech points!")
-		# Refund coins if tech removal failed
-		var coin_item = player._create_item_from_name("coin")
-		inv.add_item(coin_item, costs.coins)
 		return
 	
 	# Unlock weapon in GlobalWeaponStorage
@@ -627,17 +618,17 @@ func _create_weapon_copy(weapon: WeaponItem) -> WeaponItem:
 		return null
 	
 	match weapon.name:
-		"Pistol":
+		"Handheld Harvester":
 			return WeaponFactory.create_pistol()
-		"Shotgun":
+		"Thresher":
 			return WeaponFactory.create_shotgun()
-		"Assault Rifle":
+		"Crop Cutter":
 			return WeaponFactory.create_rifle()
-		"Sniper Rifle":
+		"Power Harvester":
 			return WeaponFactory.create_sniper()
-		"Machine Gun":
+		"Auto-Harvester":
 			return WeaponFactory.create_machine_gun()
-		"Burst Rifle":
+		"Crop Splitter":
 			return WeaponFactory.create_burst_rifle()
 		_:
 			print("Unknown weapon type: ", weapon.name)
@@ -655,11 +646,8 @@ func _on_purchase_upgrade(upgrade: WeaponUpgrade):
 
 func _can_afford_unlock(costs: Dictionary) -> bool:
 	var inv = player.get_inventory_manager()
-	
 	var coin_count = inv.get_item_quantity_by_name("Coin")
-	var tech_count = inv.get_item_quantity_by_name("Tech Point")
-	
-	return coin_count >= costs.coins and tech_count >= costs.tech
+	return coin_count >= costs.coins
 
 func _is_weapon_unlocked(weapon_name: String) -> bool:
 	var current_unlocked = GlobalWeaponStorage.get_unlocked_weapons() if GlobalWeaponStorage else ["Pistol"]
@@ -672,10 +660,9 @@ func _update_resources_display():
 	var inv = player.get_inventory_manager()
 	
 	var coins = inv.get_item_quantity_by_name("Coin")
-	var tech = inv.get_item_quantity_by_name("Tech Point")
-	var wood = inv.get_item_quantity_by_name("Wood")
+	var harvest_tokens = inv.get_item_quantity_by_name("Harvest Token")
 	
-	resources_label.text = "Resources: 💰 %d Coins | 🔧 %d Tech | 🪵 %d Wood" % [coins, tech, wood]
+	resources_label.text = "Resources: 💰 %d Coins | 🌾 %d Harvest Tokens" % [coins, harvest_tokens]
 
 func _on_close_button_pressed():
 	toggle_visibility()
@@ -738,7 +725,7 @@ func _center_on_viewport():
 func get_unlocked_weapons() -> Array[String]:
 	if GlobalWeaponStorage:
 		return GlobalWeaponStorage.get_unlocked_weapons()
-	return ["Pistol"]
+	return ["Handheld Harvester"]  # Changed from "Pistol"
 
 func set_unlocked_weapons(weapons: Array):
 	# Set in GlobalWeaponStorage

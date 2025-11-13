@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://gqmygsfvpp1w"
-path="res://.godot/imported/MushroomKey.png-95f0d0bb38c4f40f5d2f317250aa83ad.ctex"
+uid="uid://22ueespoadto"
+path="res://.godot/imported/handheldharvester.png-2fe3c21482c71ee687b58be5b56d9f6b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Resources/Map/Objects/MushroomKey.png"
-dest_files=["res://.godot/imported/MushroomKey.png-95f0d0bb38c4f40f5d2f317250aa83ad.ctex"]
+source_file="res://Resources/Weapon/Sprites/Harvesters/handheldharvester.png"
+dest_files=["res://.godot/imported/handheldharvester.png-2fe3c21482c71ee687b58be5b56d9f6b.ctex"]
 
 [params]
 

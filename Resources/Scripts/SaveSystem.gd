@@ -475,19 +475,23 @@ func apply_player_data(player: Node2D, data: Dictionary):
 	print("Player data fully restored from save file")
 
 # Helper to create weapon from name
+# Find this function at the bottom of SaveSystem.gd
+# Replace it with this version that supports BOTH old and new names:
+
 func _create_weapon_from_name(weapon_name: String) -> WeaponItem:
+	"""Create weapon from either old or new display names"""
 	match weapon_name:
-		"Pistol":
+		"Handheld Harvester", "Pistol":
 			return WeaponFactory.create_pistol()
-		"Shotgun":
+		"Thresher", "Shotgun":
 			return WeaponFactory.create_shotgun()
-		"Assault Rifle":
+		"Crop Cutter", "Assault Rifle", "Rifle":
 			return WeaponFactory.create_rifle()
-		"Sniper Rifle":
+		"Power Harvester", "Sniper Rifle", "Sniper":
 			return WeaponFactory.create_sniper()
-		"Machine Gun":
+		"Auto-Harvester", "Machine Gun", "MachineGun":
 			return WeaponFactory.create_machine_gun()
-		"Burst Rifle":
+		"Crop Splitter", "Burst Rifle", "BurstRifle":
 			return WeaponFactory.create_burst_rifle()
 		_:
 			print("Unknown weapon: ", weapon_name)

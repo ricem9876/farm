@@ -2,7 +2,7 @@ extends Item
 class_name WeaponItem
 
 # Weapon type identification
-@export_enum("Pistol", "Shotgun", "Rifle", "Sniper", "MachineGun", "Laser", "Plasma") var weapon_type: String = "Pistol"
+@export_enum("HandleHeld Harvester", "Thresher", "Crop Cutter", "Power Harvester", "Auto-Harvester", "Laser", "Plasma") var weapon_type: String = "Pistol"
 
 # Visual properties
 @export var weapon_sprite: Texture2D  # The sprite shown when equipped

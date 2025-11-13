@@ -6,7 +6,7 @@ class_name WeaponUpgrade
 @export var weapon_type: String  # "Pistol", "MachineGun", etc.
 @export var upgrade_name: String  # Display name
 @export var description: String  # What it does
-@export var wood_cost: int  # Cost in wood
+@export var harvest_token_cost: int  # ← CHANGED: Cost in Harvest Tokens (was wood_cost)
 @export var is_purchased: bool = false  # Track if player owns it
 
 # Special behavior flags
@@ -42,5 +42,5 @@ static func create(
 	upgrade.weapon_type = weapon
 	upgrade.upgrade_name = name
 	upgrade.description = desc
-	upgrade.wood_cost = cost
+	upgrade.harvest_token_cost = cost  # ← CHANGED: Set harvest_token_cost (was wood_cost)
 	return upgrade

@@ -9,13 +9,14 @@ signal chest_unlocked
 @export var required_key_type: String = "harvest"
 @export var is_locked: bool = true
 
-## Tech Points Only
-@export var tech_points_min: int = 50
-@export var tech_points_max: int = 100
+## Harvest Tokens Only
+@export var harvest_tokens_min: int = 50
+@export var harvest_tokens_max: int = 100
 
 ## Visuals
 @export var locked_texture: Texture2D
 @export var unlocked_texture: Texture2D
+@export var open_particles: GPUParticles2D
 
 @onready var sprite: Sprite2D = $Sprite2D if has_node("Sprite2D") else null
 @onready var interaction_area: Area2D = $InteractionArea if has_node("InteractionArea") else null
@@ -221,16 +222,16 @@ func _unlock_chest():
 func _open_chest():
 	is_opened = true
 	
-	# Generate loot (tech points only)
-	var tech_points = randi_range(tech_points_min, tech_points_max)
+	# Generate loot (harvest tokens only)
+	var harvest_tokens = randi_range(harvest_tokens_min, harvest_tokens_max)
 	
 	var loot = {
-		"tech_points": tech_points
+		"harvest_tokens": harvest_tokens
 	}
 	
 	print("\n=== CHEST OPENED ===")
 	print(chest_name, " contains:")
-	print("  Tech Points: ", tech_points)
+	print("  Harvest Tokens: ", harvest_tokens)
 	print("====================\n")
 	
 	# Give loot to player
@@ -261,21 +262,21 @@ func _give_loot_to_player(loot: Dictionary):
 	if not inventory:
 		return
 	
-	# Give tech points
-	if loot.has("tech_points"):
-		var tech_item = _create_tech_point_item()
-		if tech_item:
-			inventory.add_item(tech_item, loot.tech_points)
-			print("✓ Gave ", loot.tech_points, " Tech Points to player")
+	# Give harvest tokens
+	if loot.has("harvest_tokens"):
+		var token_item = _create_harvest_token_item()
+		if token_item:
+			inventory.add_item(token_item, loot.harvest_tokens)
+			print("✓ Gave ", loot.harvest_tokens, " Harvest Tokens to player")
 
-func _create_tech_point_item() -> Item:
-	"""Create a Tech Point item"""
+func _create_harvest_token_item() -> Item:
+	"""Create a Harvest Token item"""
 	var item = Item.new()
-	item.name = "Tech Point"
-	item.description = "Technology points used to upgrade weapons"
+	item.name = "Harvest Token"
+	item.description = "Valuable tokens earned from harvesting crops. Used to upgrade weapons."
 	item.stack_size = 9999
 	item.item_type = "currency"
-	item.icon = preload("res://Resources/Map/Objects/TechPoints.png")
+	item.icon = preload("res://Resources/Map/Objects/HarvestToken.png")
 	return item
 
 func _show_loot_popup(loot: Dictionary):
@@ -302,5 +303,9 @@ func _show_need_key_message():
 
 func _play_open_effects():
 	"""Play visual/audio effects when chest opens"""
-	# TODO: Add particles, sound effects, etc.
-	pass
+	if open_particles:
+		open_particles.emitting = true
+		open_particles.restart()
+		print("✓ Playing chest open particles")
+	else:
+		print("⚠ No particles assigned to chest")

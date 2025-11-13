@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://cstrfisti3x" path="res://Resources/Map/Scripts/LootChest.gd" id="1_edctm"]
 [ext_resource type="Script" uid="uid://cxugtnfw553v7" path="res://Resources/UI/chestbeamguide.gd" id="2_a5uag"]
-[ext_resource type="Texture2D" uid="uid://v6mrf7ysv8hj" path="res://Resources/Map/Objects/Coin.png" id="3_kd8h3"]
+[ext_resource type="Texture2D" uid="uid://pg1lbrneurkh" path="res://Resources/Map/Objects/HarvestToken.png" id="3_kd8h3"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_kd8h3"]
 radius = 13.5
@@ -15,14 +15,15 @@ spread = 65.06
 initial_velocity_min = 90.0
 initial_velocity_max = 262.79
 gravity = Vector3(0, 180, 0)
-scale_min = 0.3
-scale_max = 0.4
+scale_min = 0.4
+scale_max = 0.7
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_o4mqb"]
 radius = 17.0294
 
-[node name="LootChest" type="StaticBody2D"]
+[node name="LootChest" type="StaticBody2D" node_paths=PackedStringArray("open_particles")]
 script = ExtResource("1_edctm")
+open_particles = NodePath("GPUParticles2D")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(2.5, 3)

@@ -5,7 +5,7 @@ class_name Tomato
 signal died(experience_points: int)
 
 @export var max_health: float = 55.0
-@export var experience_value: int = 35
+@export var experience_value: int = 8
 @export var move_speed: float = 130.0
 @export var chase_speed: float = 150.0
 @export var contact_damage: float = 14.0

@@ -5,7 +5,7 @@ class_name Mushroom
 signal died(experience_points: int)
 
 @export var max_health: float = 50.0
-@export var experience_value: int = 30
+@export var experience_value: int = 11
 @export var move_speed: float = 100.0
 @export var chase_speed: float = 120.0
 @export var contact_damage: float = 12.0

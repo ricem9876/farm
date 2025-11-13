@@ -73,28 +73,29 @@ func _add_loot_items(loot: Dictionary):
 	"""Create UI elements for each loot item"""
 	var pixel_font = preload("res://Resources/Fonts/yoster.ttf")
 	
-	if loot.has("tech_points"):
-		var tech_points = loot.tech_points
+	# ← CHANGED: Check for "harvest_tokens" instead of "tech_points"
+	if loot.has("harvest_tokens"):
+		var harvest_tokens = loot.harvest_tokens
 		
-		# Container for tech points
+		# Container for harvest tokens
 		var item_hbox = HBoxContainer.new()
 		item_hbox.add_theme_constant_override("separation", 15)
 		item_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 		
-		# Icon
+		# Icon - CHANGED to HarvestToken.png
 		var icon = TextureRect.new()
-		icon.texture = preload("res://Resources/Map/Objects/TechPoints.png")
+		icon.texture = preload("res://Resources/Map/Objects/HarvestToken.png")
 		icon.custom_minimum_size = Vector2(60, 60)
 		icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		item_hbox.add_child(icon)
 		
-		# Amount label
+		# Amount label - CHANGED text
 		var amount_label = Label.new()
-		amount_label.text = "+ " + str(tech_points) + " Tech Points"
+		amount_label.text = "+ " + str(harvest_tokens) + " Harvest Tokens"
 		amount_label.add_theme_font_override("font", pixel_font)
 		amount_label.add_theme_font_size_override("font_size", 32)
-		amount_label.add_theme_color_override("font_color", Color(0.3, 0.8, 1.0))  # Cyan
+		amount_label.add_theme_color_override("font_color", Color(0.8, 0.6, 0.2))  # Golden (harvest theme)
 		item_hbox.add_child(amount_label)
 		
 		loot_container.add_child(item_hbox)

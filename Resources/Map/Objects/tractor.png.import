@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dcug2k8fk417g"
-path="res://.godot/imported/PlantKey.png-aa873bde029c36a8812b5f5d6a17af21.ctex"
+uid="uid://b8xfhy76xkw4d"
+path="res://.godot/imported/tractor.png-ab3714767c7eb860d6a3d4bb0a0319c9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Resources/Map/Objects/PlantKey.png"
-dest_files=["res://.godot/imported/PlantKey.png-aa873bde029c36a8812b5f5d6a17af21.ctex"]
+source_file="res://Resources/Map/Objects/tractor.png"
+dest_files=["res://.godot/imported/tractor.png-ab3714767c7eb860d6a3d4bb0a0319c9.ctex"]
 
 [params]
 

@@ -62,8 +62,8 @@ func _setup_item_appearance():
 		"coin":
 			sprite.texture = preload("res://Resources/Map/Objects/Coin.png")
 			sprite.scale = Vector2(.5,.5)
-		"techpoint", "tech_point":
-			sprite.texture = preload("res://Resources/Map/Objects/TechPoints.png")
+		"harvest_token", "harvesttoken":
+			sprite.texture = preload("res://Resources/Map/Objects/HarvestToken.png")
 			sprite.scale = Vector2(.5,.5)
 		"health_potion":
 			sprite.modulate = Color.RED
@@ -159,12 +159,12 @@ func _create_item_resource() -> Item:
 			item.item_type = "currency"
 			item.icon = preload("res://Resources/Map/Objects/Coin.png")
 		
-		"techpoint", "tech_point":
-			item.name = "Tech Point"
-			item.description = "Technology points used to upgrade weapons"
+		"harvest_token", "harvesttoken":
+			item.name = "Harvest Token"
+			item.description = "Valuable tokens earned from harvesting crops. Used to upgrade weapons."
 			item.stack_size = 9999
 			item.item_type = "currency"
-			item.icon = preload("res://Resources/Map/Objects/TechPoints.png")
+			item.icon = preload("res://Resources/Map/Objects/HarvestToken.png")
 			
 		"health_potion":
 			item.name = "Health Potion"

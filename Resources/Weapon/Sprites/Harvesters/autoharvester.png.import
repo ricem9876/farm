@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://pdi8v558b3uu"
-path="res://.godot/imported/PlantChest.png-c6ccbb0a32f53124e24f14389724207d.ctex"
+uid="uid://b5d5riorhhxin"
+path="res://.godot/imported/autoharvester.png-ca443a5ff09c400fb718d69927dc307a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Resources/Map/Objects/PlantChest.png"
-dest_files=["res://.godot/imported/PlantChest.png-c6ccbb0a32f53124e24f14389724207d.ctex"]
+source_file="res://Resources/Weapon/Sprites/Harvesters/autoharvester.png"
+dest_files=["res://.godot/imported/autoharvester.png-ca443a5ff09c400fb718d69927dc307a.ctex"]
 
 [params]
 

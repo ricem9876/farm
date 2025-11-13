@@ -273,15 +273,15 @@ func _on_purchase_button_pressed(upgrade: WeaponUpgrade):
 	if upgrade_manager.purchase_upgrade(upgrade, player):
 		print("✓ Purchase successful!")
 		_populate_upgrades()  # Refresh the UI
-		_update_wood_display()
+		_update_harvest_token_display()
 	else:
 		print("✗ Purchase failed")
 
 func _on_upgrade_purchased(upgrade: WeaponUpgrade):
 	print("Upgrade purchased signal received: ", upgrade.upgrade_name)
 
-func _update_wood_display():
-	"""Update the wood counter in the UI"""
+func _update_harvest_token_display():
+	"""Update the harvest token counter in the UI"""
 	if not player or not wood_label:
 		return
 	
@@ -289,5 +289,5 @@ func _update_wood_display():
 	if not inv:
 		return
 	
-	var wood_count = inv.get_item_quantity_by_name("Wood")
-	wood_label.text = "🪵 " + str(wood_count) + " Wood"
+	var token_count = inv.get_item_quantity_by_name("Harvest Token")
+	wood_label.text = "🌾 " + str(token_count) + " Harvest Tokens"

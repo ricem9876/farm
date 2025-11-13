@@ -395,7 +395,7 @@ func add_item_to_inventory(item: Item, quantity: int = 1) -> bool:
 	
 	if inventory_manager.add_item(item, quantity):
 		print("✓ Collected: ", item.name, " x", quantity)
-		StatsTracker.record_item_collected()  # ADD THIS LINE
+		StatsTracker.record_item_collected()
 		return true
 	else:
 		print("✗ Inventory full! Couldn't collect: ", item.name)
@@ -461,12 +461,12 @@ func _create_item_from_name(item_name: String) -> Item:
 			item.item_type = "currency"
 			item.icon = preload("res://Resources/Map/Objects/Coin.png")
 		
-		"techpoint", "techpoints", "tech point", "tech points":
-			item.name = "Tech Point"
-			item.description = "Technology points used to upgrade weapons"
+		"harvest_token", "harvesttoken", "harvest token", "harvest tokens":
+			item.name = "Harvest Token"
+			item.description = "Valuable tokens earned from harvesting crops. Used to upgrade weapons."
 			item.stack_size = 9999
 			item.item_type = "currency"
-			item.icon = preload("res://Resources/Map/Objects/TechPoints.png")
+			item.icon = preload("res://Resources/Map/Objects/HarvestToken.png")
 		
 		_:
 			print("Unknown item: ", item_name)
@@ -655,7 +655,7 @@ func _debug_topup_resources():
 		{"name": "Pumpkin", "quantity": 25},
 		{"name": "Tomato", "quantity": 25},
 		{"name": "Coin", "quantity": 100},
-		{"name": "Tech Point", "quantity": 50}
+		{"name": "Harvest Token", "quantity": 100}
 	]
 	
 	print("\n=== DEBUG: TOPPING UP RESOURCES ===")
@@ -706,3 +706,31 @@ func _debug_inventory_after_load():
 	print("Total items: ", total_items)
 	print("Total KeyItems: ", key_count)
 	print("=========================\n")
+
+# Add this method to player.gd
+
+func apply_fatigue():
+	"""Apply fatigue penalty from day/night cycle - reduces stats by 10%"""
+	if not level_system:
+		return
+	
+	# Store old max health
+	var old_max_health = max_health
+	
+	# Apply the penalty (this recalculates all stats)
+	var new_max_health = level_system.apply_fatigue_penalty()
+	
+	# Update player's max health
+	max_health = new_max_health
+	
+	# Reduce current health proportionally to maintain the same percentage
+	var health_percentage = current_health / old_max_health
+	current_health = max_health * health_percentage
+	
+	print("💀 FATIGUE APPLIED!")
+	print("  Old max health: ", old_max_health, " -> New max health: ", max_health)
+	print("  Current health adjusted to: ", current_health)
+	
+	# Refresh HUD to show new values
+	if has_method("refresh_hud"):
+		refresh_hud()

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bwtu8dacxx104"
-path="res://.godot/imported/WoolKey.png-8b570d3223a3111270a35cd3beceed5d.ctex"
+uid="uid://pg1lbrneurkh"
+path="res://.godot/imported/HarvestToken.png-1714b1489167edef34ddd5cc47c6d8ef.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Resources/Map/Objects/WoolKey.png"
-dest_files=["res://.godot/imported/WoolKey.png-8b570d3223a3111270a35cd3beceed5d.ctex"]
+source_file="res://Resources/Map/Objects/HarvestToken.png"
+dest_files=["res://.godot/imported/HarvestToken.png-1714b1489167edef34ddd5cc47c6d8ef.ctex"]
 
 [params]
 

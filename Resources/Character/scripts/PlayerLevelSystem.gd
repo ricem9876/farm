@@ -8,7 +8,7 @@ signal skill_point_spent(stat_name: String, new_value: float)
 # Experience & Leveling
 var current_level: int = 1
 var current_experience: int = 0
-var experience_to_next_level: int = 100
+var experience_to_next_level: int = 80
 var skill_points: int = 0
 var skill_points_per_level: int = 3
 
@@ -148,3 +148,32 @@ func get_points_in_stat(stat_name: String) -> int:
 		"crit_chance": return points_in_crit_chance
 		"crit_damage": return points_in_crit_damage
 	return 0
+
+# Add this method to PlayerLevelSystem.gd
+
+func apply_fatigue_penalty():
+	"""Reduce all base stats by 10% due to exhaustion from harvesting"""
+	print("\n=== APPLYING FATIGUE PENALTY ===")
+	
+	# Reduce base stats by 10%
+	base_max_health *= 0.9
+	base_move_speed *= 0.9
+	base_damage_multiplier *= 0.9
+	base_fire_rate_multiplier *= 0.9
+	base_critical_chance *= 0.9
+	base_critical_damage *= 0.9
+	
+	print("  Base Max Health: ", base_max_health)
+	print("  Base Move Speed: ", base_move_speed)
+	print("  Base Damage Multiplier: ", base_damage_multiplier)
+	print("  Base Fire Rate Multiplier: ", base_fire_rate_multiplier)
+	print("  Base Critical Chance: ", base_critical_chance)
+	print("  Base Critical Damage: ", base_critical_damage)
+	
+	# Recalculate all current stats based on new base values
+	_initialize_stats()
+	
+	print("=== FATIGUE APPLIED ===\n")
+	
+	# Return the new max health so player can adjust current health
+	return max_health

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b5akm1qynbiuo"
-path="res://.godot/imported/TechPoints.png-038ad5c906af462091f783e018e40a36.ctex"
+uid="uid://csamwrs461m4j"
+path="res://.godot/imported/cropcutter_0005.png-dfcc8f4f089647cc4da3818c79ddcba4.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Resources/Map/Objects/TechPoints.png"
-dest_files=["res://.godot/imported/TechPoints.png-038ad5c906af462091f783e018e40a36.ctex"]
+source_file="res://Resources/Weapon/Sprites/Harvesters/cropcutter_0005.png"
+dest_files=["res://.godot/imported/cropcutter_0005.png-dfcc8f4f089647cc4da3818c79ddcba4.ctex"]
 
 [params]
 
