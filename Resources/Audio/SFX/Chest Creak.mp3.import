@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://ch3tfyud7hwgy"
+path="res://.godot/imported/Chest Creak.mp3-e75972873c5e0a133e0fce887012e8e1.mp3str"
+
+[deps]
+
+source_file="res://Resources/Audio/SFX/Chest Creak.mp3"
+dest_files=["res://.godot/imported/Chest Creak.mp3-e75972873c5e0a133e0fce887012e8e1.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

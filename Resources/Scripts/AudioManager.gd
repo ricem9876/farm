@@ -1,12 +1,21 @@
 extends Node
-
 # Preload music tracks
 var title_music = preload("res://Resources/Audio/ts_In the forest MSX.mp3")
-var safehouse_music = preload("res://Resources/Audio/sh_darkforest.mp3")
-var farm_music = preload("res://Resources/Audio/cb_bit_forrest_evil.mp3")
+var safehouse_music = preload("uid://bkm4y1osyi1wp") #hush_hamlet
+
+# Farm music - multiple tracks
+var farm_music_tracks = [
+	preload("uid://b5oqa6vwp4ngi"), #Outdoors 1
+	preload("uid://b4cg55fjsfx3n"), #Outdoors 2
+	preload("uid://d30k5t7bus5ix"), #Outdoors 3
+	preload("uid://8bjn4xl7mjs7")   #Outdoors 4
+]
+var farm_music: AudioStream  # Will hold the randomly selected track
 
 # Preload sound effects
-var bullet_shot_sfx = preload("res://Resources/Audio/shot_03.ogg")
+var bullet_shot_sfx = preload("uid://dquw0twe5s2nt")
+var chest_open_sfx = preload("uid://ch3tfyud7hwgy")
+var tokens_pouring_sfx = preload("uid://y3k1casqjury")
 
 # Reference to the AudioStreamPlayer
 var music_player: AudioStreamPlayer
@@ -21,6 +30,10 @@ var sfx_volume: float = 1.0
 var master_volume: float = 1.0
 
 func _ready():
+	# Randomly select farm music on start
+	farm_music = farm_music_tracks[randi() % farm_music_tracks.size()]
+	print("✓ Selected farm music track: ", farm_music_tracks.find(farm_music) + 1)
+	
 	# Create and configure the AudioStreamPlayer for music
 	music_player = AudioStreamPlayer.new()
 	music_player.bus = "Music"
@@ -49,7 +62,19 @@ func play_sfx(sfx: AudioStream):
 
 # Play bullet shot sound
 func play_bullet_shot():
-	play_sfx(bullet_shot_sfx)
+	if sfx_player and bullet_shot_sfx:
+		sfx_player.stream = bullet_shot_sfx
+		# Add slight pitch variation (between 0.9 and 1.1)
+		sfx_player.pitch_scale = randf_range(0.9, 1.1)
+		sfx_player.play()
+
+# Play chest opening sound
+func play_chest_open():
+	play_sfx(chest_open_sfx)
+
+# Play tokens pouring sound
+func play_tokens_pouring():
+	play_sfx(tokens_pouring_sfx)
 
 # Set music volume (linear, 0.0 to 1.0)
 func set_music_volume(linear_volume: float):

@@ -222,6 +222,10 @@ func _unlock_chest():
 func _open_chest():
 	is_opened = true
 	
+	# Play chest opening sound
+	if AudioManager:
+		AudioManager.play_chest_open()
+	
 	# Generate loot (harvest tokens only)
 	var harvest_tokens = randi_range(harvest_tokens_min, harvest_tokens_max)
 	
@@ -264,6 +268,10 @@ func _give_loot_to_player(loot: Dictionary):
 	
 	# Give harvest tokens
 	if loot.has("harvest_tokens"):
+		# Play tokens pouring sound
+		if AudioManager:
+			AudioManager.play_tokens_pouring()
+		
 		var token_item = _create_harvest_token_item()
 		if token_item:
 			inventory.add_item(token_item, loot.harvest_tokens)

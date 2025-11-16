@@ -19,6 +19,13 @@ extends CanvasLayer
 
 const TITLE_SCREEN = "res://Resources/Scenes/TitleScreen.tscn"
 
+# Farm theme colors
+const BG_COLOR = Color(0.86, 0.72, 0.52)  # Tan/beige background
+const PANEL_COLOR = Color(0.96, 0.93, 0.82)  # Cream for settings panel
+const TEXT_COLOR = Color(0.15, 0.15, 0.15)  # Dark text
+const BORDER_COLOR = Color(0.3, 0.2, 0.1)  # Dark brown border
+const SHADOW_COLOR = Color(0.545841, 0.449464, 0.228986, 1)  # Warm shadow
+
 func _ready():
 	layer = 200
 	visible = false
@@ -49,33 +56,37 @@ func _ready():
 func _setup_ui():
 	var pixel_font = preload("res://Resources/Fonts/yoster.ttf")
 	
-	# Title
+	# Title - farm themed
 	if title_label:
 		title_label.text = "PAUSED"
 		title_label.add_theme_font_override("font", pixel_font)
 		title_label.add_theme_font_size_override("font_size", 48)
-		title_label.add_theme_color_override("font_color", Color(0.87058824, 0.72156864, 0.5294118))
+		title_label.add_theme_color_override("font_color", TEXT_COLOR)
+		title_label.add_theme_color_override("font_shadow_color", SHADOW_COLOR)
+		title_label.add_theme_constant_override("shadow_offset_x", 2)
+		title_label.add_theme_constant_override("shadow_offset_y", 2)
+		title_label.add_theme_constant_override("shadow_outline_size", 4)
 	
-	# Panel styling
+	# Main panel styling - warm tan/beige
 	if menu_panel:
 		var style = StyleBoxFlat.new()
-		style.bg_color = Color(0.1, 0.1, 0.15, 0.95)
+		style.bg_color = BG_COLOR
 		style.border_width_left = 4
 		style.border_width_right = 4
 		style.border_width_top = 4
 		style.border_width_bottom = 4
-		style.border_color = Color(0.3, 0.6, 0.8)
+		style.border_color = BORDER_COLOR
 		style.corner_radius_top_left = 10
 		style.corner_radius_top_right = 10
 		style.corner_radius_bottom_left = 10
 		style.corner_radius_bottom_right = 10
 		menu_panel.add_theme_stylebox_override("panel", style)
 	
-	# Style buttons
-	_style_button(resume_button, "RESUME", Color(0.2, 0.7, 0.3), pixel_font)
-	_style_button(settings_button, "SETTINGS", Color(0.7, 0.2, 0.2), pixel_font)
-	_style_button(exit_button, "EXIT TO TITLE", Color(0.7, 0.2, 0.2), pixel_font)
-	_style_button(close_button, "CLOSE", Color(0.7, 0.2, 0.2), pixel_font)
+	# Style buttons with farm colors
+	_style_button(resume_button, "RESUME", Color(0.5, 0.7, 0.4), pixel_font)  # Sage green
+	_style_button(settings_button, "SETTINGS", Color(0.8, 0.65, 0.4), pixel_font)  # Warm gold
+	_style_button(exit_button, "EXIT TO TITLE", Color(0.75, 0.5, 0.35), pixel_font)  # Rustic brown
+	_style_button(close_button, "CLOSE", Color(0.75, 0.5, 0.35), pixel_font)  # Rustic brown
 	
 	# Style settings menu
 	if settings_menu:
@@ -98,15 +109,15 @@ func _setup_ui():
 		settings_background.offset_bottom = 0
 		settings_background.visible = true
 	
-	# Style background panel
+	# Style background panel - cream color
 	if background_panel:
 		var panel_style = StyleBoxFlat.new()
-		panel_style.bg_color = Color(0.96, 0.93, 0.82, 0.95)
+		panel_style.bg_color = PANEL_COLOR
 		panel_style.border_width_left = 4
 		panel_style.border_width_right = 4
 		panel_style.border_width_top = 4
 		panel_style.border_width_bottom = 4
-		panel_style.border_color = Color(0.3, 0.6, 0.8)
+		panel_style.border_color = BORDER_COLOR
 		panel_style.corner_radius_top_left = 10
 		panel_style.corner_radius_top_right = 10
 		panel_style.corner_radius_bottom_left = 10
@@ -143,7 +154,7 @@ func _setup_ui():
 	_style_volume_control(music_volume_label, music_volume_slider, "MUSIC VOLUME", pixel_font)
 	_style_volume_control(sfx_volume_label, sfx_volume_slider, "SFX VOLUME", pixel_font)
 	
-	# NEW: Add screen shake toggle
+	# Add screen shake toggle
 	_create_screen_shake_toggle(pixel_font)
 	
 	# Ensure close button is visible
@@ -157,7 +168,11 @@ func _style_volume_control(label: Label, slider: HSlider, text: String, font: Fo
 		label.text = text
 		label.add_theme_font_override("font", font)
 		label.add_theme_font_size_override("font_size", 20)
-		label.add_theme_color_override("font_color", Color(0.87058824, 0.72156864, 0.5294118))
+		label.add_theme_color_override("font_color", TEXT_COLOR)
+		label.add_theme_color_override("font_shadow_color", SHADOW_COLOR)
+		label.add_theme_constant_override("shadow_offset_x", 1)
+		label.add_theme_constant_override("shadow_offset_y", 2)
+		label.add_theme_constant_override("shadow_outline_size", 4)
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		label.custom_minimum_size = Vector2(250, 25)
 		label.visible = true
@@ -175,6 +190,7 @@ func _style_button(button: Button, text: String, color: Color, font: Font):
 	button.custom_minimum_size = Vector2(250, 50)
 	button.add_theme_font_override("font", font)
 	button.add_theme_font_size_override("font_size", 24)
+	button.add_theme_color_override("font_color", TEXT_COLOR)
 	
 	var normal_style = StyleBoxFlat.new()
 	normal_style.bg_color = color
@@ -182,7 +198,7 @@ func _style_button(button: Button, text: String, color: Color, font: Font):
 	normal_style.border_width_right = 3
 	normal_style.border_width_top = 3
 	normal_style.border_width_bottom = 3
-	normal_style.border_color = color.darkened(0.3)
+	normal_style.border_color = BORDER_COLOR
 	normal_style.corner_radius_top_left = 8
 	normal_style.corner_radius_top_right = 8
 	normal_style.corner_radius_bottom_left = 8
@@ -190,11 +206,11 @@ func _style_button(button: Button, text: String, color: Color, font: Font):
 	button.add_theme_stylebox_override("normal", normal_style)
 	
 	var hover_style = normal_style.duplicate()
-	hover_style.bg_color = color.lightened(0.2)
+	hover_style.bg_color = color.lightened(0.15)
 	button.add_theme_stylebox_override("hover", hover_style)
 	
 	var pressed_style = normal_style.duplicate()
-	pressed_style.bg_color = color.darkened(0.2)
+	pressed_style.bg_color = color.darkened(0.15)
 	button.add_theme_stylebox_override("pressed", pressed_style)
 
 func _style_slider(slider: HSlider, _font: Font):
@@ -202,39 +218,42 @@ func _style_slider(slider: HSlider, _font: Font):
 	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	slider.visible = true
 	
+	# Grabber (handle) - warm yellow/gold
 	var grabber_style = StyleBoxFlat.new()
 	grabber_style.bg_color = Color(1, 0.9, 0.4)
 	grabber_style.border_width_left = 2
 	grabber_style.border_width_right = 2
 	grabber_style.border_width_top = 2
 	grabber_style.border_width_bottom = 2
-	grabber_style.border_color = Color(.65, 0.165, 0.165).darkened(0.3)
+	grabber_style.border_color = BORDER_COLOR
 	grabber_style.corner_radius_top_left = 5
 	grabber_style.corner_radius_top_right = 5
 	grabber_style.corner_radius_bottom_left = 5
 	grabber_style.corner_radius_bottom_right = 5
 	slider.add_theme_stylebox_override("grabber", grabber_style)
 	
+	# Slider fill - sage green
 	var slider_style = StyleBoxFlat.new()
-	slider_style.bg_color = Color(0.2, 0.7, 0.3)
+	slider_style.bg_color = Color(0.5, 0.7, 0.4)
 	slider_style.border_width_left = 2
 	slider_style.border_width_right = 2
 	slider_style.border_width_top = 2
 	slider_style.border_width_bottom = 2
-	slider_style.border_color = Color(0.2, 0.7, 0.3).darkened(0.3)
+	slider_style.border_color = BORDER_COLOR
 	slider_style.corner_radius_top_left = 5
 	slider_style.corner_radius_top_right = 5
 	slider_style.corner_radius_bottom_left = 5
 	slider_style.corner_radius_bottom_right = 5
 	slider.add_theme_stylebox_override("slider", slider_style)
 	
+	# Background - lighter tan
 	var bg_style = StyleBoxFlat.new()
-	bg_style.bg_color = Color(0.3, 0.3, 0.3, 0.8)
+	bg_style.bg_color = Color(0.75, 0.68, 0.55)
 	bg_style.border_width_left = 2
 	bg_style.border_width_right = 2
 	bg_style.border_width_top = 2
 	bg_style.border_width_bottom = 2
-	bg_style.border_color = Color(0.3, 0.3, 0.3).darkened(0.3)
+	bg_style.border_color = BORDER_COLOR
 	bg_style.corner_radius_top_left = 5
 	bg_style.corner_radius_top_right = 5
 	bg_style.corner_radius_bottom_left = 5
@@ -256,8 +275,8 @@ func _create_screen_shake_toggle(font: Font):
 	label.text = "SCREEN SHAKE"
 	label.add_theme_font_override("font", font)
 	label.add_theme_font_size_override("font_size", 20)
-	label.add_theme_color_override("font_color", Color(0.87058824, 0.72156864, 0.5294118))
-	label.add_theme_color_override("font_shadow_color", Color(0.545841, 0.449464, 0.228986, 1))
+	label.add_theme_color_override("font_color", TEXT_COLOR)
+	label.add_theme_color_override("font_shadow_color", SHADOW_COLOR)
 	label.add_theme_constant_override("shadow_offset_x", 1)
 	label.add_theme_constant_override("shadow_offset_y", 2)
 	label.add_theme_constant_override("shadow_outline_size", 4)
@@ -269,14 +288,14 @@ func _create_screen_shake_toggle(font: Font):
 	checkbox.toggled.connect(_on_screen_shake_toggled)
 	checkbox.custom_minimum_size = Vector2(40, 40)
 	
-	# Style checkbox
+	# Style checkbox - sage green
 	var check_style = StyleBoxFlat.new()
-	check_style.bg_color = Color(0.3, 0.7, 0.3)
+	check_style.bg_color = Color(0.5, 0.7, 0.4)
 	check_style.border_width_left = 2
 	check_style.border_width_right = 2
 	check_style.border_width_top = 2
 	check_style.border_width_bottom = 2
-	check_style.border_color = Color(0.2, 0.5, 0.2)
+	check_style.border_color = BORDER_COLOR
 	check_style.corner_radius_top_left = 5
 	check_style.corner_radius_top_right = 5
 	check_style.corner_radius_bottom_left = 5
