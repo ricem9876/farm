@@ -87,13 +87,13 @@ func open():
 	visible = true
 	get_tree().paused = true
 	_populate_upgrades()
-	_update_wood_display()
+	_update_harvest_token_display()
 
 func close():
 	visible = false
 	get_tree().paused = false
 	upgrade_shop_closed.emit()
-
+	
 func _on_close_pressed():
 	close()
 

@@ -4,8 +4,8 @@
 extends GPUParticles2D
 
 @export_group("Beam Range")
-@export var min_beam_range: float = 400.0  ## Minimum distance - beam turns OFF if closer
-@export var max_beam_range: float = 800.0  ## Maximum distance - beam turns OFF if farther
+@export var min_beam_range: float = 200.0  ## Minimum distance - beam turns OFF if closer
+@export var max_beam_range: float = 1600.0  ## Maximum distance - beam turns OFF if farther
 
 @export_group("Particle Settings")
 #@export var particle_count: int = 50  ## REDUCED from 100 - less overwhelming

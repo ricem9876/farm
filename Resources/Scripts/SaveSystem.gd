@@ -149,9 +149,10 @@ func collect_player_data(player: Node2D) -> Dictionary:
 		"weapon_storage": [],
 		"unlocked_weapons": ["Pistol"],  # Save unlocked weapons
 		"weapon_upgrades": {},  # Save weapon upgrades
-		# NEW: Level progression tracking - EXPANDED TO 5 LEVELS
-		"completed_levels": [false, false, false, false, false],
-		"unlock_dialogues_shown": [true, false, false, false, false],
+		# NEW: Infinite level progression tracking
+		"highest_level_reached": 1,
+		"completed_levels": [],  # Dynamic array - grows with progression
+		"unlock_dialogues_shown": [],  # Dynamic array - grows with progression
 		"storage_chests": {},
 		"current_scene": "safehouse",
 		"player_stats": {},
@@ -274,26 +275,23 @@ func collect_player_data(player: Node2D) -> Dictionary:
 	else:
 		data.character_id = "hero"  # Default fallback
 	
-	# NEW: Preserve completed_levels and unlock_dialogues_shown from existing save
+	# NEW: Preserve infinite level progress from existing save
 	# This ensures LevelSelectUI updates are persisted
 	if GameManager.current_save_slot >= 0:
 		var existing_save = get_save_data(GameManager.current_save_slot)
 		if existing_save.has("player"):
+			if existing_save.player.has("highest_level_reached"):
+				data.highest_level_reached = existing_save.player.highest_level_reached
+				print("  ✓ Preserved highest_level_reached from existing save: ", data.highest_level_reached)
 			if existing_save.player.has("completed_levels"):
 				data.completed_levels = existing_save.player.completed_levels
-				# Auto-expand if save has fewer levels (migration)
-				while data.completed_levels.size() < 5:
-					data.completed_levels.append(false)
-				print("  ✓ Preserved completed_levels from existing save: ", data.completed_levels)
+				print("  ✓ Preserved completed_levels from existing save: ", data.completed_levels.size(), " levels")
 			if existing_save.player.has("unlock_dialogues_shown"):
 				data.unlock_dialogues_shown = existing_save.player.unlock_dialogues_shown
-				# Auto-expand if save has fewer levels (migration)
-				while data.unlock_dialogues_shown.size() < 5:
-					data.unlock_dialogues_shown.append(false)
-				print("  ✓ Preserved unlock_dialogues_shown from existing save: ", data.unlock_dialogues_shown)
+				print("  ✓ Preserved unlock_dialogues_shown from existing save: ", data.unlock_dialogues_shown.size(), " levels")
 	
 	# DEPRECATED: Remove old unlocked_levels if it exists (migration path)
-	# The new system uses completed_levels instead
+	# The new system uses highest_level_reached + completed_levels instead
 	if data.has("unlocked_levels"):
 		data.erase("unlocked_levels")
 		print("  ℹ Removed deprecated unlocked_levels field")
@@ -416,41 +414,40 @@ func apply_player_data(player: Node2D, data: Dictionary):
 			WeaponUpgradeManager.load_save_data(data.weapon_upgrades)
 			print("  ✓ Weapon upgrades restored")
 	
-	# NEW: Restore completed levels - put into pending_load_data for LevelSelectUI
+	# NEW: Restore infinite level progress - put into pending_load_data for LevelSelectUI
+	if data.has("highest_level_reached") and data.highest_level_reached != null:
+		GameManager.pending_load_data["highest_level_reached"] = data.highest_level_reached
+		print("  ✓ Restored highest_level_reached: ", data.highest_level_reached)
+	
 	if data.has("completed_levels") and data.completed_levels != null:
-		var completed = data.completed_levels.duplicate()
-		# Auto-expand if save has fewer levels (migration)
-		while completed.size() < 5:
-			completed.append(false)
-		GameManager.pending_load_data["completed_levels"] = completed
-		print("  ✓ Restored completed levels: ", completed)
+		GameManager.pending_load_data["completed_levels"] = data.completed_levels.duplicate()
+		print("  ✓ Restored completed_levels: ", data.completed_levels.size(), " levels")
 	else:
 		# Migration path: Check for old unlocked_levels and convert
 		if data.has("unlocked_levels") and data.unlocked_levels != null:
 			print("  ℹ Found old unlocked_levels, migrating to completed_levels...")
 			var old_unlocked = data.unlocked_levels
 			var migrated_completed = []
-			for i in range(min(old_unlocked.size(), 5)):
+			for i in range(old_unlocked.size()):
 				if i == 0:
 					# Level 1 - if it was unlocked, it's not necessarily completed
 					migrated_completed.append(false)
 				else:
 					# Other levels - if they were unlocked, previous level was completed
 					migrated_completed.append(old_unlocked[i])
-			# Expand to 5 levels if needed
-			while migrated_completed.size() < 5:
-				migrated_completed.append(false)
 			GameManager.pending_load_data["completed_levels"] = migrated_completed
+			# Calculate highest level from old data
+			var highest = 1
+			for i in range(old_unlocked.size()):
+				if old_unlocked[i]:
+					highest = i + 1
+			GameManager.pending_load_data["highest_level_reached"] = highest + 1
 			print("  ✓ Migrated to completed levels: ", migrated_completed)
+			print("  ✓ Calculated highest_level_reached: ", highest + 1)
 	
-	# NEW: Restore unlock dialogues shown - put into pending_load_data for LevelSelectUI
 	if data.has("unlock_dialogues_shown") and data.unlock_dialogues_shown != null:
-		var dialogues = data.unlock_dialogues_shown.duplicate()
-		# Auto-expand if save has fewer levels (migration)
-		while dialogues.size() < 5:
-			dialogues.append(false)
-		GameManager.pending_load_data["unlock_dialogues_shown"] = dialogues
-		print("  ✓ Restored unlock dialogues shown: ", dialogues)
+		GameManager.pending_load_data["unlock_dialogues_shown"] = data.unlock_dialogues_shown.duplicate()
+		print("  ✓ Restored unlock_dialogues_shown: ", data.unlock_dialogues_shown.size(), " levels")
 	
 	# Storage chests
 	if data.has("storage_chests") and data.storage_chests != null:

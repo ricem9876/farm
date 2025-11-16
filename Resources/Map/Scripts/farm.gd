@@ -285,10 +285,32 @@ func _configure_enemy_spawner():
 			enemy_spawner.boss_enabled = settings.boss_enabled
 			print("  ✓ Set boss_enabled: ", settings.boss_enabled)
 	
+	# NEW: Support for multiple bosses
+	if "boss_count" in settings:
+		if "boss_count" in enemy_spawner:
+			enemy_spawner.boss_count = settings.boss_count
+			print("  ✓ Set boss_count: ", settings.boss_count)
+	
 	if "boss_spawn_at_halfway" in settings:
 		if "boss_spawn_at_halfway" in enemy_spawner:
 			enemy_spawner.boss_spawn_at_halfway = settings.boss_spawn_at_halfway
 			print("  ✓ Set boss_spawn_at_halfway: ", settings.boss_spawn_at_halfway)
+	
+	# NEW: Support for batch spawning
+	if "batch_spawn_enabled" in settings:
+		if "batch_spawn_enabled" in enemy_spawner:
+			enemy_spawner.batch_spawn_enabled = settings.batch_spawn_enabled
+			print("  ✓ Set batch_spawn_enabled: ", settings.batch_spawn_enabled)
+	
+	if "batch_size" in settings:
+		if "batch_size" in enemy_spawner:
+			enemy_spawner.batch_size = settings.batch_size
+			print("  ✓ Set batch_size: ", settings.batch_size)
+	
+	if "batch_interval" in settings:
+		if "batch_interval" in enemy_spawner:
+			enemy_spawner.batch_interval = settings.batch_interval
+			print("  ✓ Set batch_interval: ", settings.batch_interval)
 	
 	print("✓ Spawner configuration complete")
 	print("Configuration summary:")
@@ -454,46 +476,62 @@ func _on_tutorial_completed():
 	_mark_current_level_complete()
 
 func _mark_current_level_complete():
-	"""Mark the current level as complete"""
+	"""Mark the current level as complete - INFINITE LEVELS VERSION"""
 	var current_level = GameManager.current_level
 	print("[FARM] Marking Level ", current_level, " as complete...")
 	
-	# Save directly to the save file
-	if GameManager.current_save_slot >= 0:
-		var save_data = SaveSystem.load_game(GameManager.current_save_slot)
-		if save_data.is_empty():
-			save_data = {}
+	# Find the LevelSelectUI and tell it to mark the level complete
+	var level_select_ui = get_tree().get_first_node_in_group("level_select_ui")
+	if level_select_ui and level_select_ui.has_method("mark_level_complete"):
+		level_select_ui.mark_level_complete(current_level)
+		print("✓ Level ", current_level, " marked complete via LevelSelectUI")
+	else:
+		# FALLBACK: Save directly if LevelSelectUI not available
+		print("⚠️ LevelSelectUI not found, saving directly...")
 		
-		# Get or create the player data section
-		if not save_data.has("player"):
-			save_data["player"] = {}
-		
-		# Get or create completed_levels array
-		var completed_levels = save_data.player.get("completed_levels", [false, false, false, false, false])
-		
-		# Mark this level as complete
-		var level_index = current_level - 1
-		if level_index >= 0 and level_index < completed_levels.size():
-			completed_levels[level_index] = true
-			save_data.player["completed_levels"] = completed_levels
+		if GameManager.current_save_slot >= 0:
+			var save_data = SaveSystem.load_game(GameManager.current_save_slot)
+			if save_data.is_empty():
+				save_data = {}
+			
+			# Get or create the player data section
+			if not save_data.has("player"):
+				save_data["player"] = {}
+			
+			# Get existing progress or create new
+			var completed_levels = save_data.player.get("completed_levels", [])
+			var highest_level_reached = save_data.player.get("highest_level_reached", 1)
+			
+			# Expand arrays if needed
+			while completed_levels.size() < current_level:
+				completed_levels.append(false)
+			
+			# Mark this level as complete
+			if current_level > 0 and current_level <= completed_levels.size():
+				completed_levels[current_level - 1] = true
+			
+			# Update highest level reached
+			if current_level >= highest_level_reached:
+				highest_level_reached = current_level + 1
+				print("🎉 NEW HIGHEST LEVEL REACHED: ", highest_level_reached)
 			
 			# Get the player node to pass to save_game
 			var player = get_tree().get_first_node_in_group("player")
 			if player:
-				# Collect full player data and merge with our updated completed_levels
+				# Collect full player data and merge with our updated progress
 				var player_data = SaveSystem.collect_player_data(player)
 				player_data["completed_levels"] = completed_levels
+				player_data["highest_level_reached"] = highest_level_reached
 				
 				# Save it
 				SaveSystem.save_game(GameManager.current_save_slot, player_data)
 				print("✓ Level ", current_level, " completion saved to slot ", GameManager.current_save_slot)
-				print("✓ Completed levels: ", completed_levels)
+				print("✓ Highest level reached: ", highest_level_reached)
+				print("✓ Completed levels: ", completed_levels.size(), " levels tracked")
 			else:
 				print("❌ Could not find player to save data")
 		else:
-			print("❌ Invalid level index: ", level_index)
-	else:
-		print("⚠️ No save slot active - cannot save completion")
+			print("⚠️ No save slot active - cannot save completion")
 
 func _set_farm_state():
 	"""Set player location state to farm (enables guns)"""

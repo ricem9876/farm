@@ -1,4 +1,5 @@
-# EnemySpawner.gd - FIXED: Validates spawn positions to avoid physics-blocked zones
+# EnemySpawner.gd - INFINITE LEVELS VERSION with Multiple Boss Support
+# Validates spawn positions and supports spawning multiple bosses
 extends Node2D
 
 @export var spawn_enabled: bool = true
@@ -8,12 +9,16 @@ extends Node2D
 @export var spawn_mode: String = "gradual"
 @export var spawn_boundary: Rect2 = Rect2(0, 0, 1000, 1000)
 @export var boss_enabled: bool = false
+@export var boss_count: int = 1  # NEW: How many bosses to spawn
 @export var boss_spawn_at_halfway: bool = true
+@export var batch_spawn_enabled: bool = true  # NEW: Enable batch spawning
+@export var batch_size: int = 20  # NEW: How many enemies to spawn per batch
+@export var batch_interval: float = 5.0  # NEW: Seconds between batches
 
 signal enemy_spawned
 signal enemy_died
 signal wave_completed
-signal boss_spawned_now
+signal boss_spawned
 
 var enemy_scenes = {
 	"mushroom": preload("res://Resources/Enemies/Mushroom/Mushroom.tscn"),
@@ -36,9 +41,10 @@ var current_enemy_count: int = 0
 var total_spawned: int = 0
 var enemies_killed: int = 0
 var spawn_timer: float = 0.0
+var batch_timer: float = 0.0  # NEW: Timer for batch spawning
 var player: Node2D
-var boss_spawned: bool = false
-var boss_instance: Node2D = null
+var bosses_spawned: int = 0  # NEW: Track how many bosses have spawned
+var boss_instances: Array = []  # NEW: Track all boss instances
 
 # Physics validation
 var world_2d: World2D
@@ -57,11 +63,15 @@ func _ready():
 	print("Spawn mode: ", spawn_mode)
 	print("Total enemies: ", total_enemies)
 	print("Boss enabled: ", boss_enabled)
-	print("Boss at halfway: ", boss_spawn_at_halfway)
+	if boss_enabled:
+		print("Boss count: ", boss_count)
+		print("Boss at halfway: ", boss_spawn_at_halfway)
+	print("Batch spawning: ", "ENABLED" if batch_spawn_enabled else "DISABLED")
+	if batch_spawn_enabled:
+		print("  - Batch size: ", batch_size, " enemies")
+		print("  - Batch interval: ", batch_interval, " seconds")
 	print("Enemy types available: Mushroom, Tomato, Pumpkin, Corn, Pea")
 	print("Spawn weights: ", spawn_weights)
-	if boss_enabled:
-		print("👹 PEA BOSS will spawn at halfway point!")
 	print("=================================\n")
 
 func set_spawn_weights(new_weights: Dictionary):
@@ -78,11 +88,20 @@ func _process(delta):
 	if total_spawned >= total_enemies:
 		return
 	
-	spawn_timer -= delta
-	
-	if spawn_timer <= 0 and current_enemy_count < max_enemies:
-		_spawn_random_enemy()
-		spawn_timer = spawn_interval
+	# BATCH SPAWNING MODE
+	if batch_spawn_enabled:
+		batch_timer -= delta
+		
+		if batch_timer <= 0:
+			_spawn_batch()
+			batch_timer = batch_interval
+	# GRADUAL SPAWNING MODE (original)
+	else:
+		spawn_timer -= delta
+		
+		if spawn_timer <= 0 and current_enemy_count < max_enemies:
+			_spawn_random_enemy()
+			spawn_timer = spawn_interval
 
 func _spawn_all_enemies_immediately():
 	print("🚀 Spawning all ", total_enemies, " enemies at once!")
@@ -91,7 +110,34 @@ func _spawn_all_enemies_immediately():
 		await get_tree().create_timer(0.05).timeout
 	print("✓ All ", total_enemies, " enemies spawned!")
 
+func _spawn_batch():
+	"""Spawn a batch of enemies (up to batch_size or remaining enemies)"""
+	var enemies_remaining = total_enemies - total_spawned
+	var enemies_to_spawn = min(batch_size, enemies_remaining)
+	
+	# Don't spawn more than max_enemies can handle
+	var room_for_enemies = max_enemies - current_enemy_count
+	enemies_to_spawn = min(enemies_to_spawn, room_for_enemies)
+	
+	if enemies_to_spawn <= 0:
+		print("⚠ Batch spawn skipped - no room or all enemies spawned")
+		return
+	
+	print("📦 Spawning batch of ", enemies_to_spawn, " enemies! (", total_spawned, "/", total_enemies, " total)")
+	
+	for i in range(enemies_to_spawn):
+		_spawn_random_enemy()
+		# Reduced delay for much faster spawning
+		await get_tree().create_timer(0.05).timeout  # Changed from 0.1 to 0.05
+	
+	print("✓ Batch complete! (", total_spawned, "/", total_enemies, " total spawned)")
+
 func _spawn_random_enemy():
+	# SAFETY CHECK: Don't spawn if we've reached the limit
+	if total_spawned >= total_enemies:
+		print("⚠ SPAWN BLOCKED: Already spawned ", total_spawned, "/", total_enemies, " enemies")
+		return
+	
 	var enemy_type = _weighted_random_choice()
 	var spawn_pos = _get_valid_spawn_position()
 	
@@ -121,10 +167,11 @@ func _spawn_random_enemy():
 	_check_boss_spawn()
 
 func _check_boss_spawn():
+	"""Check if it's time to spawn boss(es)"""
 	if not boss_enabled:
 		return
 	
-	if boss_spawned:
+	if bosses_spawned >= boss_count:
 		return
 	
 	if not boss_spawn_at_halfway:
@@ -133,22 +180,31 @@ func _check_boss_spawn():
 	var halfway_kills = int(total_enemies / 2.0)
 	
 	if enemies_killed >= halfway_kills:
-		_spawn_boss()
+		_spawn_bosses()
 
-func _spawn_boss():
-	if boss_spawned:
-		print("⚠ Boss already spawned!")
+func _spawn_bosses():
+	"""Spawn all bosses that should appear"""
+	if bosses_spawned >= boss_count:
+		print("⚠ All bosses already spawned!")
 		return
 	
 	if not boss_scene:
 		print("✗ ERROR: Boss scene not loaded!")
 		return
 	
-	print("\n🎺 PEA BOSS SPAWNING! 🎺")
+	print("\n🎺 SPAWNING ", boss_count, " BOSS(ES)! 🎺")
 	print("Enemies killed: ", enemies_killed, "/", total_enemies)
 	
+	# Spawn all bosses at once
+	for i in range(boss_count):
+		_spawn_single_boss(i + 1)
+	
+	print("=================\n")
+
+func _spawn_single_boss(boss_number: int):
+	"""Spawn a single boss"""
 	var spawn_pos = _get_boss_spawn_position()
-	boss_instance = boss_scene.instantiate()
+	var boss_instance = boss_scene.instantiate()
 	
 	get_parent().add_child(boss_instance)
 	boss_instance.global_position = spawn_pos
@@ -156,12 +212,12 @@ func _spawn_boss():
 	if boss_instance.has_signal("died"):
 		boss_instance.died.connect(_on_boss_died)
 	
-	boss_spawned = true
+	boss_instances.append(boss_instance)
+	bosses_spawned += 1
 	current_enemy_count += 1
 	
-	boss_spawned_now.emit()
-	print("👹 PEA BOSS SPAWNED at ", spawn_pos, "!")
-	print("=================\n")
+	boss_spawned.emit()
+	print("👹 PEA BOSS #", boss_number, " SPAWNED at ", spawn_pos, "!")
 
 func _get_boss_spawn_position() -> Vector2:
 	"""Get a spawn position for the boss - tries to spawn far from player AND not in physics-blocked areas"""
@@ -295,13 +351,7 @@ func _on_enemy_died(experience_points: int, enemy_type: String):
 	enemy_died.emit()
 	
 	_check_boss_spawn()
-	
-	var all_enemies_spawned = total_spawned >= total_enemies
-	var boss_condition_met = (not boss_enabled) or (boss_enabled and boss_spawned and not is_instance_valid(boss_instance))
-	
-	if all_enemies_spawned and current_enemy_count == 0 and boss_condition_met:
-		print("🎉 WAVE COMPLETED! All enemies defeated!")
-		wave_completed.emit()
+	_check_wave_complete()
 
 func _on_boss_died(experience_points: int):
 	print("\n💀 PEA BOSS DEFEATED! 💀")
@@ -316,14 +366,38 @@ func _on_boss_died(experience_points: int):
 	if player and player.has_method("gain_experience"):
 		player.gain_experience(experience_points)
 	
-	boss_instance = null
+	# CRITICAL FIX: Remove boss from array immediately, don't wait for is_instance_valid
+	# The boss emits died signal but is still valid for a moment
+	if boss_instances.size() > 0:
+		boss_instances.pop_back()  # Remove the most recent boss
+		print("✓ Boss removed from tracking array. Remaining bosses: ", boss_instances.size())
 	
 	enemy_died.emit()
 	
 	print("==================\n")
 	
-	if total_spawned >= total_enemies and current_enemy_count == 0:
-		print("🎉 WAVE COMPLETED! All enemies and Pea Boss defeated!")
+	_check_wave_complete()
+
+func _check_wave_complete():
+	"""Check if the wave is complete"""
+	var all_enemies_spawned = total_spawned >= total_enemies
+	var all_bosses_spawned = bosses_spawned >= boss_count
+	var no_enemies_alive = current_enemy_count == 0
+	var all_bosses_dead = boss_instances.size() == 0
+	
+	var boss_condition_met = (not boss_enabled) or (boss_enabled and all_bosses_spawned and all_bosses_dead)
+	
+	# DEBUG LOGGING
+	print("=== WAVE COMPLETION CHECK ===")
+	print("  All enemies spawned? ", all_enemies_spawned, " (", total_spawned, "/", total_enemies, ")")
+	print("  All bosses spawned? ", all_bosses_spawned, " (", bosses_spawned, "/", boss_count, ")")
+	print("  No enemies alive? ", no_enemies_alive, " (current: ", current_enemy_count, ")")
+	print("  All bosses dead? ", all_bosses_dead, " (alive: ", boss_instances.size(), ")")
+	print("  Boss condition met? ", boss_condition_met)
+	print("=============================")
+	
+	if all_enemies_spawned and no_enemies_alive and boss_condition_met:
+		print("🎉 WAVE COMPLETED! All enemies defeated!")
 		wave_completed.emit()
 
 func set_spawn_enabled(enabled: bool):
@@ -340,6 +414,6 @@ func clear_all_enemies():
 	for enemy in enemies:
 		enemy.queue_free()
 	current_enemy_count = 0
-	boss_spawned = false
-	boss_instance = null
+	bosses_spawned = 0
+	boss_instances.clear()
 	print("Cleared all enemies")
