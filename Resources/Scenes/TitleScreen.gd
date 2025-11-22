@@ -4,6 +4,7 @@ extends Control
 @onready var start_button = $VBoxContainer/ButtonContainer/StartButton
 @onready var settings_button = $VBoxContainer/ButtonContainer/SettingsButton 
 @onready var quit_button = $VBoxContainer/ButtonContainer/QuitButton
+@onready var leaderboard_button = $VBoxContainer/ButtonContainer/LeaderboardButton
 @onready var version_label = $VersionLabel
 @onready var settings_menu = $SettingsMenu
 @onready var background_panel = $SettingsMenu/BackgroundPanel
@@ -66,6 +67,7 @@ func _ready():
 	# Connect buttons
 	start_button.pressed.connect(_on_start_pressed)
 	settings_button.pressed.connect(_on_settings_button_pressed)
+	leaderboard_button.pressed.connect(_on_leaderboard_pressed)
 	quit_button.pressed.connect(_on_quit_pressed)
 	close_button.pressed.connect(_on_close_button_pressed)
 	
@@ -95,6 +97,8 @@ func _setup_ui():
 		_style_button(start_button, "START", Color(0.5, 0.7, 0.4), pixel_font)  # Sage green
 	if settings_button:
 		_style_button(settings_button, "SETTINGS", Color(0.8, 0.65, 0.4), pixel_font)  # Warm gold
+	if leaderboard_button:
+		_style_button(leaderboard_button, "LEADERBOARD", Color(0.7, 0.55, 0.65), pixel_font)  # Dusty rose
 	if quit_button:
 		_style_button(quit_button, "QUIT", Color(0.75, 0.5, 0.35), pixel_font)  # Rustic brown
 	if close_button:
@@ -511,6 +515,10 @@ func _add_centered_control(control: Control):
 func _on_start_pressed():
 	print("Opening save select...")
 	get_tree().change_scene_to_file("res://Resources/UI/SaveSelectScene.tscn")
+
+func _on_leaderboard_pressed():
+	print("Opening leaderboard...")
+	get_tree().change_scene_to_file("res://Resources/Scenes/LeaderboardScreen.tscn")
 
 func _on_settings_button_pressed():
 	settings_menu.visible = true
