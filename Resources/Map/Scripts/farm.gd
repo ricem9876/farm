@@ -205,6 +205,8 @@ func _ready():
 	print("=== FARM SCENE SETUP COMPLETE ===\n")
 
 
+# Replace your _configure_enemy_spawner() function in farm.gd with this version:
+
 func _configure_enemy_spawner():
 	"""Configure and start the enemy spawner - works even if settings are missing"""
 	if not enemy_spawner:
@@ -312,13 +314,46 @@ func _configure_enemy_spawner():
 			enemy_spawner.batch_interval = settings.batch_interval
 			print("  ✓ Set batch_interval: ", settings.batch_interval)
 	
+	# =====================================================
+	# CROP CONTROL CENTER - Apply spawn reduction AFTER all config is set
+	# =====================================================
+	if EnemyModifiers:
+		var spawn_mult = EnemyModifiers.get_spawn_multiplier()
+		if spawn_mult < 1.0:
+			var orig_total = enemy_spawner.total_enemies
+			var orig_max = enemy_spawner.max_enemies
+			var orig_batch = enemy_spawner.batch_size
+			
+			enemy_spawner.total_enemies = int(ceil(enemy_spawner.total_enemies * spawn_mult))
+			enemy_spawner.max_enemies = int(ceil(enemy_spawner.max_enemies * spawn_mult))
+			enemy_spawner.batch_size = int(ceil(enemy_spawner.batch_size * spawn_mult))
+			
+			# Update our local tracking variable too!
+			total_enemies_in_wave = enemy_spawner.total_enemies
+			
+			# Ensure minimums
+			enemy_spawner.total_enemies = max(1, enemy_spawner.total_enemies)
+			enemy_spawner.max_enemies = max(1, enemy_spawner.max_enemies)
+			enemy_spawner.batch_size = max(1, enemy_spawner.batch_size)
+			
+			print("\n🌾 CROP CONTROL CENTER - SPAWN REDUCTION 🌾")
+			print("  Multiplier: ", spawn_mult, " (", int((1.0 - spawn_mult) * 100), "% fewer enemies)")
+			print("  Total: ", orig_total, " -> ", enemy_spawner.total_enemies)
+			print("  Max: ", orig_max, " -> ", enemy_spawner.max_enemies) 
+			print("  Batch: ", orig_batch, " -> ", enemy_spawner.batch_size)
+			print("==========================================\n")
+			
+			# Update the counter display with new total
+			_update_enemy_counter()
+	# =====================================================
+	
 	print("✓ Spawner configuration complete")
 	print("Configuration summary:")
 	print("  - spawn_boundary: ", spawn_rect)
 	print("  - spawn_weights: ", spawn_weights)
-	print("  - max_enemies: ", settings.get("max_enemies", "N/A"))
+	print("  - max_enemies: ", enemy_spawner.max_enemies)
 	print("  - spawn_interval: ", settings.get("spawn_interval", "N/A"))
-	print("  - total_enemies: ", settings.get("total_enemies", "N/A"))
+	print("  - total_enemies: ", enemy_spawner.total_enemies)
 	print("  - spawn_mode: ", settings.get("spawn_mode", "gradual"))
 	print("  - boss_enabled: ", settings.get("boss_enabled", false))
 	

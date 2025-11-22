@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=4 uid="uid://bj8jr4y5r1lxw"]
+[gd_scene load_steps=20 format=4 uid="uid://bj8jr4y5r1lxw"]
 
 [ext_resource type="PackedScene" uid="uid://rhebvs8qauqd" path="res://Resources/Character/player.tscn" id="1_4hm0u"]
 [ext_resource type="Script" uid="uid://cf7grfcbnnuut" path="res://Resources/Scenes/safehouse.gd" id="1_oc300"]
@@ -14,6 +14,7 @@
 [ext_resource type="Script" uid="uid://dclmen2bqpf5v" path="res://Resources/Scenes/HarvestBin.gd" id="12_mlc5f"]
 [ext_resource type="Texture2D" uid="uid://bv66v2foe6ki6" path="res://Resources/Map/Objects/harvestbin.png" id="13_l5p50"]
 [ext_resource type="PackedScene" uid="uid://oqpbqlmeytpc" path="res://Resources/UI/HarvestBinUI.tscn" id="14_icrk5"]
+[ext_resource type="Script" uid="uid://d1uveejgk2jb5" path="res://Resources/Scripts/CropControlCenter.gd" id="15_h05o4"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_k87ip"]
 size = Vector2(56, 56)
@@ -24,6 +25,9 @@ size = Vector2(26, 26)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_icrk5"]
 size = Vector2(67, 51)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_h05o4"]
+size = Vector2(58, 36.3227)
+
 [node name="Safehouse" type="Node2D"]
 script = ExtResource("1_oc300")
 
@@ -32,7 +36,7 @@ tile_map_data = PackedByteArray("AAARAA8ABQABAAEAAAARABAABQABAAEAAAARABEABQABAAE
 tile_set = ExtResource("11_f4m0t")
 
 [node name="First Objects" type="TileMapLayer" parent="."]
-tile_map_data = PackedByteArray("AAAkABYABAAAAAEAAAAmABYABAAIAB4AAAAmABUABAAIAB4AAAAiABUABAAIAB4AABAiABYABAAIAB4AABArABEABAAvAAQAAAArABIABAAvAAQAAAArABMABAAvAAYAAAAqABAABAAuAAQAAAArABAABAAuAAQAAAApABAABAAtAAQAAAAqABEABAAuAAQAAAASAA8ABAACAAkAAAASABAABAACAAoAAAASABEABAACAAsAAAASABIABAACAAwAAAATAA8ABAADAAkAAAATABAABAADAAoAAAATABEABAADAAsAAAATABIABAADAAwAAAA=")
+tile_map_data = PackedByteArray("AAAkABYABAAAAAEAAAAmABYABAAIAB4AAAAmABUABAAIAB4AAAAiABUABAAIAB4AABAiABYABAAIAB4AABArABEABAAvAAQAAAArABIABAAvAAQAAAArABMABAAvAAYAAAAqABAABAAuAAQAAAArABAABAAuAAQAAAApABAABAAtAAQAAAAqABEABAAuAAQAAAASAA8ABAACAAkAAAASABAABAACAAoAAAASABEABAACAAsAAAASABIABAACAAwAAAATAA8ABAADAAkAAAATABAABAADAAoAAAATABEABAADAAsAAAATABIABAADAAwAAAAXAA8AAAABAAAAAAA=")
 tile_set = ExtResource("11_f4m0t")
 
 [node name="Walls" type="TileMapLayer" parent="."]
@@ -122,3 +126,10 @@ texture = ExtResource("13_l5p50")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HarvestBin"]
 position = Vector2(-353.225, -12.6559)
 shape = SubResource("RectangleShape2D_icrk5")
+
+[node name="CropControlCenter" type="Area2D" parent="."]
+script = ExtResource("15_h05o4")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CropControlCenter"]
+position = Vector2(374, 250.839)
+shape = SubResource("RectangleShape2D_h05o4")

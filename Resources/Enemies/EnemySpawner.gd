@@ -1,5 +1,6 @@
 # EnemySpawner.gd - INFINITE LEVELS VERSION with Multiple Boss Support
 # Validates spawn positions and supports spawning multiple bosses
+# UPDATED: Includes Crop Control Center spawn reduction
 extends Node2D
 
 @export var spawn_enabled: bool = true
@@ -46,6 +47,11 @@ var player: Node2D
 var bosses_spawned: int = 0  # NEW: Track how many bosses have spawned
 var boss_instances: Array = []  # NEW: Track all boss instances
 
+# Track if spawn modifiers have been applied
+var _spawn_modifiers_applied: bool = false
+var _original_total_enemies: int = 0
+var _original_max_enemies: int = 0
+
 # Physics validation
 var world_2d: World2D
 var space_state: PhysicsDirectSpaceState2D
@@ -53,10 +59,17 @@ var space_state: PhysicsDirectSpaceState2D
 func _ready():
 	player = get_tree().get_first_node_in_group("player")
 	
+	# Store original values before any modification
+	_original_total_enemies = total_enemies
+	_original_max_enemies = max_enemies
+	
 	# Get physics space for spawn validation
 	world_2d = get_world_2d()
 	if world_2d:
 		space_state = world_2d.direct_space_state
+	
+	# Apply spawn modifiers from Crop Control Center
+	_apply_spawn_modifiers()
 	
 	print("\n=== ENEMY SPAWNER INITIALIZED ===")
 	print("Spawn boundary: ", spawn_boundary)
@@ -73,6 +86,49 @@ func _ready():
 	print("Enemy types available: Mushroom, Tomato, Pumpkin, Corn, Pea")
 	print("Spawn weights: ", spawn_weights)
 	print("=================================\n")
+
+func _apply_spawn_modifiers():
+	"""Apply Crop Control Center spawn reduction"""
+	if _spawn_modifiers_applied:
+		return
+	
+	# Check if EnemyModifiers autoload exists
+	if not EnemyModifiers:
+		print("⚠ EnemyModifiers autoload not found - skipping spawn reduction")
+		_spawn_modifiers_applied = true
+		return
+	
+	var spawn_mult = EnemyModifiers.get_spawn_multiplier()
+	
+	if spawn_mult >= 1.0:
+		print("📦 No spawn reduction active (multiplier: ", spawn_mult, ")")
+		_spawn_modifiers_applied = true
+		return
+	
+	# Store originals for logging
+	var orig_total = total_enemies
+	var orig_max = max_enemies
+	
+	# Apply reduction
+	total_enemies = int(ceil(total_enemies * spawn_mult))
+	max_enemies = int(ceil(max_enemies * spawn_mult))
+	
+	# Also reduce batch size proportionally
+	batch_size = int(ceil(batch_size * spawn_mult))
+	
+	# Ensure minimums
+	total_enemies = max(1, total_enemies)
+	max_enemies = max(1, max_enemies)
+	batch_size = max(1, batch_size)
+	
+	print("\n🌾 CROP CONTROL CENTER - SPAWN REDUCTION 🌾")
+	print("  Spawn multiplier: ", spawn_mult, " (", int((1.0 - spawn_mult) * 100), "% reduction)")
+	print("  Total enemies: ", orig_total, " -> ", total_enemies)
+	print("  Max concurrent: ", orig_max, " -> ", max_enemies)
+	print("  Batch size: ", int(ceil(orig_max * 1.0)), " -> ", batch_size)
+	print("==========================================\n")
+	
+	_spawn_modifiers_applied = true
 
 func set_spawn_weights(new_weights: Dictionary):
 	spawn_weights = new_weights
@@ -417,3 +473,20 @@ func clear_all_enemies():
 	bosses_spawned = 0
 	boss_instances.clear()
 	print("Cleared all enemies")
+
+# NEW: Call this if you set total_enemies/max_enemies externally AFTER _ready()
+func configure_spawner(new_total: int, new_max: int, new_batch_size: int = -1):
+	"""Configure spawner with new values and apply modifiers"""
+	_original_total_enemies = new_total
+	_original_max_enemies = new_max
+	
+	total_enemies = new_total
+	max_enemies = new_max
+	if new_batch_size > 0:
+		batch_size = new_batch_size
+	
+	# Reset and reapply modifiers
+	_spawn_modifiers_applied = false
+	_apply_spawn_modifiers()
+	
+	print("✓ Spawner reconfigured: ", total_enemies, " total, ", max_enemies, " max")

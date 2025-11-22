@@ -1,8 +1,31 @@
-[gd_resource type="TileSet" load_steps=7 format=3 uid="uid://b0es801vgvp1s"]
+[gd_resource type="TileSet" load_steps=9 format=3 uid="uid://b0es801vgvp1s"]
 
+[ext_resource type="Texture2D" uid="uid://dsni526qswpce" path="res://Resources/Map/Objects/seedbench.png" id="1_i84g2"]
 [ext_resource type="Texture2D" uid="uid://bwp2u0rbbl5s1" path="res://Resources/Map/Tilesets/PixelCrawler/Walls.png" id="1_nbs7d"]
 [ext_resource type="Texture2D" uid="uid://dm5q2q0gv2d2s" path="res://Resources/Map/Tilesets/PixelCrawler/Furniture.png" id="2_i84g2"]
 [ext_resource type="Texture2D" uid="uid://ijmwp0fk73y2" path="res://Resources/Map/Tilesets/PixelCrawler/Floors.png" id="3_13rkk"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_13rkk"]
+texture = ExtResource("1_i84g2")
+1:5/0 = 0
+1:6/0 = 0
+2:4/0 = 0
+2:5/0 = 0
+3:4/0 = 0
+3:5/0 = 0
+3:6/0 = 0
+1:0/size_in_atlas = Vector2i(3, 3)
+1:0/animation_columns = 4
+1:0/animation_separation = Vector2i(1, 0)
+1:0/animation_frame_0/duration = 1.0
+1:0/animation_frame_1/duration = 1.0
+1:0/animation_frame_2/duration = 1.0
+1:0/animation_frame_3/duration = 1.0
+1:0/0 = 0
+1:0/0/texture_origin = Vector2i(0, 8)
+1:0/0/z_index = 2
+1:0/0/y_sort_origin = 1
+1:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-20.5039, -16.8168, 18.7053, -16.4571, 18.7053, -4.5864, -19.9643, -5.30583)
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_o5i5p"]
 texture = ExtResource("2_i84g2")
@@ -1344,3 +1367,4 @@ physics_layer_0/collision_layer = 1
 sources/4 = SubResource("TileSetAtlasSource_o5i5p")
 sources/5 = SubResource("TileSetAtlasSource_6typ2")
 sources/9 = SubResource("TileSetAtlasSource_nbs7d")
+sources/0 = SubResource("TileSetAtlasSource_13rkk")

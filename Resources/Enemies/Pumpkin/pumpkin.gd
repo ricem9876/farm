@@ -77,16 +77,31 @@ func _ready():
 func _apply_level_scaling():
 	var farm_level = GameManager.current_level if GameManager else 1
 	
-	if farm_level <= 1:
-		return
+	# Base scaling from level progression
+	var level_health_mult = 1.0
+	var level_damage_mult = 1.0
 	
-	var health_multiplier = 1.0 + (0.12 * (farm_level - 1))
-	var damage_multiplier = 1.0 + (0.03 * (farm_level - 1))
+	if farm_level > 1:
+		level_health_mult = 1.0 + (0.12 * (farm_level - 1))
+		level_damage_mult = 1.0 + (0.03 * (farm_level - 1))
 	
-	max_health = base_health * health_multiplier
-	contact_damage = base_damage * damage_multiplier
+	# Apply Crop Control Center modifiers (reductions from upgrades)
+	var ccc_health_mult = 1.0
+	var ccc_damage_mult = 1.0
+	var ccc_speed_mult = 1.0
 	
-	print("🎃 Pumpkin scaled to Farm Level ", farm_level, ": HP=", int(max_health), " Damage=", snappedf(contact_damage, 0.1))
+	if EnemyModifiers:
+		ccc_health_mult = EnemyModifiers.get_health_multiplier()
+		ccc_damage_mult = EnemyModifiers.get_damage_multiplier()
+		ccc_speed_mult = EnemyModifiers.get_speed_multiplier()
+	
+	# Final stats = base * level_scaling * crop_control_reduction
+	max_health = base_health * level_health_mult * ccc_health_mult
+	contact_damage = base_damage * level_damage_mult * ccc_damage_mult
+	move_speed = move_speed * ccc_speed_mult
+	chase_speed = chase_speed * ccc_speed_mult
+	
+	print("Pumpkin scaled - HP: ", int(max_health), " DMG: ", snappedf(contact_damage, 0.1), " SPD: ", int(move_speed))
 
 func _physics_process(delta):
 	if is_dead:

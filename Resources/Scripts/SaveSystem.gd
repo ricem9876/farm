@@ -252,6 +252,12 @@ func collect_player_data(player: Node2D) -> Dictionary:
 		data.weapon_upgrades = WeaponUpgradeManager.get_save_data()
 		print("  ✓ Saved weapon upgrades")
 	
+		# Enemy modifiers from Crop Control Center
+	if GameManager.current_save_slot >= 0:
+		var existing_save = get_save_data(GameManager.current_save_slot)
+		if existing_save.has("player") and existing_save.player.has("enemy_modifiers"):
+			data.enemy_modifiers = existing_save.player.enemy_modifiers
+	
 	# Tutorial data
 	if TutorialManager:
 		data.tutorial = TutorialManager.get_save_data()

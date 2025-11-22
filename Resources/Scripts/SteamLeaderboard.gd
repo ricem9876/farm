@@ -17,34 +17,56 @@ signal leaderboard_scores_downloaded(entries: Array)
 signal steam_connection_failed()
 
 func _ready():
-	_initialize_steam()
+	# Delay initialization to ensure everything is loaded
+	call_deferred("_initialize_steam")
 
 func _initialize_steam():
-	"""Initialize GodotSteam if available"""
-	# Check if GodotSteam plugin is loaded
-	if Engine.has_singleton("Steam"):
-		var Steam = Engine.get_singleton("Steam")
-		
-		# Initialize Steam
-		var init_result = Steam.steamInit()
-		steam_available = init_result.status == 1
-		
-		if steam_available:
-			steam_id = Steam.getSteamID()
-			print("✓ Steam initialized - User ID: ", steam_id)
-			
-			# Connect Steam signals
-			Steam.leaderboard_find_result.connect(_on_leaderboard_find_result)
-			Steam.leaderboard_score_uploaded.connect(_on_leaderboard_score_uploaded)
-			Steam.leaderboard_scores_downloaded.connect(_on_leaderboard_scores_downloaded)
-			
-			# Find the leaderboard
-			_find_leaderboard()
-		else:
-			print("⚠ Steam initialization failed: ", init_result.verbal)
-			steam_connection_failed.emit()
-	else:
+	"""Initialize GodotSteam if available - with robust error handling"""
+	# First check if the Steam singleton even exists
+	if not Engine.has_singleton("Steam"):
 		print("ℹ GodotSteam not available - running in offline mode")
+		steam_available = false
+		steam_connection_failed.emit()
+		return
+	
+	# Try to get the singleton safely
+	var Steam = Engine.get_singleton("Steam")
+	if Steam == null:
+		print("ℹ Steam singleton is null - running in offline mode")
+		steam_available = false
+		steam_connection_failed.emit()
+		return
+	
+	# Try to initialize Steam - this can fail if Steam client isn't running
+	var init_result = Steam.steamInit()
+	
+	# Check initialization result
+	if init_result == null or not init_result is Dictionary:
+		print("⚠ Steam initialization returned invalid result - running in offline mode")
+		steam_available = false
+		steam_connection_failed.emit()
+		return
+	
+	steam_available = init_result.get("status", 0) == 1
+	
+	if steam_available:
+		steam_id = Steam.getSteamID()
+		print("✓ Steam initialized - User ID: ", steam_id)
+		
+		# Connect Steam signals safely
+		if Steam.has_signal("leaderboard_find_result"):
+			Steam.leaderboard_find_result.connect(_on_leaderboard_find_result)
+		if Steam.has_signal("leaderboard_score_uploaded"):
+			Steam.leaderboard_score_uploaded.connect(_on_leaderboard_score_uploaded)
+		if Steam.has_signal("leaderboard_scores_downloaded"):
+			Steam.leaderboard_scores_downloaded.connect(_on_leaderboard_scores_downloaded)
+		
+		# Find the leaderboard
+		_find_leaderboard()
+	else:
+		var error_msg = init_result.get("verbal", "Unknown error")
+		print("⚠ Steam initialization failed: ", error_msg)
+		print("  (This is normal if Steam client isn't running)")
 		steam_connection_failed.emit()
 
 func _find_leaderboard():
