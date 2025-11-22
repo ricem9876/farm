@@ -1,9 +1,13 @@
-[gd_scene load_steps=4 format=3 uid="uid://dcmnp8k6fb2bj"]
+[gd_scene load_steps=5 format=3 uid="uid://dcmnp8k6fb2bj"]
 
 [ext_resource type="Script" uid="uid://c5i8724333qwt" path="res://Resources/Weapon/WeaponChest.gd" id="1_fh8hy"]
 [ext_resource type="Texture2D" uid="uid://csb77vgonmerl" path="res://Resources/Map/Objects/WeaponChest.png" id="2_fh8hy"]
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_fh8hy"]
+size = Vector2(36, 32)
+
 [sub_resource type="CircleShape2D" id="CircleShape2D_fh8hy"]
+radius = 28.0179
 
 [node name="WeaponChest" type="Area2D"]
 script = ExtResource("1_fh8hy")
@@ -13,9 +17,15 @@ position = Vector2(8.75, 5.25)
 scale = Vector2(0.921875, 0.640625)
 texture = ExtResource("2_fh8hy")
 
+[node name="StaticBody2D" type="StaticBody2D" parent="Sprite2D"]
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="Sprite2D/StaticBody2D"]
+position = Vector2(-0.81356, 1.17073)
+scale = Vector2(1.08475, 1.56098)
+shape = SubResource("RectangleShape2D_fh8hy")
+
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-visible = false
-position = Vector2(0, 3)
+position = Vector2(7, 6)
 shape = SubResource("CircleShape2D_fh8hy")
 one_way_collision_margin = 29.8
 

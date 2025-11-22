@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=4 uid="uid://bj8jr4y5r1lxw"]
+[gd_scene load_steps=27 format=4 uid="uid://bj8jr4y5r1lxw"]
 
 [ext_resource type="PackedScene" uid="uid://rhebvs8qauqd" path="res://Resources/Character/player.tscn" id="1_4hm0u"]
 [ext_resource type="Script" uid="uid://cf7grfcbnnuut" path="res://Resources/Scenes/safehouse.gd" id="1_oc300"]
@@ -10,7 +10,7 @@
 [ext_resource type="PackedScene" uid="uid://1q5yvjcmhl5p" path="res://Resources/Map/Objects/Records.tscn" id="9_7dn8k"]
 [ext_resource type="Script" uid="uid://dybo01ee0pp6b" path="res://Resources/Map/Scripts/KeyForge.gd" id="10_f4m0t"]
 [ext_resource type="TileSet" uid="uid://b0es801vgvp1s" path="res://Resources/Map/Tilesets/SafehouseTileset.tres" id="11_f4m0t"]
-[ext_resource type="Texture2D" uid="uid://btcf2c7316fsv" path="res://Resources/Map/Objects/KeyForge.png" id="11_mlc5f"]
+[ext_resource type="Texture2D" uid="uid://dcd1dh350wbi4" path="res://Resources/Map/Objects/keyforge.png" id="11_h05o4"]
 [ext_resource type="Script" uid="uid://dclmen2bqpf5v" path="res://Resources/Scenes/HarvestBin.gd" id="12_mlc5f"]
 [ext_resource type="Texture2D" uid="uid://bv66v2foe6ki6" path="res://Resources/Map/Objects/harvestbin.png" id="13_l5p50"]
 [ext_resource type="PackedScene" uid="uid://oqpbqlmeytpc" path="res://Resources/UI/HarvestBinUI.tscn" id="14_icrk5"]
@@ -21,6 +21,56 @@ size = Vector2(56, 56)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_l5p50"]
 size = Vector2(26, 26)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jb54b"]
+atlas = ExtResource("11_h05o4")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fhxx1"]
+atlas = ExtResource("11_h05o4")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3pkc5"]
+atlas = ExtResource("11_h05o4")
+region = Rect2(128, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dnx72"]
+atlas = ExtResource("11_h05o4")
+region = Rect2(192, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1kp5v"]
+atlas = ExtResource("11_h05o4")
+region = Rect2(256, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1c3ky"]
+atlas = ExtResource("11_h05o4")
+region = Rect2(320, 0, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_3okfv"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jb54b")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fhxx1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3pkc5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dnx72")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1kp5v")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1c3ky")
+}],
+"loop": false,
+"name": &"unlockkey",
+"speed": 6.0
+}]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_icrk5"]
 size = Vector2(67, 51)
@@ -36,7 +86,8 @@ tile_map_data = PackedByteArray("AAARAA8ABQABAAEAAAARABAABQABAAEAAAARABEABQABAAE
 tile_set = ExtResource("11_f4m0t")
 
 [node name="First Objects" type="TileMapLayer" parent="."]
-tile_map_data = PackedByteArray("AAAkABYABAAAAAEAAAAmABYABAAIAB4AAAAmABUABAAIAB4AAAAiABUABAAIAB4AABAiABYABAAIAB4AABArABEABAAvAAQAAAArABIABAAvAAQAAAArABMABAAvAAYAAAAqABAABAAuAAQAAAArABAABAAuAAQAAAApABAABAAtAAQAAAAqABEABAAuAAQAAAASAA8ABAACAAkAAAASABAABAACAAoAAAASABEABAACAAsAAAASABIABAACAAwAAAATAA8ABAADAAkAAAATABAABAADAAoAAAATABEABAADAAsAAAATABIABAADAAwAAAAXAA8AAAABAAAAAAA=")
+rotation = 0.0140822
+tile_map_data = PackedByteArray("AAAXAA8AAAABAAAAAAAjABYAAQAAAAIAAAAjABUAAgAAAAEAAAASABAAAwABAAAAAAASABEAAwABAAEAAAASABIAAwABAAIAAAASABMAAwABAAMAAAATABAAAwACAAAAAAATABEAAwACAAEAAAATABIAAwACAAIAAAATABMAAwACAAMAAAAjABQAAQAAAAIAAAA=")
 tile_set = ExtResource("11_f4m0t")
 
 [node name="Walls" type="TileMapLayer" parent="."]
@@ -52,6 +103,7 @@ z_index = 2
 position = Vector2(453.326, 314.117)
 
 [node name="InventoryUI" parent="." instance=ExtResource("4_vhte0")]
+visible = false
 offset_left = 650.0
 offset_top = 279.0
 offset_right = 749.0
@@ -66,6 +118,7 @@ position = Vector2(4.67941, -9.74545)
 shape = SubResource("RectangleShape2D_k87ip")
 
 [node name="StorageChest" parent="." instance=ExtResource("6_vabqk")]
+visible = false
 z_index = 1
 position = Vector2(554.86, 239.132)
 
@@ -76,7 +129,7 @@ position = Vector2(477.433, 234.99)
 
 [node name="Records" parent="." instance=ExtResource("9_7dn8k")]
 z_index = 1
-position = Vector2(565.141, 347.577)
+position = Vector2(542.377, 334.307)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
@@ -93,11 +146,6 @@ offset_bottom = 282.0
 position = Vector2(598.513, 237.22)
 script = ExtResource("10_f4m0t")
 
-[node name="Sprite2D" type="Sprite2D" parent="KeyForge"]
-z_index = 1
-position = Vector2(4.46075, 2.86768)
-texture = ExtResource("11_mlc5f")
-
 [node name="InteractionPrompt" type="Label" parent="KeyForge"]
 offset_left = -13.7011
 offset_top = -9.55893
@@ -109,22 +157,29 @@ metadata/_edit_use_anchors_ = true
 position = Vector2(0.829468, 4.25662)
 shape = SubResource("RectangleShape2D_l5p50")
 
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="KeyForge"]
+sprite_frames = SubResource("SpriteFrames_3okfv")
+animation = &"unlockkey"
+frame = 5
+frame_progress = 1.0
+
 [node name="SpawnPoint" type="Marker2D" parent="."]
 position = Vector2(484.088, 330.241)
 
 [node name="HarvestBinUI" parent="." instance=ExtResource("14_icrk5")]
+visible = false
 
 [node name="HarvestBin" type="Area2D" parent="."]
-position = Vector2(687.225, 387.656)
+position = Vector2(975.518, 247.117)
 script = ExtResource("12_mlc5f")
 
 [node name="Sprite2D" type="Sprite2D" parent="HarvestBin"]
-position = Vector2(-351.225, -16.6559)
+position = Vector2(-310.518, 48.8831)
 scale = Vector2(0.765625, 0.765625)
 texture = ExtResource("13_l5p50")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HarvestBin"]
-position = Vector2(-353.225, -12.6559)
+position = Vector2(-310.518, 49.8831)
 shape = SubResource("RectangleShape2D_icrk5")
 
 [node name="CropControlCenter" type="Area2D" parent="."]

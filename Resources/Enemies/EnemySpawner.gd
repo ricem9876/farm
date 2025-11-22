@@ -3,7 +3,7 @@
 # UPDATED: Includes Crop Control Center spawn reduction
 extends Node2D
 
-@export var spawn_enabled: bool = true
+@export var spawn_enabled: bool = false  # Start disabled, farm.gd will enable after delay
 @export var max_enemies: int = 15
 @export var spawn_interval: float = 5.0
 @export var total_enemies: int = 15
@@ -462,6 +462,7 @@ func set_spawn_enabled(enabled: bool):
 
 func start_spawning():
 	print("start_spawning() called - mode: ", spawn_mode, " | total: ", total_enemies)
+	spawn_enabled = true
 	if spawn_mode == "all_at_once":
 		_spawn_all_enemies_immediately()
 

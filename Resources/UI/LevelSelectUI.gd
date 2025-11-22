@@ -379,7 +379,12 @@ func _on_level_selected(level_data: Dictionary, level_num: int):
 			print("✓ Save data loaded into pending_load_data")
 	
 	close()
-	get_tree().change_scene_to_file(level_data.scene)
+	
+	# Use fade transition if available, otherwise just change scene
+	if SceneTransition:
+		SceneTransition.fade_to_scene(level_data.scene)
+	else:
+		get_tree().change_scene_to_file(level_data.scene)
 
 func _on_back_pressed():
 	close()

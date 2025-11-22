@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://1q5yvjcmhl5p"]
 
-[ext_resource type="Texture2D" uid="uid://dxi25ed7vvpsx" path="res://Resources/Map/Objects/book.png" id="1_bxmwb"]
 [ext_resource type="Script" uid="uid://d2jfnnkqrqdm6" path="res://Resources/Map/Objects/RecordsBook.gd" id="1_x8nb0"]
+[ext_resource type="Texture2D" uid="uid://b5hptf2jfrx3m" path="res://Resources/Map/recordbook.png" id="2_ho1n3"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_x8nb0"]
 size = Vector2(50.5, 38)
@@ -10,12 +10,12 @@ size = Vector2(50.5, 38)
 script = ExtResource("1_x8nb0")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-position = Vector2(1.125, 1.3125)
-scale = Vector2(0.152344, 0.192797)
-texture = ExtResource("1_bxmwb")
+position = Vector2(10.3437, 9.11387)
+scale = Vector2(0.728516, 0.680383)
+texture = ExtResource("2_ho1n3")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(1, -1)
+position = Vector2(7, 7)
 shape = SubResource("RectangleShape2D_x8nb0")
 
 [node name="InteractionPrompt" type="Label" parent="."]

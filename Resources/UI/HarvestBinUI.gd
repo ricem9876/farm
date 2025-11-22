@@ -516,6 +516,10 @@ func _on_sell_pressed():
 		var coin_item = _create_coin_item()
 		inventory_manager.add_item(coin_item, total_coins)
 		
+		# Play sell sound effect
+		if AudioManager:
+			AudioManager.play_crop_sell()
+		
 		print("✓ Sold crops for ", total_coins, " coins")
 		
 		# Auto-save after selling

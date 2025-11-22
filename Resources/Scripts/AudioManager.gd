@@ -16,6 +16,8 @@ var farm_music: AudioStream  # Will hold the randomly selected track
 var bullet_shot_sfx = preload("uid://dquw0twe5s2nt")
 var chest_open_sfx = preload("uid://ch3tfyud7hwgy")
 var tokens_pouring_sfx = preload("uid://y3k1casqjury")
+var key_forge_sfx = preload("uid://dcoyacon3ej4t")
+var crop_sell_sfx = preload("uid://bryvi3ui7kg5e")
 
 # Reference to the AudioStreamPlayer
 var music_player: AudioStreamPlayer
@@ -81,6 +83,14 @@ func play_chest_open():
 # Play tokens pouring sound
 func play_tokens_pouring():
 	play_sfx(tokens_pouring_sfx)
+
+# Play key forge crafting sound
+func play_key_forge():
+	play_sfx(key_forge_sfx)
+
+# Play crop selling sound
+func play_crop_sell():
+	play_sfx(crop_sell_sfx)
 
 # Set music volume (linear, 0.0 to 1.0)
 func set_music_volume(linear_volume: float):

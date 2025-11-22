@@ -432,8 +432,14 @@ func _on_craft_harvest_key_pressed():
 				var beam_manager = get_node("/root/ChestBeamManager")
 				beam_manager.notify_key_acquired("harvest")
 			
-			# Refresh the UI to update quantities
-			_populate_recipe()
+			# Close the UI first
+			visible = false
+			forge_closed.emit()
+			print("Harvest Key Forge UI closed after crafting")
+			
+			# Tell the KeyForge to play the unlock animation
+			if key_forge.has_method("play_unlock_animation"):
+				key_forge.play_unlock_animation()
 		else:
 			print("✗ Failed to craft Harvest Key")
 	else:

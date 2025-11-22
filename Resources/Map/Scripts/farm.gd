@@ -357,8 +357,10 @@ func _configure_enemy_spawner():
 	print("  - spawn_mode: ", settings.get("spawn_mode", "gradual"))
 	print("  - boss_enabled: ", settings.get("boss_enabled", false))
 	
-	# CRITICAL: Start spawning
+	# CRITICAL: Start spawning after a delay to let the scene fully load
 	if enemy_spawner.has_method("start_spawning"):
+		print("🚀 Starting enemy spawner in 3 seconds...")
+		await get_tree().create_timer(3.0).timeout
 		print("🚀 Calling enemy_spawner.start_spawning()...")
 		enemy_spawner.start_spawning()
 		print("✓ Spawner started!")

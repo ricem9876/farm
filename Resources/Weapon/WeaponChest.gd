@@ -17,13 +17,42 @@ func _ready():
 	if prompt_label:
 		prompt_label.visible = false
 		prompt_label.text = interaction_prompt
+		_style_prompt_label()
+
+func _style_prompt_label():
+	if not prompt_label:
+		return
+	
+	# Cozy tan theme colors
+	var tan_bg = Color(0.82, 0.71, 0.55, 0.95)
+	var dark_brown = Color(0.35, 0.25, 0.15)
+	var border_brown = Color(0.55, 0.40, 0.25)
+	
+	# Create styled background
+	var style = StyleBoxFlat.new()
+	style.bg_color = tan_bg
+	style.border_color = border_brown
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(4)
+	style.content_margin_left = 6
+	style.content_margin_right = 6
+	style.content_margin_top = 3
+	style.content_margin_bottom = 3
+	
+	prompt_label.add_theme_stylebox_override("normal", style)
+	prompt_label.add_theme_color_override("font_color", dark_brown)
+	prompt_label.add_theme_font_size_override("font_size", 10)
+	
+	# Center above the chest
+	prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	prompt_label.position.x = -prompt_label.size.x / 2
+	prompt_label.position.y = -40  # Adjust based on your sprite height
 
 func _input(event):
 	if player_nearby and event.is_action_pressed("interact"):
 		open_storage()
 
 func _on_body_entered(body):
-	# Check if it's the player by name or if it's in the "player" group
 	if body.name == "player" or body.is_in_group("player"):
 		player_nearby = true
 		if prompt_label:
@@ -31,7 +60,6 @@ func _on_body_entered(body):
 		print("Player entered weapon chest area")
 
 func _on_body_exited(body):
-	# Check if it's the player by name or if it's in the "player" group
 	if body.name == "player" or body.is_in_group("player"):
 		player_nearby = false
 		if prompt_label:

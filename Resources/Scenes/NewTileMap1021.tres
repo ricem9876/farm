@@ -1,4 +1,4 @@
-[gd_resource type="TileSet" load_steps=59 format=3 uid="uid://ccqsae0bpe6xj"]
+[gd_resource type="TileSet" load_steps=61 format=3 uid="uid://ccqsae0bpe6xj"]
 
 [ext_resource type="Texture2D" uid="uid://bvh2ycvmy85ke" path="res://Resources/Map/grass.png" id="1_cx5my"]
 [ext_resource type="Texture2D" uid="uid://daijsmk2q45oc" path="res://Resources/Map/Tilesets/PixelCrawler/Floors_Tiles.png" id="1_gm17b"]
@@ -26,6 +26,7 @@
 [ext_resource type="Texture2D" uid="uid://dyhuj27n6q0dg" path="res://Resources/Map/Tilesets/PixelCrawler/Trees/Model_03/Size_03-export.png" id="26_xct6h"]
 [ext_resource type="Texture2D" uid="uid://drjch3mct0iyq" path="res://Resources/Map/Tilesets/PixelCrawler/Trees/Model_03/Size_03.png" id="27_31o0d"]
 [ext_resource type="Texture2D" uid="uid://cmi0cdylcmk62" path="res://Resources/Map/Tilesets/PixelCrawler/Trees/Model_03/Size_04-export-export.png" id="28_rw08y"]
+[ext_resource type="Texture2D" uid="uid://7geoescibfgq" path="res://Resources/Map/haybale.png" id="29_ory5k"]
 [ext_resource type="Texture2D" uid="uid://bshcp48q2e42t" path="res://Resources/Map/Tilesets/PixelCrawler/Trees/Model_03/Size_04-export.png" id="29_rj2no"]
 [ext_resource type="Texture2D" uid="uid://ch57e5i7r47x" path="res://Resources/Map/Tilesets/PixelCrawler/Trees/Model_03/Size_04.png" id="30_wlnsy"]
 [ext_resource type="Texture2D" uid="uid://d3aba68orwao0" path="res://Resources/Map/Tilesets/PixelCrawler/Trees/Model_03/Size_05.png" id="31_uqdrx"]
@@ -6414,6 +6415,21 @@ texture = ExtResource("30_wlnsy")
 14:25/0 = 0
 15:25/0 = 0
 
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_jlg8n"]
+texture = ExtResource("29_ory5k")
+0:1/0 = 0
+1:1/0 = 0
+2:1/0 = 0
+3:1/0 = 0
+0:2/0 = 0
+1:2/0 = 0
+2:2/0 = 0
+3:2/0 = 0
+0:3/0 = 0
+1:3/0 = 0
+2:3/0 = 0
+3:3/0 = 0
+
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_exlrt"]
 texture = ExtResource("31_uqdrx")
 2:0/0 = 0
@@ -6907,3 +6923,4 @@ sources/0 = SubResource("TileSetAtlasSource_n22rl")
 sources/1 = SubResource("TileSetAtlasSource_3sl1c")
 sources/2 = SubResource("TileSetAtlasSource_wbgu2")
 sources/3 = SubResource("TileSetAtlasSource_ory5k")
+sources/4 = SubResource("TileSetAtlasSource_jlg8n")

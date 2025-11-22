@@ -9,6 +9,7 @@ class_name KeyForge
 @onready var sprite = $Sprite2D if has_node("Sprite2D") else null
 @onready var collision_shape = $CollisionShape2D if has_node("CollisionShape2D") else null
 @onready var interaction_prompt = $InteractionPrompt if has_node("InteractionPrompt") else null
+@onready var animated_sprite = $AnimatedSprite2D if has_node("AnimatedSprite2D") else null
 
 var player_in_area: bool = false
 var player_ref: Node2D
@@ -34,19 +35,56 @@ func _ready():
 	if interaction_prompt:
 		interaction_prompt.text = "Press E to use " + forge_name
 		interaction_prompt.visible = false
+		_style_prompt()
 	
 	print("Key Forge initialized - Harvest Key Recipe: 25 of each vegetable")
+
+func _style_prompt():
+	if not interaction_prompt:
+		print("ERROR: No interaction prompt found!")
+		return
+	
+	# Cozy tan theme colors
+	var tan_bg = Color(0.82, 0.71, 0.55, 0.95)
+	var dark_brown = Color(0.35, 0.25, 0.15)
+	var border_brown = Color(0.55, 0.40, 0.25)
+	
+	var pixel_font = load("res://Resources/Fonts/yoster.ttf")
+	interaction_prompt.add_theme_font_override("font", pixel_font)
+	interaction_prompt.add_theme_font_size_override("font_size", 12)
+	interaction_prompt.add_theme_color_override("font_color", dark_brown)
+	
+	var background = StyleBoxFlat.new()
+	background.bg_color = tan_bg
+	background.border_color = border_brown
+	background.set_border_width_all(2)
+	background.set_corner_radius_all(4)
+	background.content_margin_left = 8
+	background.content_margin_right = 8
+	background.content_margin_top = 4
+	background.content_margin_bottom = 4
+	interaction_prompt.add_theme_stylebox_override("normal", background)
+	
+	interaction_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	interaction_prompt.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	
+	# Position above the forge
+	interaction_prompt.position = Vector2(-interaction_prompt.size.x / 2, -50)
+	interaction_prompt.z_index = 100
+	
+	print("Prompt styled, size: ", interaction_prompt.size, " pos: ", interaction_prompt.position)
 
 func _input(event):
 	if player_in_area and event.is_action_pressed("interact"):
 		open_crafting_menu()
-
+		
 func _on_body_entered(body):
-	if body.has_method("get_inventory_manager"):
+	if body.is_in_group("player") or body.name == "player":
 		player_ref = body
 		player_in_area = true
 		if interaction_prompt:
 			interaction_prompt.visible = true
+		print("Player entered Key Forge area")
 
 func _on_body_exited(body):
 	if body == player_ref:
@@ -54,6 +92,7 @@ func _on_body_exited(body):
 		player_in_area = false
 		if interaction_prompt:
 			interaction_prompt.visible = false
+		print("Player left Key Forge area")
 
 func open_crafting_menu():
 	"""Opens the Key Forge UI"""
@@ -172,3 +211,15 @@ func show_message(text: String):
 	"""Display a message to the player"""
 	print("KeyForge: ", text)
 	# TODO: Implement proper UI notification
+
+func play_unlock_animation():
+	"""Play the unlock key animation and sound effect"""
+	# Play sound effect
+	if AudioManager:
+		AudioManager.play_key_forge()
+	
+	# Play animation
+	if animated_sprite:
+		animated_sprite.frame = 0
+		animated_sprite.play("unlockkey")
+		print("✓ Playing KeyForge unlock animation")

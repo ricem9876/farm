@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dcd1dh350wbi4"
-path="res://.godot/imported/keyforge.png-309a6e3f4ece013278b530cd43a54953.ctex"
+uid="uid://7geoescibfgq"
+path="res://.godot/imported/haybale.png-2233b88ba938bf50fef03aa268b36b3f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Resources/Map/Objects/keyforge.png"
-dest_files=["res://.godot/imported/keyforge.png-309a6e3f4ece013278b530cd43a54953.ctex"]
+source_file="res://Resources/Map/haybale.png"
+dest_files=["res://.godot/imported/haybale.png-2233b88ba938bf50fef03aa268b36b3f.ctex"]
 
 [params]
 
