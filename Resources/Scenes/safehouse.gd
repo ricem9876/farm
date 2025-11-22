@@ -222,8 +222,30 @@ func _ready():
 	if TutorialManager and TutorialManager.has_method("is_tutorial_completed"):
 		if not TutorialManager.is_tutorial_completed("intro_tutorial"):
 			_setup_intro_tutorial()
+			
+	if is_new_game and GameManager.current_save_slot >= 0:
+		print("\n=== CREATING INITIAL SAVE FOR NEW GAME ===")
+		var player_data = SaveSystem.collect_player_data(player)
+		SaveSystem.save_game(GameManager.current_save_slot, player_data)
+		print("=== INITIAL SAVE CREATED ===\n")
+		
+	call_deferred("_check_apply_permadeath")
 	
 	print("=== SAFEHOUSE SETUP COMPLETE ===\n")
+
+func _input(event):
+	"""Handle input for debug cheats"""
+	# DEBUG CHEAT: Unlock next level with F4
+	if event.is_action_pressed("level_unlock"):
+		_debug_unlock_next_level()
+
+func _debug_unlock_next_level():
+	"""Debug cheat: Unlock the next level"""
+	var level_select_ui = get_tree().get_first_node_in_group("level_select_ui")
+	if level_select_ui and level_select_ui.has_method("debug_unlock_next_level"):
+		level_select_ui.debug_unlock_next_level()
+	else:
+		print("WARNING: Could not find LevelSelectUI to unlock level")
 
 func _reset_global_systems_for_new_game():
 	"""Reset all autoload singletons for a fresh new game"""
@@ -374,3 +396,25 @@ func _setup_intro_tutorial():
 		print("✓ Intro tutorial initialized")
 	else:
 		print("ERROR: IntroTutorial autoload not found!")
+		
+func _check_apply_permadeath():
+	"""Apply permadeath mode to a newly created save"""
+	if GameManager.is_starting_permadeath and GameManager.current_save_slot >= 0:
+		print("\n=== APPLYING PERMADEATH TO NEW SAVE ===")
+		
+		# Make sure the initial save exists first
+		if SaveSystem.save_exists(GameManager.current_save_slot):
+			if SaveSystem.start_permadeath_run(GameManager.current_save_slot):
+				print("✓ Permadeath mode successfully applied!")
+			else:
+				print("✗ Failed to apply permadeath mode")
+		else:
+			print("⚠ Save doesn't exist yet - will retry")
+			# If save doesn't exist yet, try again in a moment
+			await get_tree().create_timer(0.5).timeout
+			if SaveSystem.save_exists(GameManager.current_save_slot):
+				SaveSystem.start_permadeath_run(GameManager.current_save_slot)
+		
+		# Clear the flag so it doesn't apply again
+		GameManager.is_starting_permadeath = false
+		print("=== PERMADEATH SETUP COMPLETE ===\n")

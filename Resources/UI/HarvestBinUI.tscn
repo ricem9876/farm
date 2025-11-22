@@ -7,9 +7,9 @@ script = ExtResource("1_lscub")
 
 [node name="Control" type="Control" parent="."]
 layout_mode = 3
-anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
+anchor_right = 0.03125
+anchor_bottom = 0.0390625
+metadata/_edit_use_anchors_ = true
 
 [node name="ColorRect" type="ColorRect" parent="Control"]
 layout_mode = 1

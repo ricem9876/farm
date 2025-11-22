@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3 uid="uid://death_screen_001"]
+[gd_scene load_steps=2 format=3 uid="uid://b2ki6q8k61dvy"]
 
-[ext_resource type="Script" path="res://Resources/Scenes/DeathScreen.gd" id="1_death"]
+[ext_resource type="Script" uid="uid://b60aj0rf7crf2" path="res://Resources/Scenes/DeathScreen.gd" id="1_death"]
 
 [node name="DeathScreen" type="Control"]
 process_mode = 3
@@ -42,6 +42,12 @@ theme_override_colors/font_color = Color(0.8, 0.2, 0.2, 1)
 theme_override_font_sizes/font_size = 48
 text = "YOU DIED"
 horizontal_alignment = 1
+
+[node name="MessageLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="StatsLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
 
 [node name="ButtonContainer" type="VBoxContainer" parent="VBoxContainer"]
 layout_mode = 2

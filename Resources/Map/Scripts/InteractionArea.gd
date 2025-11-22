@@ -82,9 +82,11 @@ func handle_interaction():
 			print("Opening crafting station...")
 
 func _transition_to_safehouse():
+	
 	"""Auto-save then go to safehouse"""
 	# CRITICAL: Set flag BEFORE auto-saving
 	GameManager.returning_from_farm = true
+	
 	
 	var player = get_tree().get_first_node_in_group("player")
 	
@@ -102,7 +104,7 @@ func _transition_to_safehouse():
 	
 	# Change scene (don't call GameManager.change_to_safehouse as it will save again)
 	get_tree().change_scene_to_file(GameManager.SAFEHOUSE_SCENE)
-
+	
 func _open_level_select():
 	"""Open level select UI (auto-save happens when level is selected)"""
 	var level_select = get_tree().current_scene.get_node_or_null("LevelSelectUI")

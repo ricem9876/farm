@@ -32,17 +32,23 @@ func _ready():
 func _setup_styling():
 	var pixel_font = preload("res://Resources/Fonts/yoster.ttf")
 	
+	# Farm theme colors
+	const BG_COLOR = Color(0.96, 0.93, 0.82)  # Cream background
+	const TEXT_COLOR = Color(0.05, 0.05, 0.05)  # Very dark text
+	const TITLE_COLOR = Color(0.5, 0.7, 0.4)  # Sage green
+	const BORDER_COLOR = Color(0.3, 0.2, 0.1)  # Dark brown border
+	
 	# Main background
 	if background_panel:
 		background_panel.custom_minimum_size = Vector2(1400, 1000)
 		
 		var style_box = StyleBoxFlat.new()
-		style_box.bg_color = Color(0.98, 0.94, 0.86)
+		style_box.bg_color = BG_COLOR
 		style_box.border_width_left = 8
 		style_box.border_width_right = 8
 		style_box.border_width_top = 8
 		style_box.border_width_bottom = 8
-		style_box.border_color = Color(0.45, 0.32, 0.18)
+		style_box.border_color = BORDER_COLOR
 		style_box.corner_radius_top_left = 16
 		style_box.corner_radius_top_right = 16
 		style_box.corner_radius_bottom_left = 16
@@ -52,25 +58,49 @@ func _setup_styling():
 	# Title styling
 	if title_label:
 		title_label.text = "WEAPON UPGRADES"
-		title_label.add_theme_color_override("font_color", Color(0.45, 0.32, 0.18))
+		title_label.add_theme_color_override("font_color", TITLE_COLOR)
 		title_label.add_theme_font_override("font", pixel_font)
 		title_label.add_theme_font_size_override("font_size", 56)
+		title_label.add_theme_constant_override("outline_size", 2)
+		title_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.3))
 		title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	
-	# Wood counter
+	# Harvest token counter
 	if wood_label:
-		wood_label.add_theme_color_override("font_color", Color(0.6, 0.4, 0.2))
+		wood_label.add_theme_color_override("font_color", TEXT_COLOR)
 		wood_label.add_theme_font_override("font", pixel_font)
 		wood_label.add_theme_font_size_override("font_size", 32)
 		wood_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	
-	# Close button
+	# Close button - farm themed
 	if close_button:
 		close_button.custom_minimum_size = Vector2(80, 80)
 		close_button.text = "X"
 		close_button.add_theme_font_override("font", pixel_font)
 		close_button.add_theme_font_size_override("font_size", 48)
-
+		close_button.add_theme_color_override("font_color", TEXT_COLOR)
+		
+		var btn_style = StyleBoxFlat.new()
+		btn_style.bg_color = Color(0.75, 0.5, 0.35)  # Rustic brown
+		btn_style.border_width_left = 4
+		btn_style.border_width_right = 4
+		btn_style.border_width_top = 4
+		btn_style.border_width_bottom = 4
+		btn_style.border_color = BORDER_COLOR
+		btn_style.corner_radius_top_left = 8
+		btn_style.corner_radius_top_right = 8
+		btn_style.corner_radius_bottom_left = 8
+		btn_style.corner_radius_bottom_right = 8
+		close_button.add_theme_stylebox_override("normal", btn_style)
+		
+		var btn_hover = btn_style.duplicate()
+		btn_hover.bg_color = Color(0.85, 0.6, 0.45)
+		close_button.add_theme_stylebox_override("hover", btn_hover)
+		
+		var btn_pressed = btn_style.duplicate()
+		btn_pressed.bg_color = Color(0.65, 0.4, 0.25)
+		close_button.add_theme_stylebox_override("pressed", btn_pressed)
+		
 func setup(manager: WeaponUpgradeManager, player_node: Node2D):
 	upgrade_manager = manager
 	player = player_node
@@ -127,37 +157,45 @@ func _populate_upgrades():
 		_add_spacer(40)
 
 func _add_weapon_header(weapon_type: String, font: Font):
+	const TEXT_COLOR = Color(0.05, 0.05, 0.05)
+	const BORDER_COLOR = Color(0.3, 0.2, 0.1)
+	
 	var header = Label.new()
 	header.text = weapon_type.to_upper()
 	header.add_theme_font_override("font", font)
 	header.add_theme_font_size_override("font_size", 42)
-	header.add_theme_color_override("font_color", Color(0.45, 0.32, 0.18))
+	header.add_theme_color_override("font_color", Color(0.5, 0.7, 0.4))  # Sage green
+	header.add_theme_constant_override("outline_size", 2)
+	header.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.2))
 	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	
 	var separator = HSeparator.new()
 	separator.add_theme_constant_override("separation", 8)
 	var sep_style = StyleBoxFlat.new()
-	sep_style.bg_color = Color(0.45, 0.32, 0.18)
+	sep_style.bg_color = BORDER_COLOR
 	separator.add_theme_stylebox_override("separator", sep_style)
 	
 	upgrades_container.add_child(header)
 	upgrades_container.add_child(separator)
 
 func _add_upgrade_card(upgrade: WeaponUpgrade, font: Font):
+	const BORDER_COLOR = Color(0.3, 0.2, 0.1)
+	const TEXT_COLOR = Color(0.05, 0.05, 0.05)
+	
 	# Main card panel
 	var card = PanelContainer.new()
 	card.custom_minimum_size = Vector2(1200, 120)
 	
 	var card_style = StyleBoxFlat.new()
 	if upgrade.is_purchased:
-		card_style.bg_color = Color(0.6, 0.8, 0.6, 0.5)  # Green tint
+		card_style.bg_color = Color(0.7, 0.85, 0.7)  # Light sage green
 	else:
-		card_style.bg_color = Color(0.92, 0.88, 0.78)
+		card_style.bg_color = Color(0.92, 0.88, 0.78)  # Cream
 	card_style.border_width_left = 4
 	card_style.border_width_right = 4
 	card_style.border_width_top = 4
 	card_style.border_width_bottom = 4
-	card_style.border_color = Color(0.45, 0.32, 0.18)
+	card_style.border_color = BORDER_COLOR
 	card_style.corner_radius_top_left = 12
 	card_style.corner_radius_top_right = 12
 	card_style.corner_radius_bottom_left = 12
@@ -188,7 +226,7 @@ func _add_upgrade_card(upgrade: WeaponUpgrade, font: Font):
 	name_label.text = upgrade.upgrade_name
 	name_label.add_theme_font_override("font", font)
 	name_label.add_theme_font_size_override("font_size", 36)
-	name_label.add_theme_color_override("font_color", Color(0.2, 0.5, 0.8))
+	name_label.add_theme_color_override("font_color", Color(0.3, 0.5, 0.3))  # Darker sage
 	vbox.add_child(name_label)
 	
 	# Description
@@ -196,7 +234,7 @@ func _add_upgrade_card(upgrade: WeaponUpgrade, font: Font):
 	desc_label.text = upgrade.description
 	desc_label.add_theme_font_override("font", font)
 	desc_label.add_theme_font_size_override("font_size", 28)
-	desc_label.add_theme_color_override("font_color", Color(0.3, 0.3, 0.3))
+	desc_label.add_theme_color_override("font_color", TEXT_COLOR)
 	desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(desc_label)
 	
@@ -210,7 +248,7 @@ func _add_upgrade_card(upgrade: WeaponUpgrade, font: Font):
 	cost_label.text = str(upgrade.wood_cost) + " Wood"
 	cost_label.add_theme_font_override("font", font)
 	cost_label.add_theme_font_size_override("font_size", 32)
-	cost_label.add_theme_color_override("font_color", Color(0.6, 0.4, 0.2))
+	cost_label.add_theme_color_override("font_color", TEXT_COLOR)
 	cost_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	button_container.add_child(cost_label)
 	
@@ -230,24 +268,29 @@ func _add_upgrade_card(upgrade: WeaponUpgrade, font: Font):
 		button.disabled = not can_afford
 		
 		if can_afford:
-			_style_button(button, Color(0.3, 0.7, 0.3))  # Green
+			_style_button(button, Color(0.5, 0.7, 0.4))  # Sage green
 		else:
-			_style_button(button, Color(0.5, 0.5, 0.5))  # Gray
+			_style_button(button, Color(0.7, 0.65, 0.55))  # Tan/gray
 		
 		button.pressed.connect(_on_purchase_button_pressed.bind(upgrade))
 	
 	button_container.add_child(button)
 	
 	upgrades_container.add_child(card)
-
+	
 func _style_button(button: Button, color: Color):
+	const BORDER_COLOR = Color(0.3, 0.2, 0.1)
+	const TEXT_COLOR = Color(0.05, 0.05, 0.05)
+	
+	button.add_theme_color_override("font_color", TEXT_COLOR)
+	
 	var normal = StyleBoxFlat.new()
 	normal.bg_color = color
 	normal.border_width_left = 4
 	normal.border_width_right = 4
 	normal.border_width_top = 4
 	normal.border_width_bottom = 4
-	normal.border_color = color.darkened(0.3)
+	normal.border_color = BORDER_COLOR
 	normal.corner_radius_top_left = 12
 	normal.corner_radius_top_right = 12
 	normal.corner_radius_bottom_left = 12
@@ -255,11 +298,11 @@ func _style_button(button: Button, color: Color):
 	button.add_theme_stylebox_override("normal", normal)
 	
 	var hover = normal.duplicate()
-	hover.bg_color = color.lightened(0.2)
+	hover.bg_color = color.lightened(0.15)
 	button.add_theme_stylebox_override("hover", hover)
 	
 	var pressed = normal.duplicate()
-	pressed.bg_color = color.darkened(0.2)
+	pressed.bg_color = color.darkened(0.15)
 	button.add_theme_stylebox_override("pressed", pressed)
 
 func _add_spacer(height: int):

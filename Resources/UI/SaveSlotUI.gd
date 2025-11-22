@@ -16,6 +16,10 @@ var slot_index: int = 0
 var save_data: Dictionary = {}
 var is_empty: bool = true
 
+# Farm theme colors
+const TEXT_COLOR = Color(0.05, 0.05, 0.05)
+const BORDER_COLOR = Color(0.3, 0.2, 0.1)
+
 func _ready():
 	select_button.pressed.connect(_on_select_pressed)
 	delete_button.pressed.connect(_on_delete_pressed)
@@ -39,102 +43,127 @@ func _update_display():
 	# Slot number
 	slot_label.text = "SAVE SLOT " + str(slot_index + 1)
 	slot_label.add_theme_font_override("font", pixel_font)
-	slot_label.add_theme_font_size_override("font_size", 24)
+	slot_label.add_theme_font_size_override("font_size", 28)
+	slot_label.add_theme_color_override("font_color", TEXT_COLOR)
 	
 	if is_empty:
-		# Empty slot
+		# Empty slot - light tan/cream
 		info_label.text = "Empty Slot"
+		info_label.add_theme_color_override("font_color", Color(0.4, 0.4, 0.4))
 		timestamp_label.text = ""
 		select_button.text = "NEW GAME"
 		delete_button.visible = false
-		
-		# Gray out style with shadow
+		if SaveSystem.is_permadeath_save(slot_index):
+			info_label.text += " [PERMADEATH]"
+			info_label.add_theme_color_override("font_color", Color(0.8, 0.2, 0.2))  # 
+		# Light cream style
 		var style = StyleBoxFlat.new()
-		style.bg_color = Color(0.3, 0.3, 0.3)
-		style.border_width_left = 2
-		style.border_width_right = 2
-		style.border_width_top = 2
-		style.border_width_bottom = 2
-		style.border_color = Color(0.5, 0.5, 0.5)
-		# Add shadow
-		style.shadow_color = Color(0, 0, 0, 0.5)
-		style.shadow_size = 4
+		style.bg_color = Color(0.92, 0.88, 0.78)  # Light cream
+		style.border_width_left = 3
+		style.border_width_right = 3
+		style.border_width_top = 3
+		style.border_width_bottom = 3
+		style.border_color = BORDER_COLOR
+		style.corner_radius_top_left = 8
+		style.corner_radius_top_right = 8
+		style.corner_radius_bottom_left = 8
+		style.corner_radius_bottom_right = 8
+		style.shadow_color = Color(0, 0, 0, 0.3)
+		style.shadow_size = 3
 		style.shadow_offset = Vector2(2, 2)
 		add_theme_stylebox_override("panel", style)
+		
+		# Style select button for new game - Sage green
+		_style_button(select_button, Color(0.5, 0.7, 0.4))
 	else:
-		# Existing save
+		# Existing save - darker cream with sage green tint
 		var player_data = save_data.get("player", {})
 		var level = player_data.get("level", 1)
 		var health = player_data.get("health", 100)
 		var max_health = player_data.get("max_health", 100)
-		# Convert to proper types with validation
 		var health_int = int(float(health)) if health != null else 100
 		var max_health_int = int(float(max_health)) if max_health != null else 100
+		
 		info_label.text = "Level " + str(level) + " | HP: " + str(health_int) + "/" + str(max_health_int)
+		info_label.add_theme_color_override("font_color", TEXT_COLOR)
 		timestamp_label.text = save_data.get("timestamp", "Unknown")
 		select_button.text = "CONTINUE"
 		delete_button.visible = true
 		
-		# Active style with shadow
+		# Sage green tinted style
 		var style = StyleBoxFlat.new()
-		style.bg_color = Color(0.2, 0.4, 0.3)
-		style.border_width_left = 2
-		style.border_width_right = 2
-		style.border_width_top = 2
-		style.border_width_bottom = 2
-		style.border_color = Color(0.3, 0.7, 0.4)
-		# Add shadow
-		style.shadow_color = Color(0, 0, 0, 0.5)
-		style.shadow_size = 4
+		style.bg_color = Color(0.82, 0.88, 0.78)  # Light sage tint
+		style.border_width_left = 3
+		style.border_width_right = 3
+		style.border_width_top = 3
+		style.border_width_bottom = 3
+		style.border_color = Color(0.4, 0.6, 0.4)  # Sage green border
+		style.corner_radius_top_left = 8
+		style.corner_radius_top_right = 8
+		style.corner_radius_bottom_left = 8
+		style.corner_radius_bottom_right = 8
+		style.shadow_color = Color(0, 0, 0, 0.3)
+		style.shadow_size = 3
 		style.shadow_offset = Vector2(2, 2)
 		add_theme_stylebox_override("panel", style)
+		
+		# Style buttons
+		_style_button(select_button, Color(0.5, 0.7, 0.4))  # Sage green
+		_style_button(delete_button, Color(0.75, 0.5, 0.35))  # Rustic brown
 	
 	# Style labels
 	info_label.add_theme_font_override("font", pixel_font)
-	info_label.add_theme_font_size_override("font_size", 16)
-	timestamp_label.add_theme_font_override("font", pixel_font)
-	timestamp_label.add_theme_font_size_override("font_size", 12)
-	timestamp_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	info_label.add_theme_font_size_override("font_size", 20)
 	
-	# Style buttons
-	select_button.add_theme_font_override("font", pixel_font)
-	delete_button.add_theme_font_override("font", pixel_font)
+	timestamp_label.add_theme_font_override("font", pixel_font)
+	timestamp_label.add_theme_font_size_override("font_size", 16)
+	timestamp_label.add_theme_color_override("font_color", Color(0.4, 0.4, 0.4))
+
+func _style_button(button: Button, color: Color):
+	"""Apply farm theme styling to a button"""
+	var pixel_font = preload("res://Resources/Fonts/yoster.ttf")
+	
+	button.add_theme_font_override("font", pixel_font)
+	button.add_theme_font_size_override("font_size", 20)
+	button.add_theme_color_override("font_color", TEXT_COLOR)
+	button.custom_minimum_size = Vector2(150, 50)
+	
+	var btn_style = StyleBoxFlat.new()
+	btn_style.bg_color = color
+	btn_style.border_width_left = 3
+	btn_style.border_width_right = 3
+	btn_style.border_width_top = 3
+	btn_style.border_width_bottom = 3
+	btn_style.border_color = BORDER_COLOR
+	btn_style.corner_radius_top_left = 6
+	btn_style.corner_radius_top_right = 6
+	btn_style.corner_radius_bottom_left = 6
+	btn_style.corner_radius_bottom_right = 6
+	button.add_theme_stylebox_override("normal", btn_style)
+	
+	var hover_style = btn_style.duplicate()
+	hover_style.bg_color = color.lightened(0.15)
+	button.add_theme_stylebox_override("hover", hover_style)
+	
+	var pressed_style = btn_style.duplicate()
+	pressed_style.bg_color = color.darkened(0.15)
+	button.add_theme_stylebox_override("pressed", pressed_style)
 
 func _on_select_pressed():
 	slot_selected.emit(slot_index)
 
 func _on_delete_pressed():
-	# Create a confirmation dialog
-	var confirm_dialog = ConfirmationDialog.new()
-	confirm_dialog.dialog_text = "Are you sure you want to delete this save?\nThis action cannot be undone!"
-	confirm_dialog.title = "Delete Save"
+	# Create our custom styled dialog
+	var ConfirmDeleteDialog = load("res://Resources/UI/ConfirmDeleteDialog.gd")
+	var dialog = ConfirmDeleteDialog.new()
+	add_child(dialog)
 	
-	# Style the dialog with pixel font
-	var pixel_font = preload("res://Resources/Fonts/yoster.ttf")
-	confirm_dialog.add_theme_font_override("font", pixel_font)
-	
-	# Connect the confirmed signal
-	confirm_dialog.confirmed.connect(func():
-		# Actually delete the save
+	dialog.confirmed.connect(func():
 		if SaveSystem.delete_save(slot_index):
-			# CRITICAL: Reset all global systems
 			SaveSystem.reset_global_systems_for_deleted_save()
-			
-			# Refresh this slot's display to show as empty
 			refresh()
-			
-			# Emit the signal to notify parent (if needed)
 			slot_deleted.emit(slot_index)
-			
 			print("Save slot ", slot_index, " deleted and systems reset")
 	)
 	
-	# Add dialog to scene tree and show
-	add_child(confirm_dialog)
-	confirm_dialog.popup_centered()
-	
-	# Clean up dialog after it's closed
-	confirm_dialog.visibility_changed.connect(func():
-		if not confirm_dialog.visible:
-			confirm_dialog.queue_free()
-	)
+	dialog.show_dialog("Are you sure you want to delete this save?\nThis action cannot be undone!")

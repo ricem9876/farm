@@ -370,20 +370,31 @@ func _die():
 	print("Player died!")
 	StatsTracker.record_death()
 	
-	# Auto-save current state before death (for retry functionality)
+	# Check if this is a permadeath run
+	var is_permadeath = false
 	if GameManager.current_save_slot >= 0:
-		print("\n=== AUTO-SAVING BEFORE DEATH ===")
+		is_permadeath = SaveSystem.is_permadeath_save(GameManager.current_save_slot)
+	
+	# ALWAYS auto-save for normal mode
+	# For permadeath, we still save (so death screen can record stats), but won't restore
+	if GameManager.current_save_slot >= 0:
+		if is_permadeath:
+			print("\n=== PERMADEATH RUN - Final save before death screen ===")
+		else:
+			print("\n=== AUTO-SAVING BEFORE DEATH (for retry) ===")
+		
 		var player_data = SaveSystem.collect_player_data(self)
 		SaveSystem.save_game(GameManager.current_save_slot, player_data)
-		print("=== AUTO-SAVE COMPLETE ===\n")
+		print("=== SAVE COMPLETE ===\n")
 	else:
-		print("⚠ No active save slot - retry will start fresh")
+		print("⚠ No active save slot")
 	
 	# Save the current scene path before switching
 	GameManager.last_scene = get_tree().current_scene.scene_file_path
 	
 	# Switch to death screen
 	get_tree().change_scene_to_file("res://Resources/Scenes/DeathScreen.tscn")
+
 
 # === ITEM COLLECTION METHODS ===
 
@@ -608,6 +619,10 @@ func _input(event):
 	# DEBUG CHEAT: Top-up resources with F7
 	if event.is_action_pressed("topup"):
 		_debug_topup_resources()
+	
+	# DEBUG CHEAT: Top-up experience with F8
+	if event.is_action_pressed("experience_topup"):
+		_debug_topup_experience()
 		
 func _is_skill_tree_allowed() -> bool:
 	if not has_node("LocationStateMachine"):
@@ -671,6 +686,28 @@ func _debug_topup_resources():
 	
 	print("=== TOPUP COMPLETE ===")
 
+func _debug_topup_experience():
+	"""Debug cheat: Grant enough XP to reach next level"""
+	if not level_system:
+		print("DEBUG: Cannot add XP - no level system")
+		return
+	
+	var xp_needed = level_system.experience_to_next_level - level_system.current_experience
+	if xp_needed <= 0:
+		# Already at or past the threshold, add next level's worth
+		xp_needed = level_system.experience_to_next_level
+	
+	print("\n=== DEBUG: TOPPING UP EXPERIENCE ===")
+	print("Current Level: ", level_system.current_level)
+	print("Current XP: ", level_system.current_experience, "/", level_system.experience_to_next_level)
+	print("Granting: ", xp_needed, " XP")
+	
+	gain_experience(xp_needed)
+	
+	print("New Level: ", level_system.current_level)
+	print("New XP: ", level_system.current_experience, "/", level_system.experience_to_next_level)
+	print("=== XP TOPUP COMPLETE ===")
+
 func _debug_inventory_after_load():
 	"""Debug function to check inventory state after loading"""
 	if not inventory_manager:
@@ -732,5 +769,14 @@ func apply_fatigue():
 	print("  Current health adjusted to: ", current_health)
 	
 	# Refresh HUD to show new values
+	if has_method("refresh_hud"):
+		refresh_hud()
+		
+func restore_full_health():
+	"""Restore player to full health - called when entering safehouse"""
+	current_health = max_health
+	print("✓ Health restored to full: ", current_health, "/", max_health)
+	
+	# Refresh HUD to show updated health
 	if has_method("refresh_hud"):
 		refresh_hud()

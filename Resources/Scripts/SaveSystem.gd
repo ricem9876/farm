@@ -4,6 +4,7 @@ extends Node
 
 const SAVE_DIR = "user://saves/"
 const MAX_SAVES = 3
+const PERMADEATH_RECORDS_FILE = "user://permadeath_records.json"
 
 signal save_completed(slot: int)
 signal load_completed(slot: int)
@@ -139,6 +140,7 @@ func collect_player_data(player: Node2D) -> Dictionary:
 	var data = {
 		"level": 1,
 		"experience": 0,
+		"experience_to_next_level": 80,  # ADDED: Save scaled XP requirement
 		"skill_points": 0,
 		"stats": {},
 		# Position will be set conditionally below - not here!
@@ -149,6 +151,8 @@ func collect_player_data(player: Node2D) -> Dictionary:
 		"weapon_storage": [],
 		"unlocked_weapons": ["Pistol"],  # Save unlocked weapons
 		"weapon_upgrades": {},  # Save weapon upgrades
+		"permadeath_mode": false,
+		"run_start_time" : "",
 		# NEW: Infinite level progression tracking
 		"highest_level_reached": 1,
 		"completed_levels": [],  # Dynamic array - grows with progression
@@ -183,6 +187,7 @@ func collect_player_data(player: Node2D) -> Dictionary:
 	if player.level_system:
 		data.level = player.level_system.current_level
 		data.experience = player.level_system.current_experience
+		data.experience_to_next_level = player.level_system.experience_to_next_level  # CRITICAL: Save the scaled XP requirement
 		data.skill_points = player.level_system.skill_points
 		data.stats = {
 			"health": player.level_system.points_in_health,
@@ -194,6 +199,7 @@ func collect_player_data(player: Node2D) -> Dictionary:
 			"crit_damage": player.level_system.points_in_crit_damage
 		}
 		data.max_health = player.level_system.max_health
+		print("  ✓ Saved XP: ", data.experience, "/", data.experience_to_next_level, " (level ", data.level, ")")
 	
 	# Health
 	data.health = player.current_health
@@ -289,6 +295,10 @@ func collect_player_data(player: Node2D) -> Dictionary:
 			if existing_save.player.has("unlock_dialogues_shown"):
 				data.unlock_dialogues_shown = existing_save.player.unlock_dialogues_shown
 				print("  ✓ Preserved unlock_dialogues_shown from existing save: ", data.unlock_dialogues_shown.size(), " levels")
+			if existing_save.player.has("permadeath_mode"):
+				data.permadeath_mode = existing_save.player.permadeath_mode
+			if existing_save.player.has("run_start_time"):
+				data.run_start_time = existing_save.player.run_start_time
 	
 	# DEPRECATED: Remove old unlocked_levels if it exists (migration path)
 	# The new system uses highest_level_reached + completed_levels instead
@@ -325,7 +335,9 @@ func apply_player_data(player: Node2D, data: Dictionary):
 	if player.level_system and data.has("level"):
 		player.level_system.current_level = data.get("level", 1)
 		player.level_system.current_experience = data.get("experience", 0)
+		player.level_system.experience_to_next_level = data.get("experience_to_next_level", 80)  # CRITICAL: Restore scaled XP requirement
 		player.level_system.skill_points = data.get("skill_points", 0)
+		print("  ✓ Restored XP: ", player.level_system.current_experience, "/", player.level_system.experience_to_next_level, " (level ", player.level_system.current_level, ")")
 		
 		if data.has("stats") and data.stats != null:
 			var stats = data.stats
@@ -493,3 +505,131 @@ func _create_weapon_from_name(weapon_name: String) -> WeaponItem:
 		_:
 			print("Unknown weapon: ", weapon_name)
 			return null
+
+func start_permadeath_run(slot: int) -> bool:
+	"""Mark a save slot as permadeath mode"""
+	print("\n=== STARTING PERMADEATH RUN ===")
+	print("Slot: ", slot)
+	
+	var save_data = get_save_data(slot)
+	if save_data.is_empty():
+		print("ERROR: Save data is empty!")
+		return false
+	
+	print("Save data exists: ", not save_data.is_empty())
+	print("Has player key: ", save_data.has("player"))
+	
+	if save_data.has("player"):
+		save_data.player.permadeath_mode = true
+		save_data.player.run_start_time = Time.get_datetime_string_from_system()
+		
+		print("Set permadeath_mode: ", save_data.player.permadeath_mode)
+		print("Set run_start_time: ", save_data.player.run_start_time)
+		
+		var file = FileAccess.open(get_save_file_path(slot), FileAccess.WRITE)
+		if file:
+			file.store_string(JSON.stringify(save_data, "\t"))
+			file.close()
+			print("✓ Permadeath mode SAVED to file")
+			
+			# Verify it was written
+			var verify = get_save_data(slot)
+			print("Verification - permadeath_mode in file: ", verify.player.get("permadeath_mode", false))
+			print("=== PERMADEATH RUN STARTED ===\n")
+			return true
+		else:
+			print("ERROR: Could not open file for writing!")
+	else:
+		print("ERROR: Save data has no player key!")
+	
+	return false
+
+func is_permadeath_save(slot: int) -> bool:
+	"""Check if a save slot is in permadeath mode"""
+	var save_data = get_save_data(slot)
+	if save_data.is_empty():
+		return false
+	
+	if save_data.has("player") and save_data.player.has("permadeath_mode"):
+		return save_data.player.permadeath_mode
+	
+	return false
+
+func save_permadeath_record(slot: int) -> bool:
+	"""Save the final stats of a permadeath run before deleting"""
+	var save_data = get_save_data(slot)
+	if save_data.is_empty():
+		return false
+	
+	if not save_data.has("player"):
+		return false
+	
+	var player_data = save_data.player
+	
+	# Create record entry
+	var record = {
+		"character_id": player_data.get("character_id", "hero"),
+		"final_level": player_data.get("level", 1),
+		"highest_level_reached": player_data.get("highest_level_reached", 1),
+		"completed_levels": player_data.get("completed_levels", []).size(),
+		"total_kills": 0,
+		"total_damage_dealt": 0,
+		"total_coins_earned": 0,
+		"run_start_time": player_data.get("run_start_time", "Unknown"),
+		"run_end_time": Time.get_datetime_string_from_system(),
+		"timestamp": Time.get_datetime_string_from_system()
+	}
+	
+	# Get stats from StatsTracker if available
+	if player_data.has("player_stats"):
+		var stats = player_data.player_stats
+		record.total_kills = stats.get("total_kills", 0)
+		record.total_damage_dealt = stats.get("total_damage_dealt", 0)
+		record.total_coins_earned = stats.get("total_coins", 0)
+	
+	# Load existing records
+	var records = load_permadeath_records()
+	records.append(record)
+	
+	# Sort by highest level reached (descending)
+	records.sort_custom(func(a, b): return a.highest_level_reached > b.highest_level_reached)
+	
+	# Keep only top 100 records
+	if records.size() > 100:
+		records.resize(100)
+	
+	# Save records
+	var file = FileAccess.open(PERMADEATH_RECORDS_FILE, FileAccess.WRITE)
+	if file:
+		file.store_string(JSON.stringify(records, "\t"))
+		file.close()
+		print("✓ Permadeath record saved: Level ", record.final_level, ", Highest: ", record.highest_level_reached)
+		return true
+	
+	return false
+
+func load_permadeath_records() -> Array:
+	"""Load all permadeath records for leaderboard"""
+	if not FileAccess.file_exists(PERMADEATH_RECORDS_FILE):
+		return []
+	
+	var file = FileAccess.open(PERMADEATH_RECORDS_FILE, FileAccess.READ)
+	if not file:
+		return []
+	
+	var json_string = file.get_as_text()
+	file.close()
+	
+	var json = JSON.new()
+	if json.parse(json_string) == OK:
+		return json.data
+	
+	return []
+
+func get_best_permadeath_run() -> Dictionary:
+	"""Get the player's best permadeath run"""
+	var records = load_permadeath_records()
+	if records.is_empty():
+		return {}
+	
+	return records[0]  # Already sorted by highest level

@@ -61,6 +61,9 @@ func gain_experience(amount: int):
 		_level_up()
 
 func _level_up():
+	var old_xp_req = experience_to_next_level
+	var old_xp = current_experience
+	
 	current_experience -= experience_to_next_level
 	current_level += 1
 	skill_points += skill_points_per_level
@@ -68,8 +71,19 @@ func _level_up():
 	# Scale experience requirement
 	experience_to_next_level = int(experience_to_next_level * 1.15)
 	
+	print("\n=== LEVEL UP DEBUG ===")
+	print("  Previous level: ", current_level - 1)
+	print("  New level: ", current_level)
+	print("  Old XP: ", old_xp)
+	print("  Overflow XP: ", current_experience)
+	print("  Old XP requirement: ", old_xp_req)
+	print("  New XP requirement: ", experience_to_next_level)
+	print("  Multiplier applied: x1.15")
+	print("  Stack trace:")
+	print(get_stack())
+	print("======================\n")
+	
 	level_up.emit(current_level, skill_points_per_level)
-	print("Level Up! Now level ", current_level, " | Skill points: ", skill_points)
 
 # Spend skill points on stats
 func upgrade_stat(stat_name: String) -> bool:
@@ -177,3 +191,11 @@ func apply_fatigue_penalty():
 	
 	# Return the new max health so player can adjust current health
 	return max_health
+# Add this new method to PlayerLevelSystem
+func debug_print_xp_state(context: String = ""):
+	print("\n=== XP STATE: ", context, " ===")
+	print("  Level: ", current_level)
+	print("  Current XP: ", current_experience)
+	print("  XP to next: ", experience_to_next_level)
+	print("  Ratio: ", float(current_experience) / float(experience_to_next_level) if experience_to_next_level > 0 else 0.0)
+	print("==========================\n")

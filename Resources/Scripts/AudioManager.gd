@@ -54,6 +54,12 @@ func play_music(track: AudioStream):
 		music_player.stream = track
 		music_player.play()
 
+# Play random farm music (call this when entering the farm)
+func play_random_farm_music():
+	farm_music = farm_music_tracks[randi() % farm_music_tracks.size()]
+	print("✓ Playing farm music track: ", farm_music_tracks.find(farm_music) + 1, " of ", farm_music_tracks.size())
+	play_music(farm_music)
+
 # Play a sound effect
 func play_sfx(sfx: AudioStream):
 	if sfx_player and sfx:

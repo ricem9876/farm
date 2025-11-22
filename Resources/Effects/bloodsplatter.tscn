@@ -18,17 +18,16 @@ spread = 180.0
 initial_velocity_min = 80.0
 initial_velocity_max = 150.0
 gravity = Vector3(0, 300, 0)
-scale_min = 0.4
-scale_max = 0.7
+scale_min = 0.2
+scale_max = 0.5
 color_ramp = SubResource("GradientTexture1D_blood")
 
 [node name="Bloodsplatter" type="Node2D"]
 
 [node name="GPUParticles2D" type="GPUParticles2D" parent="."]
 emitting = false
-amount = 15
 texture = ExtResource("1_hnf2y")
-lifetime = 0.17
+lifetime = 0.12
 one_shot = true
 explosiveness = 1.0
 process_material = SubResource("ParticleProcessMaterial_blood")

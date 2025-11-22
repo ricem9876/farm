@@ -30,6 +30,7 @@ var muzzle_flash_scene = preload("res://Resources/Effects/muzzle_flash.tscn")
 @onready var muzzle_place = $MuzzlePoint.global_position
 var bullet_scene = preload("res://Resources/Weapon/Bullet.tscn")
 var player: Node2D
+var base_muzzle_offset: Vector2 = Vector2.ZERO
 
 # Internal
 var fire_timer: float = 0.0
@@ -87,11 +88,17 @@ func _setup_gun_appearance():
 	var texture_size = gun_sprite.texture.get_size()
 	
 	# Pistols are 1.5x (30 pixels), all others are 2x (40 pixels)
-	var desired_width = 30.0 if weapon_type == "Pistol" else 40.0
+	var desired_width = 40.0 if weapon_type == "Pistol" else 40.0
 	
 	var scale_factor = desired_width / texture_size.x
 	gun_sprite.scale = Vector2(scale_factor, scale_factor)
-
+	
+	# Position muzzle point at the tip of the scaled sprite
+	if muzzle_point:
+		var scaled_width = texture_size.x * scale_factor
+		base_muzzle_offset = Vector2(scaled_width * 0.4, 0)
+		muzzle_point.position = base_muzzle_offset
+		print("Muzzle positioned at: ", muzzle_point.position, " for weapon: ", weapon_type)
 func setup_with_player(player_node: Node2D):
 	player = player_node
 	print("Gun.setup_with_player called. Player set to: ", player)
@@ -268,9 +275,15 @@ func _aim_at_mouse(delta):
 		if should_flip:
 			gun_sprite.scale = Vector2(scale_magnitude, -scale_magnitude)
 			position.y = 0.0  # Move the entire gun node down when flipped
+			# Adjust muzzle point Y position when flipped
+			if muzzle_point:
+				muzzle_point.position = Vector2(base_muzzle_offset.x, -base_muzzle_offset.x * -.35)
 		else:
 			gun_sprite.scale = Vector2(scale_magnitude, scale_magnitude)
 			position.y = 0.0  # Reset position when not flipped
+			# Reset muzzle point to base offset
+			if muzzle_point:
+				muzzle_point.position = base_muzzle_offset
 		
 func _handle_firing(delta):
 	if fire_timer > 0:

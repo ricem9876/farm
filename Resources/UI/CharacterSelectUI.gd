@@ -34,6 +34,7 @@ signal character_selected(character_data: CharacterData)
 @onready var confirm_button = $VBoxContainer/ConfirmButton  # "SELECT CHARACTER" button
 @onready var back_button = $VBoxContainer/BackButton  # "BACK" button
 
+
 # Available characters loaded from CharacterRegistry
 var available_characters: Array[CharacterData] = []
 var current_index: int = 0  # Which character is currently displayed (0 = first)
@@ -178,9 +179,9 @@ func _on_confirm_pressed():
 	# Emit signal (other systems can listen to this)
 	character_selected.emit(selected_character)
 	
-	# Start the game
+	# Start the game - permadeath will be applied in safehouse after first save
 	_start_game()
-
+		
 func _on_back_pressed():
 	"""Return to save slot selection screen"""
 	get_tree().change_scene_to_file("res://Resources/UI/SaveSelectScene.tscn")

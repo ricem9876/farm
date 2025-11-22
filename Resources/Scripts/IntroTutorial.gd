@@ -60,23 +60,23 @@ func _show_first_time_dialogue():
 	var dialogue_data = [
 		{
 			"speaker": "???",
-			"text": "Don't read this."
+			"text": "Oh Hello! It's about time you get up. Just because farming has become more exciting doesn't mean you can sleep in past dawn!"
 		},
 		{
 			"speaker": "Mysterious Voice",
-			"text": "Seriously."
+			"text": "My name is Earl. Most people around here  call me 'Pa though. Welcome to the Farmhouse."
 		},
 		{
-			"speaker": "Mysterious Voice",
-			"text": "You're going to run around and shoot things. No need to read the story."
+			"speaker": "'Pa",
+			"text": "You may be new here, but I can tell you're ready to get your hands dirty  with a violent life of farming."
 		},
 		{
-			"speaker": "Mysterious Voice",
-			"text": "Get a weapon from the chest, kill things, collect items, make keys, and open chests."
+			"speaker": "'Pa",
+			"text": "You'll find Weaponized Harvest Extraction Assault Tools in the chest over there. Grab a W.H.E.A.T. and get ready to farm."
 		},
 		{
-			"speaker": "Mysterious Voice",
-			"text": "Убейте всех врагов"
+			"speaker": "'Pa",
+			"text": "and Good Luck, today's harvest is light but consistent farming will yield more and more crops."
 		}
 	]
 	
@@ -171,19 +171,19 @@ func _show_current_step_objective():
 			pass
 		
 		TutorialStep.OPEN_WEAPON_STORAGE:
-			TutorialManager.show_hint("Press E near the Weapon Chest to open Weapon Storage", 5.0)
+			TutorialManager.show_hint("Press E near the Weapon Chest to open Harvester Holder", 5.0)
 			if TutorialManager.tutorial_ui:
-				TutorialManager.tutorial_ui.show_objective("Open the Weapon Storage chest")
+				TutorialManager.tutorial_ui.show_objective("Open the Harvester Holder")
 		
 		TutorialStep.EQUIP_PISTOL:
-			TutorialManager.show_hint("Click on the Pistol in Weapon Storage to equip it", 5.0)
+			TutorialManager.show_hint("Click on the Handheld Harvest in Weapon Storage to equip it", 5.0)
 			if TutorialManager.tutorial_ui:
-				TutorialManager.tutorial_ui.show_objective("Equip the Pistol from Weapon Storage")
+				TutorialManager.tutorial_ui.show_objective("Equip the Handheld Harvester from Weapon Storage")
 		
 		TutorialStep.KILL_ENEMIES_LEVEL1:
-			TutorialManager.show_hint("Complete Level 1 by killing all enemies. Use Left Mouse to shoot! Collect mushrooms to unlock harder levels!", 5.0)
+			TutorialManager.show_hint("Complete Level 1 by harvesting all crops. Use Left Mouse to fire your harvester! Completing harvests unlocks new levels!", 5.0)
 			if TutorialManager.tutorial_ui:
-				TutorialManager.tutorial_ui.show_objective("Kill all enemies in Level 1")
+				TutorialManager.tutorial_ui.show_objective("Harvest all enemies in Level 1")
 		
 		TutorialStep.OPEN_SKILL_TREE:
 			TutorialManager.show_hint("Press K to open the Skill Tree and upgrade your skills", 5.0)
@@ -196,16 +196,16 @@ func _show_current_step_objective():
 				TutorialManager.tutorial_ui.show_objective("Open the Records Book (Press E)")
 		
 		TutorialStep.CHECK_WEAPON_STORAGE:
-			TutorialManager.show_hint("Check the Weapon Storage one more time! You may not be able to upgrade now, but soon you will grow stronger!", 5.0)
+			TutorialManager.show_hint("Check the Harvester holder one more time! You may not be able to upgrade now, but soon you will grow stronger!", 5.0)
 			if TutorialManager.tutorial_ui:
-				TutorialManager.tutorial_ui.show_objective("Check the Weapon Storage")
+				TutorialManager.tutorial_ui.show_objective("Check the Harvester Holder")
 		
 		TutorialStep.COMPLETE:
-			TutorialManager.show_hint("Tutorial Complete! You're ready to explore.", 8.0)
+			TutorialManager.show_hint("Tutorial Complete! You're ready to be a real farmer!", 8.0)
 			if TutorialManager.tutorial_ui:
 				TutorialManager.tutorial_ui.hide_objective()
-			_complete_tutorial()
 
+			_complete_tutorial()
 func _process(_delta):
 	_check_step_completion()
 	
@@ -246,7 +246,7 @@ func on_pistol_equipped():
 		advance_step()
 
 func _on_weapon_equipped(slot: int, weapon_item: WeaponItem):
-	if weapon_item and weapon_item.name == "Pistol":
+	if weapon_item and weapon_item.name == "Handheld Harvester":
 		on_pistol_equipped()
 
 func on_level_started(level_number: int):

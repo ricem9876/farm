@@ -10,8 +10,11 @@ signal storage_closed
 @onready var right_panel = $Background/HBoxContainer/RightPanel
 @onready var weapon_grid = $Background/HBoxContainer/LeftPanel/VBoxContainer/WeaponGrid
 @onready var title_label = $Background/HBoxContainer/LeftPanel/VBoxContainer/TitleBar/TitleLabel
-@onready var resources_label = $Background/HBoxContainer/LeftPanel/VBoxContainer/TitleBar/ResourcesLabel
-@onready var close_button = $Background/CloseButton
+@onready var resources_container = $Background/HBoxContainer/LeftPanel/VBoxContainer/ResourcesContainer
+@onready var close_button = $Background/HBoxContainer/RightPanel/CloseButton
+
+# NOTE: ResourcesLabel moved to be under WeaponGrid in the scene tree
+# It should now be at: Background/HBoxContainer/LeftPanel/VBoxContainer/ResourcesContainer
 
 # Right panel - Weapon details & upgrades
 @onready var weapon_info_container = $Background/HBoxContainer/RightPanel/VBoxContainer
@@ -65,94 +68,142 @@ func _ready():
 	
 	_setup_styling()
 	
+	# FORCE background color after styling
+	await get_tree().process_frame
+	_force_background_color()
+	
 	if close_button:
 		close_button.pressed.connect(_on_close_button_pressed)
 
+func _force_background_color():
+	"""Force the warm tan background color on the Background panel and fix any gray panels"""
+	const WARM_TAN = Color(0.86, 0.72, 0.52)
+	const DARK_BROWN = Color(0.3, 0.2, 0.1)
+	
+	if background_panel:
+		var style_box = StyleBoxFlat.new()
+		style_box.bg_color = WARM_TAN
+		style_box.border_width_left = 3
+		style_box.border_width_right = 3
+		style_box.border_width_top = 3
+		style_box.border_width_bottom = 3
+		style_box.border_color = DARK_BROWN
+		style_box.corner_radius_top_left = 8
+		style_box.corner_radius_top_right = 8
+		style_box.corner_radius_bottom_left = 8
+		style_box.corner_radius_bottom_right = 8
+		background_panel.add_theme_stylebox_override("panel", style_box)
+		background_panel.self_modulate = Color(1, 1, 1, 1)
+		print("✓ Forced warm tan background color on Background panel")
+		
+		# Recursively fix any child panels that might be gray
+		_fix_child_panels(background_panel, WARM_TAN)
+
+func _fix_child_panels(node: Node, color: Color):
+	"""Recursively check and fix any Panel or ColorRect children"""
+	for child in node.get_children():
+		# Fix ColorRect nodes
+		if child is ColorRect:
+			child.color = color
+			print("  ✓ Fixed ColorRect: ", child.name)
+		
+		# Fix Panel nodes (but skip the slots and specific UI elements)
+		elif child is Panel:
+			if child.name != "Background":  # Don't override the main background again
+				# Only override if it's gray/default colored
+				var current_style = child.get_theme_stylebox("panel")
+				if current_style == null or (current_style is StyleBoxFlat and current_style.bg_color.r < 0.6):
+					var panel_style = StyleBoxFlat.new()
+					panel_style.bg_color = color
+					panel_style.draw_center = false  # Make interior panels transparent
+					child.add_theme_stylebox_override("panel", panel_style)
+					print("  ✓ Fixed Panel: ", child.name)
+		
+		# Recurse into children
+		_fix_child_panels(child, color)
+
 func _setup_styling():
 	var pixel_font = preload("res://Resources/Fonts/yoster.ttf")
+	
+	# Farm theme colors - MATCHING HARVEST BIN AESTHETIC
+	const BG_COLOR = Color(0.86, 0.72, 0.52)  # Warm tan/beige (matches Harvest Bin!)
+	const TEXT_COLOR = Color(0.2, 0.2, 0.2)  # Dark text
+	const TITLE_COLOR = Color(0.2, 0.7, 0.2)  # Vibrant green (matches "Harvest Bin" title)
+	const BORDER_COLOR = Color(0.3, 0.2, 0.1)  # Dark brown border
+	const BUTTON_BG = Color(0.95, 0.88, 0.7)  # Light tan for buttons (matches Harvest Bin buttons)
+	const SLOT_BG = Color(0.95, 0.88, 0.7)  # Light tan for weapon slots
 	
 	# Main background
 	if background_panel:
 		background_panel.custom_minimum_size = Vector2(1800, 1000)
 		
 		var style_box = StyleBoxFlat.new()
-		style_box.bg_color = Color(0.98, 0.94, 0.86)
-		style_box.border_width_left = 8
-		style_box.border_width_right = 8
-		style_box.border_width_top = 8
-		style_box.border_width_bottom = 8
-		style_box.border_color = Color(0.45, 0.32, 0.18)
-		style_box.corner_radius_top_left = 16
-		style_box.corner_radius_top_right = 16
-		style_box.corner_radius_bottom_left = 16
-		style_box.corner_radius_bottom_right = 16
+		style_box.bg_color = BG_COLOR
+		style_box.border_width_left = 3
+		style_box.border_width_right = 3
+		style_box.border_width_top = 3
+		style_box.border_width_bottom = 3
+		style_box.border_color = BORDER_COLOR
+		style_box.corner_radius_top_left = 8
+		style_box.corner_radius_top_right = 8
+		style_box.corner_radius_bottom_left = 8
+		style_box.corner_radius_bottom_right = 8
 		background_panel.add_theme_stylebox_override("panel", style_box)
+		
+		# Check for any ColorRect children and update them
+		for child in background_panel.get_children():
+			if child is ColorRect:
+				child.color = BG_COLOR
+				print("✓ Updated ColorRect child to warm tan")
 	
 	# Title
 	if title_label:
-		title_label.text = "WEAPON ARMORY"
-		title_label.add_theme_color_override("font_color", Color(0.45, 0.32, 0.18))
+		title_label.text = "Harvester Holder"
+		title_label.add_theme_color_override("font_color", TITLE_COLOR)
 		title_label.add_theme_font_override("font", pixel_font)
 		title_label.add_theme_font_size_override("font_size", 48)
+		title_label.add_theme_constant_override("outline_size", 2)
+		title_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.3))
 	
-	# Resources label
-	if resources_label:
-		resources_label.add_theme_color_override("font_color", Color(0.6, 0.4, 0.2))
-		resources_label.add_theme_font_override("font", pixel_font)
-		resources_label.add_theme_font_size_override("font_size", 28)
+	# Resources container - will be populated dynamically with icons and labels
+	# No need to set up styling here as it's just a container
 	
-	# Close button - FIXED positioning
+	# Close button - Farm themed (matching Harvest Bin style)
+	# Position will be set by scene tree placement - we only style here
 	if close_button:
-		# CRITICAL: Use anchor positioning for top-right
-		close_button.layout_mode = 1  # Use anchors
-		close_button.anchors_preset = Control.PRESET_TOP_RIGHT
-		close_button.anchor_left = 1.0
-		close_button.anchor_top = 0.0
-		close_button.anchor_right = 1.0
-		close_button.anchor_bottom = 0.0
-		close_button.grow_horizontal = GROW_DIRECTION_BEGIN
-		close_button.grow_vertical = GROW_DIRECTION_END
+		close_button.custom_minimum_size = Vector2(130, 60)
+		close_button.size = Vector2(130, 60)
 		
-		# Position relative to top-right
-		close_button.offset_left = -100.0  # 100 pixels from right edge
-		close_button.offset_top = 20.0     # 20 pixels from top
-		close_button.offset_right = -20.0  # Creates 80px width (100-20)
-		close_button.offset_bottom = 100.0 # Creates 80px height (100-20)
-		
-		close_button.custom_minimum_size = Vector2(80, 80)
-		close_button.size = Vector2(80, 80)
-		
-		# Text and font
-		close_button.text = "X"
+		# Text and font - change from "X" to "CLOSE"
+		close_button.text = "CLOSE"
 		close_button.add_theme_font_override("font", pixel_font)
-		close_button.add_theme_font_size_override("font_size", 48)
-		close_button.add_theme_color_override("font_color", Color.WHITE)
+		close_button.add_theme_font_size_override("font_size", 28)
+		close_button.add_theme_color_override("font_color", TEXT_COLOR)
 		
-		# Ensure it only responds to its own clicks
 		close_button.mouse_filter = Control.MOUSE_FILTER_STOP
 		
-		# Style the button
+		# Farm-themed button style - MATCHING HARVEST BIN
 		var btn_style = StyleBoxFlat.new()
-		btn_style.bg_color = Color(0.8, 0.2, 0.2)
-		btn_style.border_width_left = 4
-		btn_style.border_width_right = 4
-		btn_style.border_width_top = 4
-		btn_style.border_width_bottom = 4
-		btn_style.border_color = Color(0.6, 0.1, 0.1)
-		btn_style.corner_radius_top_left = 8
-		btn_style.corner_radius_top_right = 8
-		btn_style.corner_radius_bottom_left = 8
-		btn_style.corner_radius_bottom_right = 8
+		btn_style.bg_color = BUTTON_BG  # Light tan
+		btn_style.border_width_left = 2
+		btn_style.border_width_right = 2
+		btn_style.border_width_top = 2
+		btn_style.border_width_bottom = 2
+		btn_style.border_color = BORDER_COLOR
+		btn_style.corner_radius_top_left = 4
+		btn_style.corner_radius_top_right = 4
+		btn_style.corner_radius_bottom_left = 4
+		btn_style.corner_radius_bottom_right = 4
 		close_button.add_theme_stylebox_override("normal", btn_style)
 		
 		var btn_hover = btn_style.duplicate()
-		btn_hover.bg_color = Color(0.9, 0.3, 0.3)
+		btn_hover.bg_color = Color(1.0, 0.95, 0.8)  # Lighter on hover
 		close_button.add_theme_stylebox_override("hover", btn_hover)
 		
 		var btn_pressed = btn_style.duplicate()
-		btn_pressed.bg_color = Color(0.6, 0.1, 0.1)
+		btn_pressed.bg_color = Color(0.85, 0.78, 0.6)  # Darker when pressed
 		close_button.add_theme_stylebox_override("pressed", btn_pressed)
-
+		
 func setup_storage(storage: WeaponStorageManager, manager: WeaponManager, player_node: Node2D):
 	print("\n=== WEAPON STORAGE SETUP ===")
 	var current_unlocked = GlobalWeaponStorage.get_unlocked_weapons() if GlobalWeaponStorage else ["Pistol"]
@@ -326,6 +377,15 @@ func _update_weapon_details(weapon: WeaponItem):
 	
 	var pixel_font = preload("res://Resources/Fonts/yoster.ttf")
 	
+	# Weapon name - BIGGER and more prominent
+	weapon_name_label.text = weapon.name
+	weapon_name_label.add_theme_font_override("font", pixel_font)
+	weapon_name_label.add_theme_font_size_override("font_size", 56)  # Much bigger!
+	weapon_name_label.add_theme_color_override("font_color", Color(0.75, 0.58, 0.23))  
+	weapon_name_label.add_theme_constant_override("outline_size", 3)
+	weapon_name_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.3))
+	weapon_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	
 	# Weapon name
 	weapon_name_label.text = weapon.name
 	
@@ -367,7 +427,8 @@ func _create_unlock_button(weapon: WeaponItem):
 	var can_afford = _can_afford_unlock(costs)
 	unlock_btn.disabled = not can_afford
 	
-	_style_button(unlock_btn, Color(0.3, 0.7, 0.3) if can_afford else Color(0.5, 0.5, 0.5))
+	# Harvest Bin style colors
+	_style_button(unlock_btn, Color(0.95, 0.88, 0.7) if can_afford else Color(0.7, 0.65, 0.55))
 	
 	unlock_btn.pressed.connect(_on_unlock_weapon.bind(weapon, costs))
 	action_buttons.add_child(unlock_btn)
@@ -379,14 +440,18 @@ func _create_equip_buttons(weapon: WeaponItem):
 	var primary_weapon = weapon_manager.get_weapon_in_slot(0)
 	var secondary_weapon = weapon_manager.get_weapon_in_slot(1)
 	
+	# Colors from title screen
+	const EQUIP_GREEN = Color(0.5, 0.7, 0.4)  # Sage green for equip (from title screen START button)
+	const UNEQUIP_RED = Color(0.75, 0.5, 0.35)  # Rustic brown/red for unequip (from title screen QUIT button)
+	
 	# Equip Primary
 	var primary_btn = Button.new()
 	if primary_weapon and primary_weapon.name == weapon.name:
 		primary_btn.text = "Unequip Primary [1]"
-		_style_button(primary_btn, Color(0.8, 0.4, 0.2))  # Orange for unequip
+		_style_button(primary_btn, UNEQUIP_RED)
 	else:
 		primary_btn.text = "Equip Primary [1]"
-		_style_button(primary_btn, Color(0.2, 0.6, 0.8))  # Blue for equip
+		_style_button(primary_btn, EQUIP_GREEN)
 	primary_btn.custom_minimum_size = Vector2(400, 80)
 	primary_btn.add_theme_font_override("font", pixel_font)
 	primary_btn.add_theme_font_size_override("font_size", 28)
@@ -397,10 +462,10 @@ func _create_equip_buttons(weapon: WeaponItem):
 	var secondary_btn = Button.new()
 	if secondary_weapon and secondary_weapon.name == weapon.name:
 		secondary_btn.text = "Unequip Secondary [2]"
-		_style_button(secondary_btn, Color(0.8, 0.4, 0.2))  # Orange for unequip
+		_style_button(secondary_btn, UNEQUIP_RED)
 	else:
 		secondary_btn.text = "Equip Secondary [2]"
-		_style_button(secondary_btn, Color(0.6, 0.2, 0.8))  # Purple for equip
+		_style_button(secondary_btn, EQUIP_GREEN)
 	secondary_btn.custom_minimum_size = Vector2(400, 80)
 	secondary_btn.add_theme_font_override("font", pixel_font)
 	secondary_btn.add_theme_font_size_override("font_size", 28)
@@ -422,21 +487,24 @@ func _show_upgrades_for_weapon(weapon: WeaponItem):
 
 func _create_upgrade_card(upgrade: WeaponUpgrade):
 	var pixel_font = preload("res://Resources/Fonts/yoster.ttf")
+	const BORDER_COLOR = Color(0.3, 0.2, 0.1)
+	const TEXT_COLOR = Color(0.2, 0.2, 0.2)
 	
 	var card = PanelContainer.new()
 	card.custom_minimum_size = Vector2(700, 140)
 	
 	var card_style = StyleBoxFlat.new()
-	card_style.bg_color = Color(0.6, 0.8, 0.6, 0.5) if upgrade.is_purchased else Color(0.92, 0.88, 0.78)
-	card_style.border_width_left = 4
-	card_style.border_width_right = 4
-	card_style.border_width_top = 4
-	card_style.border_width_bottom = 4
-	card_style.border_color = Color(0.45, 0.32, 0.18)
-	card_style.corner_radius_top_left = 8
-	card_style.corner_radius_top_right = 8
-	card_style.corner_radius_bottom_left = 8
-	card_style.corner_radius_bottom_right = 8
+	# Owned upgrades: slightly greenish tint; Available: light tan (matching Harvest Bin)
+	card_style.bg_color = Color(0.88, 0.90, 0.82) if upgrade.is_purchased else Color(0.95, 0.88, 0.7)
+	card_style.border_width_left = 2
+	card_style.border_width_right = 2
+	card_style.border_width_top = 2
+	card_style.border_width_bottom = 2
+	card_style.border_color = BORDER_COLOR
+	card_style.corner_radius_top_left = 4
+	card_style.corner_radius_top_right = 4
+	card_style.corner_radius_bottom_left = 4
+	card_style.corner_radius_bottom_right = 4
 	card.add_theme_stylebox_override("panel", card_style)
 	
 	var margin = MarginContainer.new()
@@ -455,7 +523,7 @@ func _create_upgrade_card(upgrade: WeaponUpgrade):
 	name_label.text = upgrade.upgrade_name
 	name_label.add_theme_font_override("font", pixel_font)
 	name_label.add_theme_font_size_override("font_size", 32)
-	name_label.add_theme_color_override("font_color", Color(0.2, 0.5, 0.8))
+	name_label.add_theme_color_override("font_color", Color(0.2, 0.6, 0.2))  # Green tint for names
 	vbox.add_child(name_label)
 	
 	# Description
@@ -463,19 +531,29 @@ func _create_upgrade_card(upgrade: WeaponUpgrade):
 	desc_label.text = upgrade.description
 	desc_label.add_theme_font_override("font", pixel_font)
 	desc_label.add_theme_font_size_override("font_size", 24)
-	desc_label.add_theme_color_override("font_color", Color(0.3, 0.3, 0.3))
+	desc_label.add_theme_color_override("font_color", TEXT_COLOR)
 	desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(desc_label)
 	
 	# Purchase button
 	if not upgrade.is_purchased:
 		var hbox = HBoxContainer.new()
+		hbox.add_theme_constant_override("separation", 15)
 		vbox.add_child(hbox)
 		
+		# Harvest Token icon
+		var token_icon = TextureRect.new()
+		token_icon.texture = load("uid://pg1lbrneurkh")
+		token_icon.custom_minimum_size = Vector2(28, 28)
+		token_icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		token_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		hbox.add_child(token_icon)
+		
 		var cost_label = Label.new()
-		cost_label.text = "🌾 %d Harvest Tokens" % upgrade.harvest_token_cost
+		cost_label.text = "%d Harvest Tokens" % upgrade.harvest_token_cost
 		cost_label.add_theme_font_override("font", pixel_font)
 		cost_label.add_theme_font_size_override("font_size", 28)
+		cost_label.add_theme_color_override("font_color", TEXT_COLOR)
 		hbox.add_child(cost_label)
 		
 		var button = Button.new()
@@ -487,7 +565,8 @@ func _create_upgrade_card(upgrade: WeaponUpgrade):
 		var can_afford = WeaponUpgradeManager.can_purchase_upgrade(upgrade, player)
 		button.disabled = not can_afford
 		
-		_style_button(button, Color(0.3, 0.7, 0.3) if can_afford else Color(0.5, 0.5, 0.5))
+		# Use Harvest Bin button colors
+		_style_button(button, Color(0.95, 0.88, 0.7) if can_afford else Color(0.7, 0.65, 0.55))
 		button.pressed.connect(_on_purchase_upgrade.bind(upgrade))
 		hbox.add_child(button)
 	else:
@@ -495,32 +574,46 @@ func _create_upgrade_card(upgrade: WeaponUpgrade):
 		owned_label.text = "✓ OWNED"
 		owned_label.add_theme_font_override("font", pixel_font)
 		owned_label.add_theme_font_size_override("font_size", 28)
-		owned_label.add_theme_color_override("font_color", Color(0.3, 0.7, 0.3))
+		owned_label.add_theme_color_override("font_color", Color(0.2, 0.6, 0.2))  # Green for owned
 		vbox.add_child(owned_label)
 	
 	upgrades_container.add_child(card)
-
+	
 func _style_button(button: Button, color: Color):
+	const BORDER_COLOR = Color(0.3, 0.2, 0.1)
+	const TEXT_COLOR = Color(0.15, 0.15, 0.15)  # Slightly lighter dark text
+	
+	var pixel_font = preload("res://Resources/Fonts/yoster.ttf")
+	button.add_theme_font_override("font", pixel_font)
+	button.add_theme_color_override("font_color", TEXT_COLOR)
+	
+	# Button styles matching Harvest Bin aesthetic
 	var normal = StyleBoxFlat.new()
 	normal.bg_color = color
-	normal.border_width_left = 4
-	normal.border_width_right = 4
-	normal.border_width_top = 4
-	normal.border_width_bottom = 4
-	normal.border_color = color.darkened(0.3)
-	normal.corner_radius_top_left = 10
-	normal.corner_radius_top_right = 10
-	normal.corner_radius_bottom_left = 10
-	normal.corner_radius_bottom_right = 10
+	normal.border_width_left = 2
+	normal.border_width_right = 2
+	normal.border_width_top = 2
+	normal.border_width_bottom = 2
+	normal.border_color = BORDER_COLOR
+	normal.corner_radius_top_left = 4
+	normal.corner_radius_top_right = 4
+	normal.corner_radius_bottom_left = 4
+	normal.corner_radius_bottom_right = 4
 	button.add_theme_stylebox_override("normal", normal)
 	
 	var hover = normal.duplicate()
-	hover.bg_color = color.lightened(0.2)
+	hover.bg_color = color.lightened(0.1)
 	button.add_theme_stylebox_override("hover", hover)
 	
 	var pressed_style = normal.duplicate()
-	pressed_style.bg_color = color.darkened(0.2)
+	pressed_style.bg_color = color.darkened(0.1)
 	button.add_theme_stylebox_override("pressed", pressed_style)
+	
+	# Disabled style
+	var disabled_style = normal.duplicate()
+	disabled_style.bg_color = Color(0.7, 0.65, 0.55)
+	disabled_style.border_color = Color(0.5, 0.4, 0.3)
+	button.add_theme_stylebox_override("disabled", disabled_style)
 
 func _on_unlock_weapon(weapon: WeaponItem, costs: Dictionary):
 	print("Attempting to unlock: ", weapon.name)
@@ -654,15 +747,97 @@ func _is_weapon_unlocked(weapon_name: String) -> bool:
 	return weapon_name in current_unlocked
 
 func _update_resources_display():
-	if not player or not resources_label:
+	print("=== _update_resources_display called ===")
+	
+	if not player:
+		print("  ✗ No player reference!")
 		return
 	
+	# Check if resources_container exists, if not try to find or create it
+	if not resources_container:
+		print("  ⚠ resources_container not found, attempting to find it...")
+		resources_container = get_node_or_null("%ResourcesContainer")
+		
+		if not resources_container:
+			print("  ⚠ Still not found with unique name, trying path...")
+			resources_container = get_node_or_null("Background/HBoxContainer/LeftPanel/VBoxContainer/ResourcesContainer")
+		
+		if not resources_container:
+			print("  ✗ resources_container still not found - cannot display resources!")
+			print("  ℹ Please add a Container node named 'ResourcesContainer' under the LeftPanel VBoxContainer")
+			return
+		else:
+			print("  ✓ Found resources_container at: ", resources_container.get_path())
+	
 	var inv = player.get_inventory_manager()
+	if not inv:
+		print("  ✗ No inventory manager!")
+		return
 	
 	var coins = inv.get_item_quantity_by_name("Coin")
 	var harvest_tokens = inv.get_item_quantity_by_name("Harvest Token")
 	
-	resources_label.text = "Resources: 💰 %d Coins | 🌾 %d Harvest Tokens" % [coins, harvest_tokens]
+	print("  Coins: ", coins, " | Harvest Tokens: ", harvest_tokens)
+	
+	# Clear existing children (icons and labels)
+	for child in resources_container.get_children():
+		child.queue_free()
+	
+	# Create HBoxContainer for icons and text
+	var hbox = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 15)
+	resources_container.add_child(hbox)
+	
+	# Add "Resources:" label
+	var resources_text = Label.new()
+	resources_text.text = "Resources: "
+	resources_text.add_theme_font_override("font", preload("res://Resources/Fonts/yoster.ttf"))
+	resources_text.add_theme_font_size_override("font_size", 28)
+	resources_text.add_theme_color_override("font_color", Color(0.2, 0.2, 0.2))
+	hbox.add_child(resources_text)
+	
+	# Coin icon
+	var coin_icon = TextureRect.new()
+	coin_icon.texture = load("uid://v6mrf7ysv8hj")
+	coin_icon.custom_minimum_size = Vector2(32, 32)
+	coin_icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	coin_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	hbox.add_child(coin_icon)
+	
+	# Coin count
+	var coin_label = Label.new()
+	coin_label.text = "%d Coins" % coins
+	coin_label.add_theme_font_override("font", preload("res://Resources/Fonts/yoster.ttf"))
+	coin_label.add_theme_font_size_override("font_size", 28)
+	coin_label.add_theme_color_override("font_color", Color(0.2, 0.2, 0.2))
+	hbox.add_child(coin_label)
+	
+	# Separator
+	var separator = Label.new()
+	separator.text = " | "
+	separator.add_theme_font_override("font", preload("res://Resources/Fonts/yoster.ttf"))
+	separator.add_theme_font_size_override("font_size", 28)
+	separator.add_theme_color_override("font_color", Color(0.2, 0.2, 0.2))
+	hbox.add_child(separator)
+	
+	# Harvest Token icon
+	var token_icon = TextureRect.new()
+	token_icon.texture = load("uid://pg1lbrneurkh")
+	token_icon.custom_minimum_size = Vector2(32, 32)
+	token_icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	token_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	hbox.add_child(token_icon)
+	
+	# Harvest Token count
+	var token_label = Label.new()
+	token_label.text = "%d Harvest Tokens" % harvest_tokens
+	token_label.add_theme_font_override("font", preload("res://Resources/Fonts/yoster.ttf"))
+	token_label.add_theme_font_size_override("font_size", 28)
+	token_label.add_theme_color_override("font_color", Color(0.2, 0.2, 0.2))
+	hbox.add_child(token_label)
+	
+	print("  ✓ Resources display updated successfully")
+	print("=== End _update_resources_display ===")
 
 func _on_close_button_pressed():
 	toggle_visibility()

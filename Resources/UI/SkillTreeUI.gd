@@ -17,49 +17,42 @@ signal skill_tree_closed
 var level_system: PlayerLevelSystem
 var skill_buttons: Dictionary = {}
 
-# Skill definitions with icons and descriptions
+# Farm theme colors
+const BG_COLOR = Color(0.96, 0.93, 0.82)  # Cream background
+const TEXT_COLOR = Color(0.05, 0.05, 0.05)  # Very dark text
+const TITLE_COLOR = Color(0.5, 0.7, 0.4)  # Sage green
+const BORDER_COLOR = Color(0.3, 0.2, 0.1)  # Dark brown border
+const CARD_BG = Color(0.92, 0.88, 0.78)  # Slightly darker cream for cards
+
+# Skill definitions with descriptions (removed icons and colors)
 var skill_data = {
 	"health": {
 		"display_name": "Max Health",
-		"description": "+10 HP per point",
-		"icon": "❤️",
-		"color": Color(1, 0.3, 0.3)
+		"description": "+10 HP per point"
 	},
 	"speed": {
 		"display_name": "Movement Speed",
-		"description": "+5% speed per point",
-		"icon": "⚡",
-		"color": Color(0.3, 1, 1)
+		"description": "+5% speed per point"
 	},
 	"damage": {
 		"display_name": "Weapon Damage",
-		"description": "+5% damage per point",
-		"icon": "⚔️",
-		"color": Color(1, 0.5, 0.2)
+		"description": "+5% damage per point"
 	},
 	"fire_rate": {
 		"display_name": "Fire Rate",
-		"description": "+4% fire rate per point",
-		"icon": "🔥",
-		"color": Color(1, 0.8, 0.2)
+		"description": "+4% fire rate per point"
 	},
 	"luck": {
-		"display_name": "luck",
-		"description": "+1% dodge & double drops per point",
-		"icon": "🍀",
-		"color": Color(0.3, 0.8, 0.3)
+		"display_name": "Luck",
+		"description": "+1% dodge & double drops per point"
 	},
 	"crit_chance": {
 		"display_name": "Critical Chance",
-		"description": "+2% crit chance per point (Max 25)",
-		"icon": "💥",
-		"color": Color(1, 1, 0.3)
+		"description": "+2% crit chance per point (Max 25)"
 	},
 	"crit_damage": {
 		"display_name": "Critical Damage",
-		"description": "+10% crit damage per point",
-		"icon": "💢",
-		"color": Color(1, 0.3, 1)
+		"description": "+10% crit damage per point"
 	}
 }
 
@@ -73,6 +66,9 @@ func _ready():
 	visible = false
 	if background:
 		background.visible = false
+	
+	# Apply farm theme styling
+	_setup_ui_styling()
 	
 	# Connect buttons
 	if close_button:
@@ -92,6 +88,128 @@ func _ready():
 	
 	_create_skill_buttons()
 	print("=== INITIALIZATION COMPLETE ===\n")
+
+func _setup_ui_styling():
+	"""Apply farm theme to the UI"""
+	var pixel_font = preload("res://Resources/Fonts/yoster.ttf")
+	
+	# Style main panel
+	if main_panel:
+		var panel_style = StyleBoxFlat.new()
+		panel_style.bg_color = BG_COLOR
+		panel_style.border_width_left = 6
+		panel_style.border_width_right = 6
+		panel_style.border_width_top = 6
+		panel_style.border_width_bottom = 6
+		panel_style.border_color = BORDER_COLOR
+		panel_style.corner_radius_top_left = 12
+		panel_style.corner_radius_top_right = 12
+		panel_style.corner_radius_bottom_left = 12
+		panel_style.corner_radius_bottom_right = 12
+		main_panel.add_theme_stylebox_override("panel", panel_style)
+	
+	# CHANGE 1: Add "SKILL TREE" title with shadow and warm gold color
+	var title_container = main_panel.find_child("Header", true, false)
+	if title_container:
+		# Check if we already added the title
+		var existing_title = title_container.find_child("SkillTreeTitle", false, false)
+		if not existing_title:
+			var title = Label.new()
+			title.name = "SkillTreeTitle"
+			title.text = "SKILL TREE"
+			title.add_theme_font_override("font", pixel_font)
+			title.add_theme_font_size_override("font_size", 48)
+			title.add_theme_color_override("font_color", Color(0.8, 0.65, 0.4))  # Warm gold like Level
+			# Add shadow
+			title.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.5))  # 50% transparent black
+			title.add_theme_constant_override("shadow_offset_x", 1)
+			title.add_theme_constant_override("shadow_offset_y", 2)
+			title.add_theme_constant_override("shadow_outline_size", 4)
+			title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			
+			# Insert at the beginning of the header
+			title_container.add_child(title)
+			title_container.move_child(title, 0)
+	
+	# Style labels
+	if level_label:
+		level_label.add_theme_font_override("font", pixel_font)
+		level_label.add_theme_font_size_override("font_size", 28)
+		level_label.add_theme_color_override("font_color", Color(0.8, 0.65, 0.4))  # Warm gold
+	
+	if skill_points_label:
+		skill_points_label.add_theme_font_override("font", pixel_font)
+		skill_points_label.add_theme_font_size_override("font_size", 28)
+		skill_points_label.add_theme_color_override("font_color", TITLE_COLOR)  # Sage green
+	
+	if xp_label:
+		xp_label.add_theme_font_override("font", pixel_font)
+		xp_label.add_theme_font_size_override("font_size", 20)
+		xp_label.add_theme_color_override("font_color", TEXT_COLOR)
+	
+	# Style XP bar
+	if xp_bar:
+		var bar_style = StyleBoxFlat.new()
+		bar_style.bg_color = Color(0.5, 0.7, 0.4)  # Sage green
+		bar_style.corner_radius_top_left = 5
+		bar_style.corner_radius_top_right = 5
+		bar_style.corner_radius_bottom_left = 5
+		bar_style.corner_radius_bottom_right = 5
+		xp_bar.add_theme_stylebox_override("fill", bar_style)
+		
+		var bg_style = StyleBoxFlat.new()
+		bg_style.bg_color = Color(0.75, 0.68, 0.55)
+		bg_style.corner_radius_top_left = 5
+		bg_style.corner_radius_top_right = 5
+		bg_style.corner_radius_bottom_left = 5
+		bg_style.corner_radius_bottom_right = 5
+		xp_bar.add_theme_stylebox_override("background", bg_style)
+	
+	# CHANGE 2: Remove scrollbars from ScrollContainer
+	var scroll_container = main_panel.find_child("ScrollContainer", true, false)
+	if scroll_container:
+		scroll_container.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		scroll_container.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	
+	# Style buttons
+	_style_button(close_button, Color(0.75, 0.5, 0.35), "X")  # Rustic brown
+	_style_button(reset_button, Color(0.75, 0.5, 0.35), "Reset All Skills")  # Rustic brown
+	_style_button(continue_button, Color(0.5, 0.7, 0.4), "Continue")  # Sage green
+	
+	
+func _style_button(button: Button, color: Color, text: String = ""):
+	if not button:
+		return
+	
+	var pixel_font = preload("res://Resources/Fonts/yoster.ttf")
+	
+	if text != "":
+		button.text = text
+	
+	button.add_theme_font_override("font", pixel_font)
+	button.add_theme_font_size_override("font_size", 24)
+	button.add_theme_color_override("font_color", TEXT_COLOR)
+	
+	var btn_style = StyleBoxFlat.new()
+	btn_style.bg_color = color
+	btn_style.border_width_left = 3
+	btn_style.border_width_right = 3
+	btn_style.border_width_top = 3
+	btn_style.border_width_bottom = 3
+	btn_style.border_color = BORDER_COLOR
+	btn_style.corner_radius_top_left = 8
+	btn_style.corner_radius_top_right = 8
+	btn_style.corner_radius_bottom_left = 8
+	btn_style.corner_radius_bottom_right = 8
+	button.add_theme_stylebox_override("normal", btn_style)
+	
+	var hover_style = btn_style.duplicate()
+	hover_style.bg_color = color.lightened(0.15)
+	button.add_theme_stylebox_override("hover", hover_style)
+	
+	var pressed_style = btn_style.duplicate()
+	pressed_style.bg_color = color.darkened(0.15)
+	button.add_theme_stylebox_override("pressed", pressed_style)
 	
 func _process(delta):
 	if visible:
@@ -110,7 +228,6 @@ func setup(player_level_system: PlayerLevelSystem):
 	
 	# Connect to level system signals
 	if level_system:
-		#level_system.level_up.connect(_on_level_up)
 		level_system.experience_gained.connect(_on_experience_gained)
 		level_system.skill_point_spent.connect(_on_skill_point_spent)
 		print("✓ Connected to level system signals")
@@ -123,83 +240,83 @@ func _create_skill_buttons():
 		var skill_panel = _create_skill_panel(stat_name)
 		skills_container.add_child(skill_panel)
 		skill_buttons[stat_name] = skill_panel
-
+		
+		
 func _create_skill_panel(stat_name: String) -> PanelContainer:
+	var pixel_font = preload("res://Resources/Fonts/yoster.ttf")
 	var data = skill_data[stat_name]
 	
-	# Main panel
+	# Main panel with farm theme
 	var panel = PanelContainer.new()
 	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.15, 0.15, 0.2, 1)
+	style.bg_color = CARD_BG
 	style.border_width_left = 2
 	style.border_width_top = 2
 	style.border_width_right = 2
 	style.border_width_bottom = 2
-	style.border_color = data.color
-	style.corner_radius_top_left = 5
-	style.corner_radius_top_right = 5
-	style.corner_radius_bottom_left = 5
-	style.corner_radius_bottom_right = 5
+	style.border_color = BORDER_COLOR
+	style.corner_radius_top_left = 8
+	style.corner_radius_top_right = 8
+	style.corner_radius_bottom_left = 8
+	style.corner_radius_bottom_right = 8
 	panel.add_theme_stylebox_override("panel", style)
 	
 	# Margin
 	var margin = MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 10)
-	margin.add_theme_constant_override("margin_top", 10)
-	margin.add_theme_constant_override("margin_right", 10)
-	margin.add_theme_constant_override("margin_bottom", 10)
+	margin.add_theme_constant_override("margin_left", 15)
+	margin.add_theme_constant_override("margin_top", 12)
+	margin.add_theme_constant_override("margin_right", 15)
+	margin.add_theme_constant_override("margin_bottom", 12)
 	panel.add_child(margin)
 	
 	# Main HBox
 	var hbox = HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 15)
+	hbox.add_theme_constant_override("separation", 20)
 	margin.add_child(hbox)
 	
 	# Left side - Info
 	var vbox = VBoxContainer.new()
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_theme_constant_override("separation", 5)
 	hbox.add_child(vbox)
 	
-	# Title with icon
-	var title_hbox = HBoxContainer.new()
-	vbox.add_child(title_hbox)
-	
-	var icon_label = Label.new()
-	icon_label.text = data.icon
-	icon_label.add_theme_font_size_override("font_size", 24)
-	title_hbox.add_child(icon_label)
-	
+	# CHANGE 3: Title only (no icon)
 	var title_label = Label.new()
 	title_label.text = data.display_name
-	title_label.add_theme_color_override("font_color", data.color)
-	title_label.add_theme_font_size_override("font_size", 18)
-	title_hbox.add_child(title_label)
+	title_label.add_theme_font_override("font", pixel_font)
+	title_label.add_theme_color_override("font_color", TEXT_COLOR)
+	title_label.add_theme_font_size_override("font_size", 24)
+	vbox.add_child(title_label)
 	
-	# Description
+	# Description (removed gear icon here too)
 	var desc_label = Label.new()
 	desc_label.text = data.description
-	desc_label.add_theme_font_size_override("font_size", 12)
-	desc_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	desc_label.add_theme_font_override("font", pixel_font)
+	desc_label.add_theme_font_size_override("font_size", 18)
+	desc_label.add_theme_color_override("font_color", Color(0.3, 0.3, 0.3))
 	vbox.add_child(desc_label)
 	
 	# Current value
 	var value_label = Label.new()
 	value_label.name = "ValueLabel"
 	value_label.text = "Current: 0"
-	value_label.add_theme_font_size_override("font_size", 14)
-	value_label.add_theme_color_override("font_color", Color(0.9, 0.9, 1))
+	value_label.add_theme_font_override("font", pixel_font)
+	value_label.add_theme_font_size_override("font_size", 20)
+	value_label.add_theme_color_override("font_color", Color(0.8, 0.65, 0.4))  # Warm gold
 	vbox.add_child(value_label)
 	
 	# Right side - Points and Button
 	var right_vbox = VBoxContainer.new()
-	right_vbox.add_theme_constant_override("separation", 5)
+	right_vbox.add_theme_constant_override("separation", 8)
 	hbox.add_child(right_vbox)
 	
 	# Points invested
 	var points_label = Label.new()
 	points_label.name = "PointsLabel"
 	points_label.text = "Points: 0/50"
-	points_label.add_theme_font_size_override("font_size", 14)
+	points_label.add_theme_font_override("font", pixel_font)
+	points_label.add_theme_font_size_override("font_size", 20)
+	points_label.add_theme_color_override("font_color", TEXT_COLOR)
 	points_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	right_vbox.add_child(points_label)
 	
@@ -207,12 +324,44 @@ func _create_skill_panel(stat_name: String) -> PanelContainer:
 	var button = Button.new()
 	button.name = "UpgradeButton"
 	button.text = "Upgrade"
-	button.custom_minimum_size = Vector2(100, 40)
-	button.add_theme_font_size_override("font_size", 16)
+	button.custom_minimum_size = Vector2(120, 50)
+	button.add_theme_font_override("font", pixel_font)
+	button.add_theme_font_size_override("font_size", 22)
 	button.pressed.connect(_on_upgrade_button_pressed.bind(stat_name))
+	_style_upgrade_button(button)
 	right_vbox.add_child(button)
 	
 	return panel
+	
+func _style_upgrade_button(button: Button):
+	"""Style the upgrade button with sage green"""
+	button.add_theme_color_override("font_color", TEXT_COLOR)
+	
+	var btn_style = StyleBoxFlat.new()
+	btn_style.bg_color = Color(0.5, 0.7, 0.4)  # Sage green
+	btn_style.border_width_left = 3
+	btn_style.border_width_right = 3
+	btn_style.border_width_top = 3
+	btn_style.border_width_bottom = 3
+	btn_style.border_color = BORDER_COLOR
+	btn_style.corner_radius_top_left = 6
+	btn_style.corner_radius_top_right = 6
+	btn_style.corner_radius_bottom_left = 6
+	btn_style.corner_radius_bottom_right = 6
+	button.add_theme_stylebox_override("normal", btn_style)
+	
+	var hover_style = btn_style.duplicate()
+	hover_style.bg_color = Color(0.6, 0.8, 0.5)
+	button.add_theme_stylebox_override("hover", hover_style)
+	
+	var pressed_style = btn_style.duplicate()
+	pressed_style.bg_color = Color(0.4, 0.6, 0.3)
+	button.add_theme_stylebox_override("pressed", pressed_style)
+	
+	# Disabled state
+	var disabled_style = btn_style.duplicate()
+	disabled_style.bg_color = Color(0.7, 0.65, 0.55)  # Gray/tan
+	button.add_theme_stylebox_override("disabled", disabled_style)
 
 func _on_upgrade_button_pressed(stat_name: String):
 	if level_system and level_system.upgrade_stat(stat_name):
@@ -271,11 +420,6 @@ func _update_skill_button(stat_name: String):
 	if button:
 		var can_upgrade = level_system.skill_points > 0 and points_invested < max_points
 		button.disabled = not can_upgrade
-		
-		if can_upgrade:
-			button.add_theme_color_override("font_color", Color(0.4, 1, 0.4))
-		else:
-			button.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
 
 func open():
 	print("\n=== OPENING SKILL TREE ===")
@@ -311,12 +455,6 @@ func _on_reset_button_pressed():
 	
 	print("Reset not implemented - add confirmation dialog")
 	# You can add a confirmation dialog here
-
-#func _on_level_up(new_level: int, skill_points_gained: int):
-	## Auto-open when leveling up
-	#print("Level up detected! Opening skill tree...")
-	#open()
-	#_update_ui()
 
 func _on_experience_gained(amount: int, total: int):
 	# Update XP bar in real-time if UI is open

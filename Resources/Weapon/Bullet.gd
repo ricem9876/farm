@@ -29,7 +29,8 @@ func _ready():
 	# Play the rotation animation
 	if animated_sprite:
 		animated_sprite.play("rotate")  # Or whatever you name your animation
-	
+		animated_sprite.frame = randi() % animated_sprite.sprite_frames.get_frame_count("rotate")
+		
 	get_tree().create_timer(lifetime).timeout.connect(queue_free)
 
 func setup(bullet_damage: float, bullet_speed: float, bullet_direction: Vector2):

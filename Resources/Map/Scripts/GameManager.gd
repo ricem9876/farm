@@ -10,7 +10,9 @@ var current_level: int = 0  # Track which level number (1-4)
 var selected_character_id: String = "hero"  # Selected character for new games
 var last_scene: String = ""  # Track last played scene for death screen retry
 var returning_from_farm: bool = false  # ADD THIS LINE
-
+var is_starting_permadeath: bool = false  # Flag for new permadeath runs
+var latest_permadeath_score: int = 0  # Score to upload to Steam leaderboard
+var returned_from_permadeath: bool = false  # Flag for leaderboard screen context
 # Temporary holders for loading from save file
 var pending_load_data: Dictionary = {}
 

@@ -42,33 +42,33 @@ region = Rect2(112, 0, 16, 16)
 [sub_resource type="SpriteFrames" id="SpriteFrames_dus5h"]
 animations = [{
 "frames": [{
-"duration": 0.1,
+"duration": 0.2,
 "texture": SubResource("AtlasTexture_dn7tf")
 }, {
-"duration": 0.1,
+"duration": 0.2,
 "texture": SubResource("AtlasTexture_qii65")
 }, {
-"duration": 0.1,
+"duration": 0.2,
 "texture": SubResource("AtlasTexture_rib1n")
 }, {
-"duration": 0.1,
+"duration": 0.2,
 "texture": SubResource("AtlasTexture_gw5vr")
 }, {
-"duration": 0.1,
+"duration": 0.2,
 "texture": SubResource("AtlasTexture_elexd")
 }, {
-"duration": 0.1,
+"duration": 0.2,
 "texture": SubResource("AtlasTexture_y3yvj")
 }, {
-"duration": 0.1,
+"duration": 0.2,
 "texture": SubResource("AtlasTexture_5hos0")
 }, {
-"duration": 0.1,
+"duration": 0.2,
 "texture": SubResource("AtlasTexture_7rhdd")
 }],
 "loop": true,
 "name": &"rotate",
-"speed": 15.0
+"speed": 30.0
 }]
 
 [node name="Bullet" type="Area2D"]
