@@ -5,11 +5,13 @@ signal storage_changed
 signal weapon_added(weapon: WeaponItem)
 signal weapon_removed(weapon: WeaponItem)
 
-@export var max_slots: int = 12
+var max_slots: int = 12  # Fixed at 12 slots for export compatibility
 var weapons: Array[WeaponItem] = []
 
 func _ready():
-	weapons.resize(max_slots)
+	if weapons.is_empty():
+		weapons.resize(max_slots)
+		print("WeaponStorageManager initialized with ", max_slots, " slots")
 
 func add_weapon(weapon: WeaponItem) -> bool:
 	if not weapon or weapon.item_type != "weapon":

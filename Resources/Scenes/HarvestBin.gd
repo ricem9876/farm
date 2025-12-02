@@ -9,7 +9,7 @@ class_name HarvestBin
 var player_in_area: bool = false
 var player_ref: Node2D = null
 var interaction_prompt: Label
-var harvest_bin_ui: CanvasLayer = null
+var harvest_bin_ui: Control = null
 
 # Crop prices (5 coins each)
 const CROP_PRICES = {
@@ -57,34 +57,30 @@ func _create_prompt():
 	interaction_prompt = Label.new()
 	get_tree().current_scene.add_child(interaction_prompt)
 	
+	# Cozy tan theme colors
+	var tan_bg = Color(0.82, 0.71, 0.55, 0.95)
+	var dark_brown = Color(0.35, 0.25, 0.15)
+	var border_brown = Color(0.55, 0.40, 0.25)
+	
 	var pixel_font = load("res://Resources/Fonts/yoster.ttf")
 	interaction_prompt.add_theme_font_override("font", pixel_font)
-	interaction_prompt.add_theme_font_size_override("font_size", 20)
+	interaction_prompt.add_theme_font_size_override("font_size", 12)
 	interaction_prompt.text = "Press E to sell crops"
-	interaction_prompt.add_theme_color_override("font_color", Color.WHITE)
-	interaction_prompt.add_theme_color_override("font_outline_color", Color.BLACK)
-	interaction_prompt.add_theme_constant_override("outline_size", 5)
+	interaction_prompt.add_theme_color_override("font_color", dark_brown)
 	
 	var background = StyleBoxFlat.new()
-	background.bg_color = Color(0.0, 0.0, 0.0, 0.9)
-	background.border_width_left = 3
-	background.border_width_right = 3
-	background.border_width_top = 3
-	background.border_width_bottom = 3
-	background.border_color = Color(0.8, 0.6, 0.2)  # Golden harvest color
-	background.corner_radius_top_left = 8
-	background.corner_radius_top_right = 8
-	background.corner_radius_bottom_left = 8
-	background.corner_radius_bottom_right = 8
-	background.content_margin_left = 10
-	background.content_margin_right = 10
-	background.content_margin_top = 5
-	background.content_margin_bottom = 5
+	background.bg_color = tan_bg
+	background.border_color = border_brown
+	background.set_border_width_all(2)
+	background.set_corner_radius_all(4)
+	background.content_margin_left = 8
+	background.content_margin_right = 8
+	background.content_margin_top = 4
+	background.content_margin_bottom = 4
 	interaction_prompt.add_theme_stylebox_override("normal", background)
 	
 	interaction_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	interaction_prompt.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	interaction_prompt.custom_minimum_size = Vector2(220, 40)
 	interaction_prompt.z_index = 100
 	interaction_prompt.visible = false
 

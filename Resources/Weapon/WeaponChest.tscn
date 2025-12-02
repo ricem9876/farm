@@ -13,8 +13,8 @@ radius = 28.0179
 script = ExtResource("1_fh8hy")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-position = Vector2(8.75, 5.25)
-scale = Vector2(0.921875, 0.640625)
+position = Vector2(14.625, -9.125)
+scale = Vector2(1.10547, 1.08984)
 texture = ExtResource("2_fh8hy")
 
 [node name="StaticBody2D" type="StaticBody2D" parent="Sprite2D"]

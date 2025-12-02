@@ -1,13 +1,13 @@
 # HarvestBinUI.gd
-# UI for selling crops at the harvest bin - STYLED VERSION WITH MEMORY LEAK FIX
-extends CanvasLayer
+# UI for selling crops at the harvest bin - SIMPLE VERSION WITH GUARANTEED BORDER
+extends Control
 
 @onready var crop_list_container = %CropListContainer
 @onready var total_value_label = %TotalValueLabel
 @onready var sell_button = %SellButton
 @onready var close_button = %CloseButton
-@onready var panel = %Panel  # Main panel background
-@onready var margin_container = %MarginContainer
+@onready var panel = %Panel  # Main panel for border
+@onready var background = %Background  # ColorRect for background color
 
 var inventory_manager: InventoryManager = null
 var player: Node2D = null
@@ -22,13 +22,13 @@ const CROP_PRICES = {
 }
 
 # Style colors
-const BG_COLOR = Color(0.86, 0.72, 0.52)  # Tan/beige background
-const HEADER_COLOR = Color(0.2, 0.7, 0.2)  # Green for "Harvest Bin" title
+const BG_COLOR = Color(0.82, 0.71, 0.55)  # Tan/beige background
+const BORDER_COLOR = Color(0.25, 0.15, 0.05)  # Very dark brown border
 const TEXT_COLOR = Color(0.2, 0.2, 0.2)  # Dark text
 const BUTTON_BG = Color(0.95, 0.88, 0.7)  # Light tan for buttons
 const BUTTON_BORDER = Color(0.3, 0.2, 0.1)  # Dark brown border
 
-# MEMORY LEAK FIX: Cache StyleBox objects instead of creating new ones every time
+# MEMORY LEAK FIX: Cache StyleBox objects
 var _button_style_normal: StyleBoxFlat = null
 var _button_style_hover: StyleBoxFlat = null
 var _button_style_pressed: StyleBoxFlat = null
@@ -39,64 +39,59 @@ var _separator_style: StyleBoxFlat = null
 var _styles_created: bool = false
 
 func _enter_tree():
-	# Add to group as early as possible
 	add_to_group("harvest_bin_ui")
 	print("✓ HarvestBinUI added to group 'harvest_bin_ui'")
 
 func _ready():
-	# CRITICAL: Prevent running in editor to avoid memory leaks
 	if Engine.is_editor_hint():
 		return
 	
-	# Double-check we're in the group
 	if not is_in_group("harvest_bin_ui"):
 		add_to_group("harvest_bin_ui")
-		print("⚠ Had to re-add HarvestBinUI to group in _ready()")
 	
 	# CRITICAL: Allow processing while paused
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	
+	# Make this Control fill the entire screen
+	set_anchors_preset(Control.PRESET_FULL_RECT)
+	
 	visible = false
 	
 	print("=== HarvestBinUI _ready() called ===")
-	print("  - In group: ", is_in_group("harvest_bin_ui"))
-	print("  - Parent: ", get_parent().name if get_parent() else "NO PARENT")
 	
 	# Create all StyleBox objects ONCE
 	_create_cached_styles()
 	
-	# Apply styles to panel AND ColorRect
-	_setup_panel_style()
-	_setup_colorrect()
+	# Apply styles - ColorRect for background, Panel for border
+	_setup_panel_and_background()
 	
 	# Apply styles to buttons
 	_setup_button_styles()
 	
 	# Connect buttons
 	if sell_button:
-		# Disconnect first if already connected (safety check)
 		if sell_button.pressed.is_connected(_on_sell_pressed):
 			sell_button.pressed.disconnect(_on_sell_pressed)
 		sell_button.pressed.connect(_on_sell_pressed)
 		print("  ✓ Sell button connected")
-	else:
-		print("  ✗ Sell button NOT FOUND")
 	
 	if close_button:
-		# Disconnect first if already connected (safety check)
 		if close_button.pressed.is_connected(_on_close_pressed):
 			close_button.pressed.disconnect(_on_close_pressed)
 		close_button.pressed.connect(_on_close_pressed)
 		print("  ✓ Close button connected")
-	else:
-		print("  ✗ Close button NOT FOUND")
+
+	if panel:
+		var viewport_size = get_viewport_rect().size
+		var panel_size = Vector2(750, 650)  # Your panel size
+		panel.position = (viewport_size - panel_size) / 2.0
 	
 	print("=== HarvestBinUI ready complete ===")
 
 func _create_cached_styles():
 	"""Create all StyleBox objects ONCE and cache them to prevent memory leaks"""
 	if _styles_created:
-		return  # Already created
+		return
 	
 	print("Creating cached StyleBox objects...")
 	
@@ -104,76 +99,41 @@ func _create_cached_styles():
 	_button_style_normal = StyleBoxFlat.new()
 	_button_style_normal.bg_color = BUTTON_BG
 	_button_style_normal.border_color = BUTTON_BORDER
-	_button_style_normal.border_width_left = 2
-	_button_style_normal.border_width_right = 2
-	_button_style_normal.border_width_top = 2
-	_button_style_normal.border_width_bottom = 2
-	_button_style_normal.corner_radius_top_left = 4
-	_button_style_normal.corner_radius_top_right = 4
-	_button_style_normal.corner_radius_bottom_left = 4
-	_button_style_normal.corner_radius_bottom_right = 4
+	_button_style_normal.set_border_width_all(2)
+	_button_style_normal.set_corner_radius_all(4)
 	
 	_button_style_hover = StyleBoxFlat.new()
-	_button_style_hover.bg_color = Color(1.0, 0.95, 0.8)  # Lighter on hover
+	_button_style_hover.bg_color = Color(1.0, 0.95, 0.8)
 	_button_style_hover.border_color = BUTTON_BORDER
-	_button_style_hover.border_width_left = 2
-	_button_style_hover.border_width_right = 2
-	_button_style_hover.border_width_top = 2
-	_button_style_hover.border_width_bottom = 2
-	_button_style_hover.corner_radius_top_left = 4
-	_button_style_hover.corner_radius_top_right = 4
-	_button_style_hover.corner_radius_bottom_left = 4
-	_button_style_hover.corner_radius_bottom_right = 4
+	_button_style_hover.set_border_width_all(2)
+	_button_style_hover.set_corner_radius_all(4)
 	
 	_button_style_pressed = StyleBoxFlat.new()
-	_button_style_pressed.bg_color = Color(0.85, 0.78, 0.6)  # Darker when pressed
+	_button_style_pressed.bg_color = Color(0.85, 0.78, 0.6)
 	_button_style_pressed.border_color = BUTTON_BORDER
-	_button_style_pressed.border_width_left = 2
-	_button_style_pressed.border_width_right = 2
-	_button_style_pressed.border_width_top = 2
-	_button_style_pressed.border_width_bottom = 2
-	_button_style_pressed.corner_radius_top_left = 4
-	_button_style_pressed.corner_radius_top_right = 4
-	_button_style_pressed.corner_radius_bottom_left = 4
-	_button_style_pressed.corner_radius_bottom_right = 4
+	_button_style_pressed.set_border_width_all(2)
+	_button_style_pressed.set_corner_radius_all(4)
 	
 	_button_style_disabled = StyleBoxFlat.new()
 	_button_style_disabled.bg_color = Color(0.7, 0.65, 0.55)
 	_button_style_disabled.border_color = Color(0.5, 0.4, 0.3)
-	_button_style_disabled.border_width_left = 2
-	_button_style_disabled.border_width_right = 2
-	_button_style_disabled.border_width_top = 2
-	_button_style_disabled.border_width_bottom = 2
-	_button_style_disabled.corner_radius_top_left = 4
-	_button_style_disabled.corner_radius_top_right = 4
-	_button_style_disabled.corner_radius_bottom_left = 4
-	_button_style_disabled.corner_radius_bottom_right = 4
+	_button_style_disabled.set_border_width_all(2)
+	_button_style_disabled.set_corner_radius_all(4)
 	
-	# Panel style
+	# Panel style - ONLY BORDER, transparent background
 	_panel_style = StyleBoxFlat.new()
-	_panel_style.bg_color = BG_COLOR
-	_panel_style.border_color = BUTTON_BORDER
-	_panel_style.border_width_left = 3
-	_panel_style.border_width_right = 3
-	_panel_style.border_width_top = 3
-	_panel_style.border_width_bottom = 3
-	_panel_style.corner_radius_top_left = 8
-	_panel_style.corner_radius_top_right = 8
-	_panel_style.corner_radius_bottom_left = 8
-	_panel_style.corner_radius_bottom_right = 8
+	_panel_style.bg_color = Color(0, 0, 0, 0)  # Transparent - ColorRect handles background
+	_panel_style.border_color = BORDER_COLOR
+	_panel_style.set_border_width_all(8)  # THICK 8px border
+	_panel_style.set_corner_radius_all(8)
+	_panel_style.draw_center = true  # Must be true to show border
 	
 	# Quantity display background style
 	_display_style = StyleBoxFlat.new()
-	_display_style.bg_color = Color(0.95, 0.95, 0.95)  # Almost white background
+	_display_style.bg_color = Color(0.95, 0.95, 0.95)
 	_display_style.border_color = BUTTON_BORDER
-	_display_style.border_width_left = 2
-	_display_style.border_width_right = 2
-	_display_style.border_width_top = 2
-	_display_style.border_width_bottom = 2
-	_display_style.corner_radius_top_left = 4
-	_display_style.corner_radius_top_right = 4
-	_display_style.corner_radius_bottom_left = 4
-	_display_style.corner_radius_bottom_right = 4
+	_display_style.set_border_width_all(2)
+	_display_style.set_corner_radius_all(4)
 	_display_style.content_margin_left = 4
 	_display_style.content_margin_right = 4
 	_display_style.content_margin_top = 4
@@ -186,38 +146,21 @@ func _create_cached_styles():
 	_styles_created = true
 	print("✓ Cached StyleBox objects created")
 
-func _setup_panel_style():
-	"""Apply tan/beige background to the main panel"""
+func _setup_panel_and_background():
+	"""Setup panel border and background color"""
+	# Panel gets the border style
 	if panel and _panel_style:
 		panel.add_theme_stylebox_override("panel", _panel_style)
-		panel.self_modulate = Color.WHITE
+		print("✓ Panel border applied (8px dark brown)")
+	else:
+		print("⚠ Panel not found!")
 	
-	# Also check if there's a ColorRect we need to update
-	var color_rect = get_node_or_null("%ColorRect")
-	if color_rect == null:
-		color_rect = panel.get_node_or_null("../ColorRect")
-	
-	if color_rect:
-		color_rect.color = BG_COLOR
-		print("✓ ColorRect updated to tan color")
-
-func _setup_colorrect():
-	"""Find and update any ColorRect to tan background"""
-	# Try to find ColorRect in various locations
-	var paths_to_try = [
-		"Control/ColorRect",
-		"../ColorRect",
-		"../../ColorRect"
-	]
-	
-	for path in paths_to_try:
-		var color_rect = get_node_or_null(path)
-		if color_rect and color_rect is ColorRect:
-			color_rect.color = BG_COLOR
-			print("✓ Found and updated ColorRect at: ", path)
-			return
-	
-	print("  No ColorRect found (this is okay if Panel handles the background)")
+	# ColorRect gets the background color
+	if background:
+		background.color = BG_COLOR
+		print("✓ Background color applied (tan)")
+	else:
+		print("⚠ Background ColorRect not found!")
 
 func _setup_button_styles():
 	"""Apply consistent button styling using CACHED styles"""
@@ -256,7 +199,6 @@ func close():
 
 func _build_crop_list():
 	"""Build the list of sellable crops from inventory"""
-	# CRITICAL: Check for null inventory_manager
 	if not inventory_manager:
 		print("⚠ ERROR: inventory_manager is null!")
 		return
@@ -272,7 +214,7 @@ func _build_crop_list():
 	
 	# Validate max_slots
 	var max_slots = inventory_manager.max_slots if inventory_manager else 0
-	if max_slots <= 0 or max_slots > 100:  # Sanity check
+	if max_slots <= 0 or max_slots > 100:
 		print("⚠ WARNING: Invalid max_slots: ", max_slots)
 		return
 	
@@ -307,7 +249,6 @@ func _build_crop_list():
 
 func _create_crop_entry_placeholder(crop_name: String):
 	"""Create a placeholder entry for crops not in inventory"""
-	# Create a dummy item for display
 	var dummy_item = Item.new()
 	dummy_item.name = crop_name
 	
@@ -386,19 +327,14 @@ func _create_crop_entry(item: Item, max_quantity: int):
 	quantity_display.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	quantity_display.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	quantity_display.add_theme_font_size_override("font_size", 32)
-	quantity_display.add_theme_color_override("font_color", Color(0.1, 0.1, 0.1))  # Very dark text
+	quantity_display.add_theme_color_override("font_color", Color(0.1, 0.1, 0.1))
 	
 	# Use anchors to center the label in the panel
 	quantity_display.anchor_left = 0
 	quantity_display.anchor_right = 1
 	quantity_display.anchor_top = 0
 	quantity_display.anchor_bottom = 1
-	quantity_display.offset_left = 0
-	quantity_display.offset_right = 0
-	quantity_display.offset_top = 0
-	quantity_display.offset_bottom = 0
 	
-	# Add label to panel
 	quantity_panel.add_child(quantity_display)
 	quantity_container.add_child(quantity_panel)
 	
@@ -418,7 +354,7 @@ func _create_crop_entry(item: Item, max_quantity: int):
 	
 	entry_container.add_child(quantity_container)
 	
-	# Track current quantity - USE DICTIONARY so lambdas can modify it
+	# Track current quantity
 	var quantity_ref = {"value": 0}
 	
 	# Connect signals
@@ -458,7 +394,7 @@ func _create_crop_entry(item: Item, max_quantity: int):
 	# Add to container
 	crop_list_container.add_child(entry_container)
 	
-	# Add separator (subtle)
+	# Add separator
 	var separator = HSeparator.new()
 	separator.add_theme_stylebox_override("separator", _separator_style)
 	crop_list_container.add_child(separator)
@@ -484,9 +420,8 @@ func _update_total_value():
 	if total_value_label:
 		total_value_label.text = "Total: " + str(total) + " Coins"
 		total_value_label.add_theme_font_size_override("font_size", 26)
-		total_value_label.add_theme_color_override("font_color", Color(0.15, 0.15, 0.15))  # Very dark
+		total_value_label.add_theme_color_override("font_color", Color(0.15, 0.15, 0.15))
 	
-	# Enable/disable sell button based on total
 	if sell_button:
 		sell_button.disabled = (total == 0)
 
@@ -495,7 +430,6 @@ func _on_sell_pressed():
 	var total_coins = 0
 	var items_sold: Dictionary = {}
 	
-	# Calculate totals and remove items
 	for entry in crop_entries:
 		var quantity = entry.get_quantity.call()
 		
@@ -504,28 +438,22 @@ func _on_sell_pressed():
 			var unit_price = CROP_PRICES.get(crop_name, 0)
 			var value = unit_price * quantity
 			
-			# Remove items from inventory
 			if inventory_manager.remove_item_by_name(crop_name, quantity):
 				total_coins += value
 				items_sold[crop_name] = quantity
 			else:
 				print("⚠ Warning: Failed to remove ", crop_name, " x", quantity)
 	
-	# Add coins to inventory
 	if total_coins > 0:
 		var coin_item = _create_coin_item()
 		inventory_manager.add_item(coin_item, total_coins)
 		
-		# Play sell sound effect
 		if AudioManager:
 			AudioManager.play_crop_sell()
 		
 		print("✓ Sold crops for ", total_coins, " coins")
-		
-		# Auto-save after selling
 		_auto_save_after_sale()
 	
-	# Close the UI
 	close()
 
 func _auto_save_after_sale():

@@ -1,0 +1,55 @@
+[gd_scene load_steps=9 format=3 uid="uid://b5vd52sf32ro5"]
+
+[ext_resource type="Script" uid="uid://cuwekh1m66mva" path="res://Resources/Enemies/Avocado/avocado_seed.gd" id="1_8kiw8"]
+[ext_resource type="Texture2D" uid="uid://picc67g0t2px" path="res://Resources/Enemies/Avocado/avocadoseed.png" id="1_x5wy2"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8kiw8"]
+atlas = ExtResource("1_x5wy2")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4ev5b"]
+atlas = ExtResource("1_x5wy2")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gqh08"]
+atlas = ExtResource("1_x5wy2")
+region = Rect2(32, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_aqt47"]
+atlas = ExtResource("1_x5wy2")
+region = Rect2(48, 0, 16, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_4wxh8"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8kiw8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4ev5b")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gqh08")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_aqt47")
+}],
+"loop": true,
+"name": &"shoot",
+"speed": 10.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_x5wy2"]
+radius = 4.0
+
+[node name="AvocadoSeed" type="Area2D"]
+collision_layer = 3
+collision_mask = 3
+script = ExtResource("1_8kiw8")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_4wxh8")
+animation = &"shoot"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_x5wy2")

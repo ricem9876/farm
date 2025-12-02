@@ -1,6 +1,6 @@
-# EnemySpawner.gd - INFINITE LEVELS VERSION with Multiple Boss Support
+# EnemySpawner.gd - INFINITE LEVELS VERSION with Multiple Boss Support + ELITE ENEMIES
 # Validates spawn positions and supports spawning multiple bosses
-# UPDATED: Includes Crop Control Center spawn reduction
+# NEW: Elite enemies (like Avocado) appear after level 5
 extends Node2D
 
 @export var spawn_enabled: bool = false  # Start disabled, farm.gd will enable after delay
@@ -10,11 +10,11 @@ extends Node2D
 @export var spawn_mode: String = "gradual"
 @export var spawn_boundary: Rect2 = Rect2(0, 0, 1000, 1000)
 @export var boss_enabled: bool = false
-@export var boss_count: int = 1  # NEW: How many bosses to spawn
+@export var boss_count: int = 1
 @export var boss_spawn_at_halfway: bool = true
-@export var batch_spawn_enabled: bool = true  # NEW: Enable batch spawning
-@export var batch_size: int = 20  # NEW: How many enemies to spawn per batch
-@export var batch_interval: float = 5.0  # NEW: Seconds between batches
+@export var batch_spawn_enabled: bool = true
+@export var batch_size: int = 20
+@export var batch_interval: float = 5.0
 
 signal enemy_spawned
 signal enemy_died
@@ -26,8 +26,14 @@ var enemy_scenes = {
 	"tomato": preload("res://Resources/Enemies/Tomato/tomato.tscn"),
 	"pumpkin": preload("res://Resources/Enemies/Pumpkin/pumpkin.tscn"),
 	"corn": preload("res://Resources/Enemies/Corn/corn.tscn"),
-	"pea": preload("res://Resources/Enemies/Pea/pea.tscn")
+	"pea": preload("res://Resources/Enemies/Pea/pea.tscn"),
+	"avocado": preload("res://Resources/Enemies/Avocado/Avocado.tscn"),
+	"lemon": preload("res://Resources/Enemies/Lemon/Lemon.tscn")
 }
+
+# Elite enemies (appear after level 6)
+var elite_enemies = ["avocado", "lemon"]
+var elite_enabled: bool = false
 
 var boss_scene = preload("res://Resources/Enemies/Pea/PeaBoss.tscn")
 
@@ -35,17 +41,18 @@ var spawn_weights = {
 	"mushroom": 50,
 	"tomato": 40,
 	"pumpkin": 30,
-	"corn": 40
+	"corn": 40,
+	"avocado": 50  # Lower weight for elite - they're stronger!
 }
 
 var current_enemy_count: int = 0
 var total_spawned: int = 0
 var enemies_killed: int = 0
 var spawn_timer: float = 0.0
-var batch_timer: float = 0.0  # NEW: Timer for batch spawning
+var batch_timer: float = 0.0
 var player: Node2D
-var bosses_spawned: int = 0  # NEW: Track how many bosses have spawned
-var boss_instances: Array = []  # NEW: Track all boss instances
+var bosses_spawned: int = 0
+var boss_instances: Array = []
 
 # Track if spawn modifiers have been applied
 var _spawn_modifiers_applied: bool = false
@@ -57,11 +64,17 @@ var world_2d: World2D
 var space_state: PhysicsDirectSpaceState2D
 
 func _ready():
+	# Add to group so we can be found by other systems
+	add_to_group("enemy_spawner")
+	
 	player = get_tree().get_first_node_in_group("player")
 	
 	# Store original values before any modification
 	_original_total_enemies = total_enemies
 	_original_max_enemies = max_enemies
+	
+	# Check if elite enemies should be enabled based on current level
+	_check_elite_unlock()
 	
 	# Get physics space for spawn validation
 	world_2d = get_world_2d()
@@ -83,9 +96,37 @@ func _ready():
 	if batch_spawn_enabled:
 		print("  - Batch size: ", batch_size, " enemies")
 		print("  - Batch interval: ", batch_interval, " seconds")
-	print("Enemy types available: Mushroom, Tomato, Pumpkin, Corn, Pea")
+	print("Elite enemies: ", "UNLOCKED!" if elite_enabled else "LOCKED (level 6+)")
+	if elite_enabled:
+		print("  - Available elites: ", elite_enemies)
+	print("Enemy types available: Mushroom, Tomato, Pumpkin, Corn, Pea", ", Avocado" if elite_enabled else "")
 	print("Spawn weights: ", spawn_weights)
 	print("=================================\n")
+
+func _check_elite_unlock():
+	"""Check if elite enemies should be unlocked based on current level"""
+	var current_level = GameManager.current_level if GameManager else 1
+	
+	# IMPORTANT: Also check level settings in case current_level isn't updated yet
+	var level_number = current_level
+	if GameManager.current_level_settings and GameManager.current_level_settings.has("level_number"):
+		level_number = GameManager.current_level_settings.level_number
+	
+	if level_number >= 6:
+		elite_enabled = true
+		print("🥑 ELITE ENEMIES UNLOCKED! (Level ", level_number, ")")
+		# Make sure elite spawn weights are added
+		if not spawn_weights.has("avocado"):
+			spawn_weights["avocado"] = 15
+			print("✓ Added avocado to spawn weights")
+	else:
+		elite_enabled = false
+		print("🔒 Elite enemies locked (Need level 6+, currently level ", level_number, ")")
+		# Remove elite enemies from spawn weights if they shouldn't appear yet
+		for elite in elite_enemies:
+			if spawn_weights.has(elite):
+				spawn_weights.erase(elite)
+				print("✓ Removed ", elite, " from spawn weights")
 
 func _apply_spawn_modifiers():
 	"""Apply Crop Control Center spawn reduction"""
@@ -131,7 +172,17 @@ func _apply_spawn_modifiers():
 	_spawn_modifiers_applied = true
 
 func set_spawn_weights(new_weights: Dictionary):
+	"""Update spawn weights while preserving elite enemy weights if unlocked"""
 	spawn_weights = new_weights
+	
+	# CRITICAL: Restore elite weights if they're unlocked
+	if elite_enabled:
+		for elite in elite_enemies:
+			if not spawn_weights.has(elite):
+				# Add elite with appropriate weight
+				spawn_weights[elite] = 5  # Lower weight for elites
+				print("✓ Restored elite '", elite, "' to spawn weights (weight: 5)")
+	
 	print("✓ Spawn weights updated: ", spawn_weights)
 
 func _process(delta):
@@ -184,7 +235,7 @@ func _spawn_batch():
 	for i in range(enemies_to_spawn):
 		_spawn_random_enemy()
 		# Reduced delay for much faster spawning
-		await get_tree().create_timer(0.05).timeout  # Changed from 0.1 to 0.05
+		await get_tree().create_timer(0.05).timeout
 	
 	print("✓ Batch complete! (", total_spawned, "/", total_enemies, " total spawned)")
 
@@ -195,6 +246,12 @@ func _spawn_random_enemy():
 		return
 	
 	var enemy_type = _weighted_random_choice()
+	
+	# Double-check elite enemies are allowed
+	if not elite_enabled and enemy_type in elite_enemies:
+		print("⚠ Elite enemy rolled but not unlocked yet - rerolling")
+		enemy_type = _weighted_random_choice()
+	
 	var spawn_pos = _get_valid_spawn_position()
 	
 	# If we couldn't find a valid position after many tries, skip this spawn
@@ -218,7 +275,17 @@ func _spawn_random_enemy():
 	
 	current_enemy_count += 1
 	total_spawned += 1
-	print("Spawned ", enemy_type, " at ", spawn_pos, " (", current_enemy_count, "/", max_enemies, ") [Total: ", total_spawned, "/", total_enemies, "]")
+	
+	var elite_marker = ""
+	if enemy_type in elite_enemies:
+		if enemy_type == "lemon":
+			elite_marker = " 🍋 ELITE!"
+		elif enemy_type == "avocado":
+			elite_marker = " 🥑 ELITE!"
+		else:
+			elite_marker = " ⭐ ELITE!"
+	
+	print("Spawned ", enemy_type, elite_marker, " at ", spawn_pos, " (", current_enemy_count, "/", max_enemies, ") [Total: ", total_spawned, "/", total_enemies, "]")
 	
 	_check_boss_spawn()
 
@@ -306,7 +373,7 @@ func _get_boss_spawn_position() -> Vector2:
 
 func _get_valid_spawn_position() -> Vector2:
 	"""Get a valid spawn position that's not blocked by physics and not too close to player"""
-	var max_attempts = 20  # Try 20 times to find a good spot
+	var max_attempts = 50  # Try 50 times to find a good spot (increased from 20)
 	
 	for attempt in range(max_attempts):
 		var test_pos = _get_random_position_in_boundary()
@@ -339,8 +406,27 @@ func _is_position_valid(position: Vector2) -> bool:
 	if not space_state:
 		return true  # If we can't check, assume it's valid
 	
-	# Perform a point raycast in multiple directions to check for obstacles
-	# We check 4 directions: up, down, left, right
+	# First, do a shape cast to check if the spawn area is clear
+	# This checks a circular area around the spawn point
+	var shape_query = PhysicsShapeQueryParameters2D.new()
+	var circle = CircleShape2D.new()
+	circle.radius = 20.0  # Check a 20-unit radius around spawn point
+	shape_query.shape = circle
+	shape_query.transform = Transform2D(0, position)
+	# Check against layers 1 (world), 4 (enemies), and any other obstacle layers
+	shape_query.collision_mask = 1 + 4  # Layers 1 and 3
+	
+	var shape_results = space_state.intersect_shape(shape_query, 5)  # Check up to 5 collisions
+	if shape_results.size() > 0:
+		# Something is blocking this spawn area
+		for result in shape_results:
+			var collider = result.collider
+			# Ignore if it's another enemy (we just don't want to spawn inside walls/hay/etc)
+			if not collider.is_in_group("enemies"):
+				print("⚠ Spawn blocked by: ", collider.name if collider.name else "unnamed object")
+				return false
+	
+	# Perform raycast checks in multiple directions to ensure it's not enclosed
 	var check_distance = 50.0  # How far to check in each direction
 	var directions = [
 		Vector2(check_distance, 0),    # Right
@@ -349,29 +435,21 @@ func _is_position_valid(position: Vector2) -> bool:
 		Vector2(0, -check_distance)    # Up
 	]
 	
-	# If ANY direction is blocked, this position is probably bad
+	# If 3+ directions are blocked, position is too enclosed
 	var blocked_count = 0
 	for direction in directions:
 		var query = PhysicsRayQueryParameters2D.create(position, position + direction)
 		# Check against world layer (layer 1) - walls and obstacles
-		query.collision_mask = 1  # Layer 1 is typically the world/walls layer
+		query.collision_mask = 1 + 4  # Check layers 1 and 3
 		
 		var result = space_state.intersect_ray(query)
 		if result:
 			blocked_count += 1
 	
-	# If 3 or more directions are blocked, this is probably inside a wall/house
+	# If 3 or more directions are blocked, this is inside something
 	if blocked_count >= 3:
+		print("⚠ Spawn position too enclosed (", blocked_count, "/4 directions blocked)")
 		return false
-	
-	# Also check if there's a collision right at the spawn point
-	var point_query = PhysicsPointQueryParameters2D.new()
-	point_query.position = position
-	point_query.collision_mask = 1  # Check against world layer
-	
-	var point_results = space_state.intersect_point(point_query, 1)  # Max 1 result
-	if point_results.size() > 0:
-		return false  # Something is already at this point
 	
 	# Position is valid!
 	return true
@@ -462,6 +540,11 @@ func set_spawn_enabled(enabled: bool):
 
 func start_spawning():
 	print("start_spawning() called - mode: ", spawn_mode, " | total: ", total_enemies)
+	
+	# CRITICAL: Recheck elite unlock when spawning actually starts
+	# This ensures we have the correct level info from GameManager
+	_check_elite_unlock()
+	
 	spawn_enabled = true
 	if spawn_mode == "all_at_once":
 		_spawn_all_enemies_immediately()
@@ -489,5 +572,8 @@ func configure_spawner(new_total: int, new_max: int, new_batch_size: int = -1):
 	# Reset and reapply modifiers
 	_spawn_modifiers_applied = false
 	_apply_spawn_modifiers()
+	
+	# Recheck elite unlock
+	_check_elite_unlock()
 	
 	print("✓ Spawner reconfigured: ", total_enemies, " total, ", max_enemies, " max")

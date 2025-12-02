@@ -85,6 +85,12 @@ func _ready():
 	await get_tree().process_frame
 	await get_tree().process_frame
 	
+	# DEBUG: Check if player has weapon manager after _ready()
+	var test_mgr = player.get_weapon_manager()
+	print("DEBUG: Player weapon manager after _ready(): ", test_mgr)
+	if not test_mgr:
+		print("WARNING: Player has no weapon manager! This should not happen!")
+	
 	# Ensure player is in correct group
 	if not player.is_in_group("player"):
 		player.add_to_group("player")
@@ -132,11 +138,6 @@ func _ready():
 		weapon_chest.set_storage_ui(weapon_storage_ui)
 		print("✓ Weapon chest connected")
 	
-	# Connect to weapon equip events to disable guns in safehouse
-	var player_weapon_manager = player.get_weapon_manager()
-	if player_weapon_manager and player_weapon_manager.has_signal("weapon_equipped"):
-		player_weapon_manager.weapon_equipped.connect(_on_weapon_equipped)
-	
 	# CRITICAL: Load player data
 	# BUT: ALWAYS ignore position - we already set it at SpawnPoint above
 	if not is_new_game:
@@ -168,6 +169,29 @@ func _ready():
 		var unlocked = GlobalWeaponStorage.get_unlocked_weapons() if GlobalWeaponStorage else []
 		print("  ✓ Unlocked weapons already in GlobalWeaponStorage: ", unlocked)
 		GameManager.pending_load_data.erase("unlocked_weapons")
+	
+	# CRITICAL: Wait an extra frame to ensure player's weapon manager is fully initialized
+	await get_tree().process_frame
+	
+	# Get weapon manager for weapon storage setup (AFTER save restoration)
+	# Try multiple ways to get the weapon manager
+	var player_weapon_manager = player.get_weapon_manager()
+	
+	# If still null, try getting it directly as a child
+	if not player_weapon_manager:
+		print("WARNING: get_weapon_manager() returned null, trying direct child access...")
+		player_weapon_manager = player.get_node_or_null("WeaponManager")
+		
+	print("DEBUG: Retrieved weapon manager after save restore: ", player_weapon_manager)
+	
+	# If STILL null, the weapon manager was never created - this is a bug
+	if not player_weapon_manager:
+		print("CRITICAL ERROR: Player has no WeaponManager child node!")
+		print("Player children: ", player.get_children())
+	
+	# Connect to weapon equip events to disable guns in safehouse
+	if player_weapon_manager and player_weapon_manager.has_signal("weapon_equipped"):
+		player_weapon_manager.weapon_equipped.connect(_on_weapon_equipped)
 	
 	# Setup weapon storage UI (AFTER unlocked_weapons are restored)
 	if weapon_storage_ui and player_weapon_manager:
@@ -252,8 +276,8 @@ func _reset_global_systems_for_new_game():
 	print("  Resetting GlobalWeaponStorage...")
 	if GlobalWeaponStorage:
 		if GlobalWeaponStorage.has_method("set_unlocked_weapons"):
-			GlobalWeaponStorage.set_unlocked_weapons(["Pistol"])
-			print("  ✓ GlobalWeaponStorage reset to default (Pistol only)")
+			GlobalWeaponStorage.set_unlocked_weapons(["Handheld Harvester"])
+			print("  ✓ GlobalWeaponStorage reset to default (Handheld Harvester only)")
 		else:
 			print("  ⚠ GlobalWeaponStorage doesn't have set_unlocked_weapons method")
 	
@@ -299,7 +323,7 @@ func _restore_weapon_storage_from_save(weapon_data: Array):
 		
 		var weapon: WeaponItem = null
 		match data.name:
-			"Pistol":
+			"Pistol", "Handheld Harvester":  # Support both old and new names
 				weapon = WeaponFactory.create_pistol()
 			"Shotgun":
 				weapon = WeaponFactory.create_shotgun()

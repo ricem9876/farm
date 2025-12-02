@@ -291,7 +291,7 @@ func _create_modifier_entry(mod_key: String, mod_data: Dictionary):
 	# Upgrade button
 	var upgrade_button = Button.new()
 	var is_maxed = current_level >= max_level
-	upgrade_button.text = "MAX" if is_maxed else "Upgrade (" + str(cost) + " 🪙)"
+	upgrade_button.text = "MAX" if is_maxed else "Upgrade (" + str(cost) + " Tokens)"
 	upgrade_button.custom_minimum_size = Vector2(150, 40)
 	upgrade_button.disabled = is_maxed or not _can_afford(cost)
 	_apply_button_style(upgrade_button)
@@ -388,7 +388,7 @@ func _update_modifier_ui(mod_key: String):
 	
 	# Update button
 	var is_maxed = current_level >= max_level
-	refs.upgrade_button.text = "MAX" if is_maxed else "Upgrade (" + str(cost) + " 🪙)"
+	refs.upgrade_button.text = "MAX" if is_maxed else "Upgrade (" + str(cost) + " Tokens )"
 	refs.upgrade_button.disabled = is_maxed or not _can_afford(cost)
 
 func _update_all_upgrade_buttons():

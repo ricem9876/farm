@@ -28,20 +28,24 @@ func _style_prompt_label():
 	var dark_brown = Color(0.35, 0.25, 0.15)
 	var border_brown = Color(0.55, 0.40, 0.25)
 	
+	# Load the pixel font to match other prompts
+	var pixel_font = load("res://Resources/Fonts/yoster.ttf")
+	prompt_label.add_theme_font_override("font", pixel_font)
+	prompt_label.add_theme_font_size_override("font_size", 12)
+	prompt_label.add_theme_color_override("font_color", dark_brown)
+	
 	# Create styled background
 	var style = StyleBoxFlat.new()
 	style.bg_color = tan_bg
 	style.border_color = border_brown
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(4)
-	style.content_margin_left = 6
-	style.content_margin_right = 6
-	style.content_margin_top = 3
-	style.content_margin_bottom = 3
+	style.content_margin_left = 8
+	style.content_margin_right = 8
+	style.content_margin_top = 4
+	style.content_margin_bottom = 4
 	
 	prompt_label.add_theme_stylebox_override("normal", style)
-	prompt_label.add_theme_color_override("font_color", dark_brown)
-	prompt_label.add_theme_font_size_override("font_size", 10)
 	
 	# Center above the chest
 	prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

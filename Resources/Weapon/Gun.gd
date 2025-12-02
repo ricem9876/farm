@@ -88,7 +88,7 @@ func _setup_gun_appearance():
 	var texture_size = gun_sprite.texture.get_size()
 	
 	# Pistols are 1.5x (30 pixels), all others are 2x (40 pixels)
-	var desired_width = 40.0 if weapon_type == "Pistol" else 40.0
+	var desired_width = 30.0 if weapon_type == "Pistol" else 30.0
 	
 	var scale_factor = desired_width / texture_size.x
 	gun_sprite.scale = Vector2(scale_factor, scale_factor)

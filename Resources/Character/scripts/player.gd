@@ -3,7 +3,7 @@ extends CharacterBody2D
 signal inventory_toggle_requested
 
 # Movement and Physics
-@export var base_speed: float = 50.0
+var base_speed: float = 50.0  # Default speed - set directly to ensure export compatibility
 
 # Health System
 var current_health: float = 10.0
@@ -101,7 +101,7 @@ func _load_default_character():
 	character_data.character_name = "Hero"
 	character_data.starting_health = 100.0
 	character_data.starting_speed = 100.0
-	character_data.starting_weapon = "Pistol"
+	character_data.starting_weapon = "Handheld Harvester"
 
 func _apply_character_bonuses():
 	"""Apply character-specific bonuses after level system is created"""
@@ -137,7 +137,7 @@ func _apply_character_bonuses_deferred():
 					print("✓ Gave starting item: ", item_data.name, " x", item_data.quantity)
 	
 	# Give starting weapon if different from default
-	if character_data.starting_weapon != "Pistol" and weapon_manager:
+	if character_data.starting_weapon != "Handheld Harvester" and weapon_manager:
 		var starting_weapon = _create_weapon_item_from_name(character_data.starting_weapon)
 		if starting_weapon:
 			weapon_manager.equip_weapon(starting_weapon, 0)
@@ -146,7 +146,7 @@ func _apply_character_bonuses_deferred():
 func _create_weapon_item_from_name(weapon_name: String) -> WeaponItem:
 	"""Helper to create weapon items"""
 	match weapon_name:
-		"Pistol":
+		"Pistol", "Handheld Harvester":  # Support both old and new names
 			return WeaponFactory.create_pistol()
 		"Shotgun":
 			return WeaponFactory.create_shotgun()
@@ -163,12 +163,16 @@ func _setup_level_system():
 	level_system = PlayerLevelSystem.new()
 	add_child(level_system)
 	
+	# Apply character data BEFORE connecting signals
+	if character_data:
+		level_system.apply_character_data(character_data)
+	
 	# Connect to level system signals
 	level_system.level_up.connect(_on_player_level_up)
 	level_system.skill_point_spent.connect(_on_skill_point_spent)
 	level_system.experience_gained.connect(_on_experience_gained)
 	
-	print("✓ Level system created")
+	print("✓ Level system created with character data")
 
 func _setup_weapon_manager():
 	# Create the weapon manager
@@ -262,7 +266,11 @@ func gain_experience(amount: int):
 # Get current movement speed (for use by state machine)
 func get_movement_speed() -> float:
 	if level_system:
-		return level_system.move_speed
+		var speed = level_system.move_speed
+		# DEBUG: Print speed occasionally (every 60 frames = ~1 second)
+		if Engine.get_process_frames() % 60 == 0:
+			print("DEBUG: Current movement speed: ", speed, " (base: ", base_speed, ", level multiplier: ", level_system.move_speed / base_speed if base_speed > 0 else 1.0, ")")
+		return speed
 	return base_speed
 
 # Take damage from enemies
@@ -575,6 +583,9 @@ func _on_skill_tree_closed():
 # === INPUT HANDLING ===
 
 func _input(event):
+	# DEBUG: Print when player receives input
+	if event is InputEventKey and event.pressed:
+		print("DEBUG: Player received key press: ", event.keycode, " (", OS.get_keycode_string(event.keycode), ")")
 
 	# Don't process input if skill tree is open
 	if skill_tree_ui and skill_tree_ui.visible:
@@ -618,10 +629,12 @@ func _input(event):
 	
 	# DEBUG CHEAT: Top-up resources with F7
 	if event.is_action_pressed("topup"):
+		print("DEBUG: F7 pressed - calling _debug_topup_resources()")
 		_debug_topup_resources()
 	
 	# DEBUG CHEAT: Top-up experience with F8
 	if event.is_action_pressed("experience_topup"):
+		print("DEBUG: F8 pressed - calling _debug_topup_experience()")
 		_debug_topup_experience()
 		
 func _is_skill_tree_allowed() -> bool:

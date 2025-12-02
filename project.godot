@@ -10,10 +10,10 @@ config_version=5
 
 [application]
 
-config/name="Farm"
+config/name="Cropocalypse"
 run/main_scene="uid://byw4c6cvbce5g"
 config/features=PackedStringArray("4.4", "Forward Plus")
-config/icon="res://icon.svg"
+config/icon="uid://bru1lxe77y5qo"
 
 [autoload]
 
@@ -136,9 +136,3 @@ level_unlock={
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0
-
-[steam]
-
-initialization/app_id=0
-initialization/initialize_on_startup=false
-initialization/embed_callbacks=false

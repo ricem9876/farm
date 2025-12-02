@@ -2,12 +2,26 @@
 extends Node
 
 var weapon_storage: WeaponStorageManager
-var unlocked_weapons: Array[String] = ["Pistol"]  # CRITICAL: Store unlocked weapons globally
+var unlocked_weapons: Array[String] = []  # CRITICAL: Store unlocked weapons globally
+var _initialized: bool = false
 
 func _ready():
+	_initialize()
+
+func _initialize():
+	if _initialized:
+		return
+		
 	weapon_storage = WeaponStorageManager.new()
 	add_child(weapon_storage)
-	print("Global weapon storage initialized")
+	
+	# Initialize with default pistol if array is empty
+	if unlocked_weapons.is_empty():
+		unlocked_weapons.append("Handheld Harvester")
+		print("Initialized with default weapon: Handheld Harvester")
+	
+	_initialized = true
+	print("Global weapon storage initialized - Unlocked weapons: ", unlocked_weapons)
 
 func get_storage() -> WeaponStorageManager:
 	return weapon_storage

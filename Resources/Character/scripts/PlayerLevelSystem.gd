@@ -42,6 +42,35 @@ var points_in_luck: int = 0
 func _ready():
 	_initialize_stats()
 
+# New method to apply character data at initialization
+func apply_character_data(char_data: CharacterData):
+	"""Apply character-specific starting stats"""
+	if not char_data:
+		return
+	
+	# Set base stats from character data
+	base_max_health = char_data.starting_health
+	base_move_speed = char_data.starting_speed
+	base_damage_multiplier = char_data.starting_damage_multiplier
+	base_fire_rate_multiplier = char_data.starting_fire_rate_multiplier
+	
+	# Apply passive bonuses directly to base stats
+	base_critical_chance += char_data.bonus_crit_chance
+	base_critical_damage += char_data.bonus_crit_damage
+	base_luck += char_data.bonus_luck
+	
+	print("✓ Applied character data to level system:")
+	print("  Health: ", base_max_health)
+	print("  Speed: ", base_move_speed)
+	print("  Damage Multiplier: ", base_damage_multiplier)
+	print("  Fire Rate Multiplier: ", base_fire_rate_multiplier)
+	print("  Crit Chance: ", base_critical_chance)
+	print("  Crit Damage: ", base_critical_damage)
+	print("  Luck: ", base_luck)
+	
+	# Recalculate all stats based on new base values
+	_initialize_stats()
+
 func _initialize_stats():
 	max_health = base_max_health + (points_in_health * 10)
 	move_speed = base_move_speed + (points_in_speed * 5)
